@@ -116,6 +116,8 @@ def get_xlabel(variable, plot_type):
             return r'$\ln(\Delta z)$'
         elif variable == 'dt':
             return r'$\ln(\Delta t)$'
+        elif variable == 'rncells_per_dim':
+            return r'$\ln\sqrt{1/n}$'
         else:
             return variable
     elif plot_type == 'grid parameters':
