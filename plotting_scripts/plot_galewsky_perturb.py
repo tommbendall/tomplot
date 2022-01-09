@@ -9,7 +9,7 @@ from tomplot import make_field_plots, make_convergence_plots, make_time_series_p
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-results_dirname = 'galewsky_RTCF2_perturb'
+results_dirname = 'galewsky_RTCF1_recovered'
 plot_times = 'all'
 base_angle_list = [np.pi/4]
 base_res_list = [100]

@@ -6,7 +6,6 @@ This file provides routines for generating multiple plots. There are four types:
 - convergence plots of global errors
 """
 import matplotlib.pyplot as plt
-from pyop2.mpi import COMM_WORLD
 from netCDF4 import Dataset
 import numpy as np
 from .extract_field_data import extract_1D_data, extract_2D_data
@@ -52,11 +51,6 @@ def make_field_plots(dirname, run_id, testname, fields,
         filename = dirname
     else:
         filename = 'results/'+dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
-
-    # The same data file is used for all field plots, so open at start
-    comm = COMM_WORLD
-    if comm.Get_size() > 1:
-        raise ValueError('Plotting not implemented for parallel runs')
 
     data_file = Dataset(filename, 'r')
 
