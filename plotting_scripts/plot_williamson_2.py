@@ -1,5 +1,5 @@
 """
-Makes plots for the shallow water Galewsky jet test case,
+Makes plots for the shallow water Williamson 2 test case,
 """
 
 import numpy as np
@@ -9,11 +9,11 @@ from tomplot import make_field_plots, make_convergence_plots, make_time_series_p
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-base_results_dirname = 'conv_3_quads_sw2_RTCF1'
+base_results_dirname = 'sw2_RTCF1'
 plot_times = -1
 base_angle_list = [0.0]
-base_res_list = [50,58,66,74,82]
-results_options = ['upwind','recovered','vorticity']
+base_res_list = [20,24,30,36,40]
+results_options = ['plain','recovered','vorticity']
 results_labels = ['plain', 'recovered', 'vorticity']
 
 # ---------------------------------------------------------------------------- #
@@ -84,12 +84,12 @@ for result_option in results_options:
 
         list_of_variables = ['D' for i in range(num_angles)]
         make_convergence_plots(results_dirname, 'rncells_per_dim', list_of_variables, list_of_run_ids,
-                               'L2_error_normalised', testname='williamson_2_D',
+                               'L2_error_normalised', testname='conv_williamson_2_D',
                                ylabels=r'$\ln\left[||D-D_{true}||_{L_2}/||D_{true}||_{L_2}\right]$',
                                field_labels=field_labels)
         list_of_variables = ['u' for i in range(num_angles)]
         make_convergence_plots(results_dirname, 'rncells_per_dim', list_of_variables, list_of_run_ids,
-                               'L2_error_normalised', testname='williamson_2_u',
+                               'L2_error_normalised', testname='conv_williamson_2_u',
                                ylabels=r'$\ln\left[||\textbf{u}-\textbf{u}_{true}||_{L_2}/||\textbf{u}_{true}||_{L_2}\right]$',
                                field_labels=field_labels)
 
