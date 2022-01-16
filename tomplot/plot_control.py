@@ -13,6 +13,7 @@ from .field_1D_plot import individual_field_1d_plot
 from .field_contour_plot import individual_field_contour_plot
 from .time_series_plot import individual_time_series_plot
 from .convergence_plot import individual_convergence_plot
+from .quiver_plot import individual_quiver_plot
 
 def make_field_plots(dirname, run_id, testname, fields,
                      time_idxs, slices=None, plotdir=None,
@@ -292,6 +293,179 @@ def make_field_plots(dirname, run_id, testname, fields,
                                                   slice_idx=None, **kwargs)
 
                     # Remove any added options to kwargs
+                    if xlabel_added:
+                        kwargs.pop('xlabel')
+                        xlabel_added = False
+                    if xlims_added:
+                        kwargs.pop('xlims')
+                        xlims_added = False
+                    if xticklabels_added:
+                        kwargs.pop('xticklabels')
+                        xticklabels_added = False
+                    if ylabel_added:
+                        kwargs.pop('ylabel')
+                        ylabel_added = False
+                    if ylims_added:
+                        kwargs.pop('ylims')
+                        ylims_added = False
+                    if yticklabels_added:
+                        kwargs.pop('yticklabels')
+                        yticklabels_added = False
+                    if extra_field_added:
+                        kwargs.pop('extra_field_data')
+                        extra_field_added = False
+
+    data_file.close()
+
+
+def make_quiver_plots(dirname, run_id, testname, field_info,
+                      time_idxs, slices, plotdir=None,
+                      override_dirname=False, **kwargs):
+    """
+    A routine for controlling the auto-generation of quiver plots of vector
+    fields from netCDF field data.
+
+    :arg dirname:          the name of the directory with the data
+    :arg run_id:           the ID of the run to be plotted
+    :arg testname:         a string to name the plots, usually based on the
+                           specific transport test case used for the run to be
+                           plotted. This is also used for identifying specific
+                           decorations for the plots.
+    :arg field_info:       a list of tuples:
+                          (field_name, field_component_X, field_component_Y).
+    :arg time_idxs:        a list of the integers that index the points in time
+                           at which the data was dumped. If the string 'all' is
+                           given it will be plotted at all times.
+    :arg slices:           the slices on which to extract the fields. Can be a
+                           list, e.g. ['xy', 'xz'], or a list of lists which
+                           specifies the indices for the slices,
+                           e.g. [['xy', 0, 1], ['yz', -1]]. Slices are not
+                           relevant to 1D domains, and must be specified for
+                           3D domains.
+    :arg plotdir:          (Optional) the name of the directory to output the
+                           plots to. If None (the default value) then plotdir
+                           will be the same as dirname.
+    :arg override_dirname: (Optional) Boolean for determining whether to
+                           override the default path to the dirname
+    **kwargs               Other keyword arguments to be passed through for
+                           producing field plots.
+    """
+
+    # Determine whether we are 1D, 2D or 3D
+    if override_dirname:
+        filename = dirname
+    else:
+        filename = 'results/'+dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
+
+    data_file = Dataset(filename, 'r')
+
+    topological_dim = data_file.variables['topological_dimension'][0]
+
+    # Check that slices are appropriate
+    if (topological_dim == 1):
+        raise ValueError('Cannot do quiver plots for 1D data')
+
+    # allow 'all' as a time option
+    if time_idxs == 'all':
+        time_idxs = range(len(data_file['time'][:]))
+    elif isinstance(time_idxs, int):
+        time_idxs = [time_idxs]
+
+    if isinstance(field_info, tuple):
+        field_info = [field_info]
+
+    if isinstance(slices, str):
+        slices = [slices]
+
+    # Flags for adding options to kwargs
+    xlabel_added = False
+    xlims_added = False
+    xticklabels_added = False
+    ylabel_added = False
+    ylims_added = False
+    yticklabels_added = False
+    extra_field_added = False
+
+    #--------------------------------------------------------------------------#
+
+    # Now loop through details and pass them to an individual plotter
+    for time_idx in time_idxs:
+        for field_stuff in field_info:
+
+            if len(field_stuff) != 3:
+                raise ValueError('field_info needs to be list of tuples of length 3')
+            field_name, field_X_name, field_Y_name = field_stuff
+
+            # Consider case of looping through slices
+            if slices is None:
+                raise ValueError('slices must be specified')
+
+            for slice_type in slices:
+
+                # Check if slice_type is a list and extract indices if so
+                if isinstance(slice_type, list):
+                    slice_name = slice_type[0]
+                    slice_idxs = slice_type[1:] # first element should be name
+                else:
+                    # If no slice_idxs specified, use 0
+                    slice_idxs = [0]
+                    slice_name = slice_type
+
+                for slice_idx in slice_idxs:
+
+                    if plotdir is None:
+                        plotdir = 'results/'+dirname+'/figures'
+                    plotname = '%s/%s_%s_slice_%s_run_%s_time_%s.png' % (plotdir, testname, field_name, slice_name,
+                                                                         str(run_id), str(time_idx))
+
+
+                    coords_X, coords_Y, field_X_data, time, \
+                    coord_labels, coord_lims, coord_ticks,  \
+                    slice_label = extract_2D_data(data_file, field_X_name, time_idx,
+                                                  slice_name=slice_name, slice_idx=slice_idx)
+
+                    coords_X, coords_Y, field_Y_data, time, \
+                    coord_labels, coord_lims, coord_ticks,  \
+                    slice_label = extract_2D_data(data_file, field_Y_name, time_idx,
+                                                  slice_name=slice_name, slice_idx=slice_idx)
+
+                    # Extract second field data if we need it
+                    if 'extra_field_name' in kwargs.keys():
+                        coords_X, coords_Y, extra_field_data, time, \
+                        coord_labels, coord_lims, coord_ticks, \
+                        slice_label = extract_2D_data(data_file, kwargs['extra_field_name'], time_idx,
+                                                      slice_name=slice_name, slice_idx=slice_idx)
+                        kwargs['extra_field_data'] = extra_field_data
+                        extra_field_added = True
+
+
+                    # Add plotting details to kwargs if they were not already there
+                    if 'xlabel' not in kwargs.keys():
+                        kwargs['xlabel'] = coord_labels[0]
+                        xlabel_added = True
+                    if 'xlims' not in kwargs.keys():
+                        kwargs['xlims'] = coord_lims[0]
+                        xlims_added = True
+                    if 'xticklabels' not in kwargs.keys():
+                        kwargs['xticklabels'] = coord_ticks[0]
+                        xticklabels_added = True
+                    if 'ylabel' not in kwargs.keys():
+                        kwargs['ylabel'] = coord_labels[1]
+                        ylabel_added = True
+                    if 'ylims' not in kwargs.keys():
+                        kwargs['ylims'] = coord_lims[1]
+                        ylims_added = True
+                    if 'yticklabels' not in kwargs.keys():
+                        kwargs['yticklabels'] = coord_ticks[1]
+                        yticklabels_added = True
+
+                    individual_quiver_plot(coords_X, coords_Y, field_X_data, field_Y_data,
+                                           testname=testname, plotname=plotname, time=time,
+                                           field_name=field_name, slice_name=slice_name,
+                                           slice_idx=slice_idx, slice_label=slice_label,
+                                           **kwargs)
+
+                    # Remove any added options
                     if xlabel_added:
                         kwargs.pop('xlabel')
                         xlabel_added = False

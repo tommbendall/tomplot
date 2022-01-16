@@ -10,7 +10,7 @@ from tomplot import make_field_plots, make_convergence_plots, make_time_series_p
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-results_dirname = 'conv_1_quads_cyl_curly_old'
+results_dirname = 'conv_1_quads_cyl_curly'
 plot_times = -1
 field_labels = ['plain','vorticity','recovered']
 plot_testname = 'cylinder_curly'
@@ -28,8 +28,10 @@ data.close()
 # Field plots
 # ---------------------------------------------------------------------------- #
 
+print('Making field plots')
 for run_id in run_ids:
     for i in range(num_setups):
+        print('Field plot %d %d' % (run_id, i))
         field_names = ['F_'+str(i)+'_zonal', 'F_'+str(i)+'_meridional']
 
         make_field_plots(results_dirname, run_id, plot_testname,
@@ -39,7 +41,8 @@ for run_id in run_ids:
 # Convergence plots
 # ---------------------------------------------------------------------------- #
 
-if len(num_1D_cells) > 1:
+if len(run_ids) > 1:
+    print('Making convergence plots')
     field_names = ['F_'+str(i) for i in range(num_setups)]
     make_convergence_plots(results_dirname, 'rncells_per_dim', field_names, run_ids,
                            'L2_error', field_labels=field_labels,
@@ -59,6 +62,7 @@ if len(num_1D_cells) > 1:
 # Time series plots
 # ---------------------------------------------------------------------------- #
 
+print('Making time series plots')
 F_labels = ['F_'+str(i) for i in range(num_setups)]
 make_time_series_plots(results_dirname, F_labels, run_ids[-1], 'L2',
                        field_labels=field_labels, testname=plot_testname)

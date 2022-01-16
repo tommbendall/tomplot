@@ -354,7 +354,7 @@ def axes_limits_labels_and_titles(ax, xlabel=None, xlabelpad=None, xlims=None,
         ax.set_ylabel(ylabel, labelpad=ylabelpad)
     if title is not None:
         ax.set_title(title, pad=titlepad)
-    elif (title_method is not None or title_method != 'none'):
+    elif (title_method is not None and title_method != 'none'):
         # We have a method for generating a title if one hasn't been provided
         if title_method == 'slice':
             title = slice_label
@@ -364,14 +364,26 @@ def axes_limits_labels_and_titles(ax, xlabel=None, xlabelpad=None, xlims=None,
             title = 'min: %2.2e, max: %2.2e' % (field_min, field_max)
         elif title_method == 'full':
             if slice_label is None and time is None:
-                title = 'min: %2.2e, max: %2.2e' % (field_min, field_max)
+                if field_min is None:
+                    title = ''
+                else:
+                    title = 'min: %2.2e, max: %2.2e' % (field_min, field_max)
             elif slice_label is None:
-                title = 'min: %2.2e, max: %2.2e, ' % (field_min, field_max)
-                title += 'time: '+get_time_string(time, time_method)
+                if field_min is None:
+                    title = 'time: '+get_time_string(time, time_method)
+                else:
+                    title = 'min: %2.2e, max: %2.2e, ' % (field_min, field_max)
+                    title += 'time: '+get_time_string(time, time_method)
             elif time is None:
-                title = slice_label+', min: %2.2e, max: %2.2e' % (field_min, field_max)
+                if field_min is None:
+                    title = slice_label
+                else:
+                    title = slice_label+', min: %2.2e, max: %2.2e' % (field_min, field_max)
             else:
-                title = slice_label+', min: %2.2e, max: %2.2e, ' % (field_min, field_max)
+                if field_min is None:
+                    title = slice_label
+                else:
+                    title = slice_label+', min: %2.2e, max: %2.2e, ' % (field_min, field_max)
                 title += 'time: '+get_time_string(time, time_method)
         else:
             raise ValueError('title_method %s not recognised' % title_method)
