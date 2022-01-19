@@ -17,7 +17,8 @@ from .quiver_plot import individual_quiver_plot
 
 def make_field_plots(dirname, run_id, testname, fields,
                      time_idxs, slices=None, plotdir=None,
-                     override_dirname=False, **kwargs):
+                     override_dirname=False, plot_coords_1d=None,
+                     **kwargs):
     """
     A routine for controlling the auto-generation of plots of fields from
     netCDF field data.
@@ -43,6 +44,9 @@ def make_field_plots(dirname, run_id, testname, fields,
                            will be the same as dirname.
     :arg override_dirname: (Optional) Boolean for determining whether to
                            override the default path to the dirname
+    :arg plot_coords_1d:   (Optional) An array of 1D arrays of the points at which
+                           to plot. If not specified then this will be determined
+                           from the data
     **kwargs               Other keyword arguments to be passed through for
                            producing field plots.
     """
@@ -84,6 +88,7 @@ def make_field_plots(dirname, run_id, testname, fields,
     ylims_added = False
     yticklabels_added = False
     extra_field_added = False
+    central_lon = kwargs['spherical_centre'][0] if 'spherical_centre' in kwargs.keys() else 0.0
 
     #--------------------------------------------------------------------------#
 
@@ -115,8 +120,8 @@ def make_field_plots(dirname, run_id, testname, fields,
 
                             coords, field_data, time, \
                             coord_label, coord_lims, \
-                            coord_ticks, slice_label = extract_1D_data(data_file, field, time_idx,
-                                                                       slice_name=slice_name, slice_idx=slice_idx)
+                            coord_ticks, slice_label = extract_1D_data(data_file, field, time_idx, slice_name=slice_name,
+                                                                       slice_idx=slice_idx, plot_coords_1d=plot_coords_1d)
 
                             if 'xlabel' not in kwargs.keys():
                                 kwargs['xlabel'] = coord_label
@@ -148,14 +153,16 @@ def make_field_plots(dirname, run_id, testname, fields,
                             coords_X, coords_Y, field_data, time, \
                             coord_labels, coord_lims, coord_ticks, \
                             slice_label = extract_2D_data(data_file, field, time_idx,
-                                                          slice_name=slice_name, slice_idx=slice_idx)
+                                                          slice_name=slice_name, slice_idx=slice_idx,
+                                                          central_lon=central_lon, plot_coords_1d=plot_coords_1d)
 
                             # Extract second field data if we need it
                             if 'extra_field_name' in kwargs.keys():
                                 coords_X, coords_Y, extra_field_data, time, \
                                 coord_labels, coord_lims, coord_ticks, \
                                 slice_label = extract_2D_data(data_file, kwargs['extra_field_name'], time_idx,
-                                                              slice_name=slice_name, slice_idx=slice_idx)
+                                                              slice_name=slice_name, slice_idx=slice_idx,
+                                                              central_lon=central_lon, plot_coords_1d=plot_coords_1d)
                                 kwargs['extra_field_data'] = extra_field_data
                                 extra_field_added = True
 
@@ -222,7 +229,8 @@ def make_field_plots(dirname, run_id, testname, fields,
                     coords, field_data, time, \
                     coord_label, coord_lims, \
                     coord_ticks, slice_label = extract_1D_data(data_file, field, time_idx,
-                                                               slice_name='x', slice_idx=None)
+                                                               slice_name='x', slice_idx=None,
+                                                               plot_coords_1d=plot_coords_1d)
 
                     # Add plotting details to kwargs if they are not already there
                     if 'xlabel' not in kwargs.keys():
@@ -255,14 +263,17 @@ def make_field_plots(dirname, run_id, testname, fields,
                     coords_X, coords_Y, field_data, time, \
                     coord_labels, coord_lims, coord_ticks, \
                     slice_label = extract_2D_data(data_file, field, time_idx,
-                                                  slice_name=None, slice_idx=None)
+                                                  slice_name=None, slice_idx=None,
+                                                  central_lon=central_lon,
+                                                  plot_coords_1d=plot_coords_1d)
 
                     # Extract second field data if we need it
                     if 'extra_field_name' in kwargs.keys():
                         coords_X, coords_Y, extra_field_data, time, \
                         coord_labels, coord_lims, coord_ticks, \
                         slice_label = extract_2D_data(data_file, kwargs['extra_field_name'], time_idx,
-                                                      slice_name=None, slice_idx=None)
+                                                      slice_name=None, slice_idx=None,
+                                                      central_lon=central_lon)
                         kwargs['extra_field_data'] = extra_field_data
                         extra_field_added = True
 
@@ -320,7 +331,7 @@ def make_field_plots(dirname, run_id, testname, fields,
 
 def make_quiver_plots(dirname, run_id, testname, field_info,
                       time_idxs, slices, plotdir=None,
-                      override_dirname=False, **kwargs):
+                      override_dirname=False, plot_coords_1d=None, **kwargs):
     """
     A routine for controlling the auto-generation of quiver plots of vector
     fields from netCDF field data.
@@ -347,6 +358,9 @@ def make_quiver_plots(dirname, run_id, testname, field_info,
                            will be the same as dirname.
     :arg override_dirname: (Optional) Boolean for determining whether to
                            override the default path to the dirname
+    :arg plot_coords_1d:   (Optional) An array of 1D arrays of the points at which
+                           to plot. If not specified then this will be determined
+                           from the data
     **kwargs               Other keyword arguments to be passed through for
                            producing field plots.
     """
@@ -385,6 +399,7 @@ def make_quiver_plots(dirname, run_id, testname, field_info,
     ylims_added = False
     yticklabels_added = False
     extra_field_added = False
+    central_lon = kwargs['spherical_centre'][0] if 'spherical_centre' in kwargs.keys() else 0.0
 
     #--------------------------------------------------------------------------#
 
@@ -422,19 +437,24 @@ def make_quiver_plots(dirname, run_id, testname, field_info,
                     coords_X, coords_Y, field_X_data, time, \
                     coord_labels, coord_lims, coord_ticks,  \
                     slice_label = extract_2D_data(data_file, field_X_name, time_idx,
-                                                  slice_name=slice_name, slice_idx=slice_idx)
+                                                  slice_name=slice_name, slice_idx=slice_idx,
+                                                  central_lon=central_lon)
 
                     coords_X, coords_Y, field_Y_data, time, \
                     coord_labels, coord_lims, coord_ticks,  \
                     slice_label = extract_2D_data(data_file, field_Y_name, time_idx,
-                                                  slice_name=slice_name, slice_idx=slice_idx)
+                                                  slice_name=slice_name, slice_idx=slice_idx,
+                                                  central_lon=central_lon,
+                                                  plot_coords_1d=plot_coords_1d)
 
                     # Extract second field data if we need it
                     if 'extra_field_name' in kwargs.keys():
                         coords_X, coords_Y, extra_field_data, time, \
                         coord_labels, coord_lims, coord_ticks, \
                         slice_label = extract_2D_data(data_file, kwargs['extra_field_name'], time_idx,
-                                                      slice_name=slice_name, slice_idx=slice_idx)
+                                                      slice_name=slice_name, slice_idx=slice_idx,
+                                                      central_lon=central_lon,
+                                                      plot_coords_1d=plot_coords_1d)
                         kwargs['extra_field_data'] = extra_field_data
                         extra_field_added = True
 

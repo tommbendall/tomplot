@@ -11,11 +11,17 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                                   figsize=(8,8), field_name=None,
                                   extra_field_data=None, extra_field_name=None,
                                   slice_name=None, slice_idx=None,
+                                  projection=None,
+                                  spherical_centre=(0.0, 0.0),
                                   cbar_label=None,
+                                  cbar_labelpad=None,
+                                  cbar_ticks=None,
+                                  cbar_format=None,
+                                  no_cbar=False,
                                   contours=None,
                                   extra_contours=None,
                                   contour_lines=True,
-                                  colour_scheme='Blues', restricted_cmap=True,
+                                  colour_scheme='Blues', restricted_cmap=False,
                                   extend_cmap=True, remove_contour=False,
                                   linestyle=None, linewidth=1,
                                   linecolours='black',
@@ -70,7 +76,30 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
         plt.rc('font',**font)
 
         fig = plt.figure(1, figsize=figsize)
-        ax = fig.add_subplot(111)
+
+        if projection is None:
+            ax = fig.add_subplot(111)
+        elif projection == 'orthographic':
+            import cartopy.crs as ccrs
+            ax = fig.add_subplot(1, 1, 1,
+                                 projection=ccrs.Orthographic(spherical_centre[0]*180./np.pi,
+                                                              spherical_centre[1]*180./np.pi))
+        else:
+            raise ValueError('Projection %s not implemented' % projection)
+
+    if projection is None:
+        crs = None
+        extent = None
+    elif projection == 'orthographic':
+        import cartopy.crs as ccrs
+        ax.set_global()
+        coords_X *= 360.0/(2*np.pi)
+        coords_Y *= 360.0/(2*np.pi)
+        crs = ccrs.PlateCarree()
+        extent = (0, 360, -90, 90)
+    else:
+        raise ValueError('Projection %s not implemented' % projection)
+
 
     #--------------------------------------------------------------------------#
     # Determine contours
@@ -125,7 +154,8 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
     #--------------------------------------------------------------------------#
 
     cf = ax.contourf(coords_X, coords_Y, field_data, colour_contours,
-                     cmap=cmap, extend=extend)
+                     cmap=cmap, extent=extent, transform=crs,
+                     origin='lower')
 
     if extend_cmap:
         # Set colours for over and under shoots
@@ -137,26 +167,34 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
             linestyles = 'solid'
         cl = ax.contour(coords_X, coords_Y, field_data, line_contours,
                         linewidths=linewidth, colors=linecolours,
-                        linestyles=linestyle)
+                        linestyles=linestyle, transform=crs, extent=extent,
+                        origin='lower')
 
     if extra_field_data is not None:
         cle = ax.contour(coords_X, coords_Y, extra_field_data,
                          extra_contours, linewidths=linewidth,
-                         colors=linecolours, linestyles='dashed')
+                         colors=linecolours, linestyles='dashed',
+                         transform=crs, extent=extent, origin='lower')
 
     # FIXME: should this not be associated with the axis?
-    if cbar_label is None:
+    if cbar_label is None and field_name is not None:
         cbar_label = get_label(field_name)
-    plt.colorbar(cf, label=cbar_label)
+    if not no_cbar:
+        cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks)
+        if cbar_label is not None:
+            cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
     # Add axes labels, set limits and add a title
-    axes_limits_labels_and_titles(ax, xlabel=xlabel, xlabelpad=xlabelpad, xlims=xlims,
-                                  xticks=xticks, xticklabels=xticklabels,
-                                  ylabel=ylabel, ylabelpad=ylabelpad, ylims=ylims,
-                                  yticks=yticks, yticklabels=yticklabels,
-                                  title=title, title_method=title_method, titlepad=titlepad,
-                                  slice_label=slice_label, time=time, time_method=time_method,
-                                  field_min=field_min, field_max=field_max)
+    if projection is None:
+        axes_limits_labels_and_titles(ax, xlabel=xlabel, xlabelpad=xlabelpad, xlims=xlims,
+                                      xticks=xticks, xticklabels=xticklabels,
+                                      ylabel=ylabel, ylabelpad=ylabelpad, ylims=ylims,
+                                      yticks=yticks, yticklabels=yticklabels,
+                                      title=title, title_method=title_method, titlepad=titlepad,
+                                      slice_label=slice_label, time=time, time_method=time_method,
+                                      field_min=field_min, field_max=field_max)
+    else:
+        ax.gridlines()
 
     if text is not None:
         if text_pos is None or not isinstance(text_pos, tuple):
@@ -170,7 +208,7 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
     #--------------------------------------------------------------------------#
 
     if ax_provided:
-        return ax
+        return cf
     else:
 
         fig.savefig(plotname, bbox_inches='tight')

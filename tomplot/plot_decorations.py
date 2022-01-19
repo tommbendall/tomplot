@@ -349,7 +349,7 @@ def axes_limits_labels_and_titles(ax, xlabel=None, xlabelpad=None, xlims=None,
         ax.set_xlabel(xlabel, labelpad=xlabelpad)
     if ylabel is not None:
         if ylabelpad is None and yticklabels is not None:
-            if yticklabels[0] == '$-\\pi/2$':
+            if yticklabels[0] == '$-\pi/2$':
                 ylabelpad = -40
         ax.set_ylabel(ylabel, labelpad=ylabelpad)
     if title is not None:

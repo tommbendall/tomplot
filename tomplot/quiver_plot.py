@@ -13,12 +13,18 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
                            slice_name=None, slice_idx=None,
                            quiver_npts=1,
                            units='xy', scale=None, angles='xy', scale_units='xy',
+                           restrict_quivers=False,
+                           projection=None,
+                           spherical_centre=(0.0, 0.0),
                            cbar_label=None,
+                           cbar_labelpad=None,
+                           cbar_ticks=None,
+                           cbar_format=None,
                            no_cbar=False,
                            contour_method=None,
                            contours=None,
                            contour_lines=True,
-                           colour_scheme='Blues', restricted_cmap=True,
+                           colour_scheme='Blues', restricted_cmap=False,
                            extend_cmap=True, remove_contour=False,
                            linestyle=None, linewidth=1,
                            linecolours='black',
@@ -73,6 +79,29 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
 
         fig = plt.figure(1, figsize=figsize)
         ax = fig.add_subplot(111)
+
+        if projection is None:
+            ax = fig.add_subplot(111)
+        elif projection == 'orthographic':
+            import cartopy.crs as ccrs
+            ax = fig.add_subplot(1, 1, 1,
+                                 projection=ccrs.Orthographic(spherical_centre[0]*180./np.pi,
+                                                              spherical_centre[1]*180./np.pi))
+        else:
+            raise ValueError('Projection %s not implemented' % projection)
+
+    if projection is None:
+        crs = None
+        extent = None
+    elif projection == 'orthographic':
+        import cartopy.crs as ccrs
+        ax.set_global()
+        coords_X *= 360.0/(2*np.pi)
+        coords_Y *= 360.0/(2*np.pi)
+        crs = ccrs.PlateCarree()
+        extent = (0, 360, -90, 90)
+    else:
+        raise ValueError('Projection %s not implemented' % projection)
 
     #--------------------------------------------------------------------------#
     # Determine contour data
@@ -139,7 +168,8 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
 
     if contour_method is not None:
         cf = ax.contourf(coords_X, coords_Y, contour_data, colour_contours,
-                         cmap=cmap, extend=extend)
+                         cmap=cmap, extend=extend, transform=crs, extent=extent,
+                         origin='lower')
 
         if extend_cmap:
             # Set colours for over and under shoots
@@ -150,21 +180,55 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
             if linestyle is not None:
                 cl = ax.contour(coords_X, coords_Y, contour_data, line_contours,
                                 linewidths=linewidth, colors=linecolours,
-                                linestyles=linestyle)
+                                linestyles=linestyle, transform=crs, extent=extent,
+                                origin='lower')
 
         # FIXME: should this not be associated with the axis?
-        if cbar_label is None:
+        if cbar_label is None and field_name is not None:
             cbar_label = get_label(field_name)
         if not no_cbar:
-            plt.colorbar(cf, label=cbar_label)
+            cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks)
+            if cbar_label is not None:
+                cb.set_label(cbar_label, labelpad=cbar_labelpad)
+
+    #--------------------------------------------------------------------------#
+    # Restrict extent of quivers if required
+    #--------------------------------------------------------------------------#
+
+    if restrict_quivers:
+        # Assume that we are chopping off the top and bottom 10% of values
+        # TODO: add option for this
+        # TODO: do this in its own function?
+        top_cutoff = np.min(coords_Y) + 0.9*(np.max(coords_Y) - np.min(coords_Y))
+        bot_cutoff = np.min(coords_Y) + 0.1*(np.max(coords_Y) - np.min(coords_Y))
+
+        # Use numpy function to do elementwise masking
+        filter_array = np.logical_and(bot_cutoff <= coords_Y, coords_Y <= top_cutoff)
+        # X coordinate shouldn't be restricted
+        filter_shape = (np.shape(coords_Y)[0],
+                        # Results in a 1D array
+                        int(np.shape(coords_Y[filter_array])[0] / np.shape(coords_Y)[0]))
+
+        # Need to reshape arrays after filtering
+        field_data_X = np.reshape(field_data_X[filter_array], filter_shape)
+        field_data_Y = np.reshape(field_data_Y[filter_array], filter_shape)
+        coords_X = np.reshape(coords_X[filter_array], filter_shape)
+        coords_Y = np.reshape(coords_Y[filter_array], filter_shape)
 
     #--------------------------------------------------------------------------#
     # Plot quivers
     #--------------------------------------------------------------------------#
 
-    ax.quiver(coords_X[::quiver_npts,::quiver_npts], coords_Y[::quiver_npts,::quiver_npts],
-              field_data_X[::quiver_npts,::quiver_npts], field_data_Y[::quiver_npts,::quiver_npts],
-              units=units, scale=scale, scale_units=scale_units, angles=angles)
+    if crs is None:
+        # separately handle this case as None transform results in no arrows
+        ax.quiver(coords_X[::quiver_npts,::quiver_npts], coords_Y[::quiver_npts,::quiver_npts],
+                  field_data_X[::quiver_npts,::quiver_npts], field_data_Y[::quiver_npts,::quiver_npts],
+                  units=units, scale=scale, scale_units=scale_units, angles=angles)
+    else:
+        ax.quiver(coords_X[::quiver_npts,::quiver_npts], coords_Y[::quiver_npts,::quiver_npts],
+                  field_data_X[::quiver_npts,::quiver_npts], field_data_Y[::quiver_npts,::quiver_npts],
+                  units=units, scale=scale, scale_units=scale_units, angles=angles, transform=crs)
+
 
     # Add axes labels, set limits and add a title
     axes_limits_labels_and_titles(ax, xlabel=xlabel, xlabelpad=xlabelpad, xlims=xlims,

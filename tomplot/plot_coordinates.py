@@ -5,7 +5,7 @@ import numpy as np
 from .plot_decorations import get_domain_label
 
 def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
-                  length_units='m', angular_units='rad'):
+                  length_units='m', angular_units='rad', plot_coords_1d=None):
     """
     Returns coordinates for the mesh and the coordinates of the data points
     for use in creating 1D slice plots.
@@ -15,6 +15,9 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
     :arg slice_name: the name of the slice
     :arg slice_idx:  the index to slice along
     :arg num_points: the number of points for the plotting mesh
+    :arg plot_coords_1d: (Optional) An array of 1D arrays of the points at which
+                         to plot. If not specified then this will be determined
+                         from the data
     """
 
     # TODO: allow different slice indices for 1D slices of 3D data
@@ -35,7 +38,9 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
 
     dim = data.variables['topological_dimension'][0]
 
-    if num_points is not None:
+    if plot_coords_1d is not None:
+        num_plot_points = tuple([len(i) for i in plot_coords_1d])
+    elif num_points is not None:
         num_plot_points = num_points
     elif slice_name == 'z':
         num_plot_points = int(data.variables['nz'][0])
@@ -54,8 +59,9 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
 
 
     if dim == 1:
-        plot_coords_1d = (np.linspace(domain_extents['x'][0],
-                                      domain_extents['x'][1], num_plot_points),)
+        if plot_coords_1d is None:
+            plot_coords_1d = (np.linspace(domain_extents['x'][0],
+                                          domain_extents['x'][1], num_plot_points),)
         plot_coords = plot_coords_1d
         interp_coords = plot_coords_1d
 
@@ -64,16 +70,18 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
 
     elif dim == 2:
         if 'y' in names.keys():
-            plot_coords_1d = (np.linspace(domain_extents['x'][0],
-                                          domain_extents['x'][1], num_plot_points),
-                              np.linspace(domain_extents['y'][0],
-                                          domain_extents['y'][1], num_plot_points))
+            if plot_coords_1d is None:
+                plot_coords_1d = (np.linspace(domain_extents['x'][0],
+                                              domain_extents['x'][1], num_plot_points),
+                                  np.linspace(domain_extents['y'][0],
+                                              domain_extents['y'][1], num_plot_points))
 
         else:
-            plot_coords_1d = (np.linspace(domain_extents['x'][0],
-                                          domain_extents['x'][1], num_plot_points),
-                              np.linspace(domain_extents['z'][0],
-                                          domain_extents['z'][1], num_plot_points))
+            if plot_coords_1d is None:
+                plot_coords_1d = (np.linspace(domain_extents['x'][0],
+                                              domain_extents['x'][1], num_plot_points),
+                                  np.linspace(domain_extents['z'][0],
+                                              domain_extents['z'][1], num_plot_points))
 
         if slice_name == 'x':
             plot_coords = plot_coords_1d[0]
@@ -160,7 +168,6 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
 
     if len(names.keys()) == 1:
         data_coords = (data.variables[names['x']+'_'+space_name][:],)
-        plot_coords = plot_coords_1d
     elif len(names.keys()) == 2:
         if 'y' in names.keys():
             data_coords = np.array([[data_x, data_y] for data_x, data_y in
@@ -182,16 +189,22 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
 
 
 def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
-                  length_units='m', angular_units='rad'):
+                  length_units='m', angular_units='rad', central_lon=0.0,
+                  plot_coords_1d=None):
     """
     Returns coordinates for the mesh and the coordinates of the data points
     for use in creating 2D slice plots.
 
-    :arg data:       netCDF data file
-    :arg space_name: the name of the space to get the coordinates for
-    :arg slice_name: the name of the slice
-    :arg slice_idx:  the index to slice along
-    :arg num_points: the number of points for the plotting mesh
+    :arg data:        netCDF data file
+    :arg space_name:  the name of the space to get the coordinates for
+    :arg slice_name:  the name of the slice
+    :arg slice_idx:   the index to slice along
+    :arg num_points:  the number of points for the plotting mesh
+    :arg central_lon: (Optional) longitude at centre of plot. Only implemented
+                      for spherical domains.
+    :arg plot_coords_1d: (Optional) An array of 1D arrays of the points at which
+                         to plot. If not specified then this will be determined
+                         from the data
     """
 
     domain = data.variables['domain'][0]
@@ -221,7 +234,7 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
     #--------------------------------------------------------------------------#
 
     domain = data.variables['domain'][0]
-    names, domain_extents, ticklabels = get_domain_properties(data)
+    names, domain_extents, ticklabels = get_domain_properties(data, central_lon)
 
     coord_lims = [domain_extents[slice_name[0]], domain_extents[slice_name[1]]]
     coord_ticks = [ticklabels[slice_name[0]], ticklabels[slice_name[1]]]
@@ -234,7 +247,9 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
     # Determine number of points in each direction
     #--------------------------------------------------------------------------#
 
-    if num_points is not None:
+    if plot_coords_1d is not None:
+        num = tuple([len(i) for i in plot_coords_1d])
+    elif num_points is not None:
         # num points can be an integer or a 2D tuple
         if type(num_points) == int:
             num = tuple([num_points for i in range(dim)])
@@ -294,18 +309,20 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
         slice_label = None
 
         if 'y' in names.keys():
-            plot_coords_1d = (np.linspace(domain_extents['x'][0],
-                                          domain_extents['x'][1], num[0]),
-                              np.linspace(domain_extents['y'][0],
-                                          domain_extents['y'][1], num[1]))
+            if plot_coords_1d is None:
+                plot_coords_1d = (np.linspace(domain_extents['x'][0],
+                                              domain_extents['x'][1], num[0]),
+                                  np.linspace(domain_extents['y'][0],
+                                              domain_extents['y'][1], num[1]))
             coord_lims = [domain_extents['x'], domain_extents['y']]
             coord_ticks = [ticklabels['x'], ticklabels['y']]
 
         else:
-            plot_coords_1d = (np.linspace(domain_extents['x'][0],
-                                          domain_extents['x'][1], num[0]),
-                              np.linspace(domain_extents['z'][0],
-                                          domain_extents['z'][1], num[1]))
+            if plot_coords_1d is None:
+                plot_coords_1d = (np.linspace(domain_extents['x'][0],
+                                              domain_extents['x'][1], num[0]),
+                                  np.linspace(domain_extents['z'][0],
+                                              domain_extents['z'][1], num[1]))
             coord_lims = [domain_extents['x'], domain_extents['z']]
             coord_ticks = [ticklabels['x'], ticklabels['z']]
 
@@ -317,12 +334,13 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
                                     for j in range(num_plot_points_y)])
 
     else:
-        plot_coords_1d = (np.linspace(domain_extents['x'][0],
-                                      domain_extents['x'][1], num[0]),
-                          np.linspace(domain_extents['y'][0],
-                                      domain_extents['y'][1], num[1]),
-                          np.linspace(domain_extents['z'][0],
-                                      domain_extents['z'][1], num[2]))
+        if plot_coords_1d is not None:
+            plot_coords_1d = (np.linspace(domain_extents['x'][0],
+                                          domain_extents['x'][1], num[0]),
+                              np.linspace(domain_extents['y'][0],
+                                          domain_extents['y'][1], num[1]),
+                              np.linspace(domain_extents['z'][0],
+                                          domain_extents['z'][1], num[2]))
 
         if slice_name == 'xy':
             plot_coords = np.meshgrid(plot_coords_1d[0], plot_coords_1d[1])
@@ -391,14 +409,41 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
                                     data.variables[names['y']+'_'+space_name][:],
                                     data.variables[names['z']+'_'+space_name][:])])
 
+    # FIXME: Need a routine for adjusting coordinates
+
+    # Adjust longitudinal coordinates if necessary
+    # FIXME: Only implemented for sphere
+    if domain == 'sphere' and names['x'] == 'lon':
+        # Assume longitude data is first in the array
+        # Adjust coordinates for all points outside of branch point
+        data_coords.T[0][data_coords.T[0] < (central_lon - np.pi)] += 2*np.pi
+        data_coords.T[0][data_coords.T[0] > (central_lon + np.pi)] -= 2*np.pi
+
+    # Adjust cylinder phi coordinates to have dimensions of length
+    # FIXME: Only implemented for cylinder
+    if domain == 'cylinder' and names['x'] == 'phi':
+        # Assume phi data is first in the array
+        # Adjust coordinates for all points outside of branch point
+        radius = data.variables['base_radius'][0]
+        plot_coords[0] *= radius
+        data_coords.T[0] *= radius
+        interp_coords.T[0] *= radius
+        coord_lims[0] = domain_extents['x']*radius
+        coord_labels[0] = r'$r\phi \ / $ m'
+        coord_ticks[0] = None
+
     num_data_points = len(data_coords[0])
 
     return plot_coords, data_coords, interp_coords, coord_labels, coord_lims, coord_ticks, slice_label
 
 
-def get_domain_properties(data):
+def get_domain_properties(data, central_lon=0.0):
     """
     Get dictionaries of information about the domain from the data metadata.
+
+    :arg central_lon: (Optional) Longitude of centre of plot. Currently only
+                      implemented for spherical domains. Default is 0.0.
+                      Should be given in radians.
     """
 
     domain = data.variables['domain'][0]
@@ -462,9 +507,22 @@ def get_domain_properties(data):
 
     elif domain == 'sphere':
         names = {'x':'lon', 'y':'lat'}
-        domain_extents = {'x': (-np.pi, np.pi),
+        domain_extents = {'x': (-np.pi+central_lon, np.pi+central_lon),
                           'y': (-np.pi/2, np.pi/2)}
-        ticklabels = {'x':(r'$-\pi$', r'$\pi$'),
+        if abs(central_lon) < 1e-6:
+            xticklabels = (r'$-\pi$', r'$\pi$')
+        elif abs(central_lon - np.pi) < 1e-6:
+            xticklabels = (r'0', r'$2\pi$')
+        elif abs(central_lon + np.pi) < 1e-6:
+            xticklabels = (r'$-2\pi$', r'$0$')
+        elif abs(central_lon + np.pi/2) < 1e-6:
+            xticklabels = (r'$-3\pi/2$', r'$\pi/2$')
+        elif abs(central_lon - np.pi/2) < 1e-6:
+            xticklabels = (r'$-\pi/2$', r'$3\pi/2$')
+        else:
+            xticklabels = None
+
+        ticklabels = {'x':xticklabels,
                       'y':(r'$-\pi/2$', r'$\pi/2$'),
                       'z':None}
         if extruded:

@@ -5,7 +5,7 @@ Makes quiver plots for the planar demo case
 from netCDF4 import Dataset
 import matplotlib.pyplot as plt
 import numpy as np
-from tomplot import individual_quiver_plot, extract_2D_data
+from tomplot import individual_quiver_plot, extract_2D_data, make_convergence_plots
 
 # ---------------------------------------------------------------------------- #
 # Things that can be altered and parameters for the test case
@@ -13,10 +13,12 @@ from tomplot import individual_quiver_plot, extract_2D_data
 
 results_dirnames = ['demo_1_RTCF1_planar', 'demo_2_RTCF2_planar']
 plot_times = 'all'
-run_id = 2
+run_id = 0
+num_runs = 3
 field_info  = ('F_0', 'F_0_x', 'F_0_y')
 cbar_label = r'$|F| \ /$ m s$^{-1}$'
 titles = [r'RTCF$_1$', r'RTCF$_2$']
+colour_scheme = 'OrRd'
 
 # ---------------------------------------------------------------------------- #
 # Things that are likely the same
@@ -39,6 +41,16 @@ font = {'size':24}
 plt.rc('font',**font)
 
 # ---------------------------------------------------------------------------- #
+# Final convergence test
+# ---------------------------------------------------------------------------- #
+
+plot_dirs = [results_dirname for results_dirname in results_dirnames]
+field_labels = titles
+make_convergence_plots(plot_dirs, 'rncells_per_dim', 'F_0', range(num_runs),
+                       'L2_error', testname='convergence_planar',
+                       field_labels=titles)
+
+# ---------------------------------------------------------------------------- #
 # Field plots
 # ---------------------------------------------------------------------------- #
 
@@ -51,11 +63,10 @@ for time_idx in time_idxs:
                                                               str(run_id), str(time_idx))
 
 
-    for ax, dirname, quiver_npts, title in zip(axarray, results_dirnames, [2,1], titles):
+    for i, (ax, dirname, quiver_npts, title, ylabelpad) in enumerate(zip(axarray, results_dirnames, [2,1], titles, [-30, None])):
         # This code is all adapted from plot_control
         filename = 'results/'+dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
         data_file = Dataset(filename, 'r')
-        time_idxs = range(len(data_file['time'][:]))
 
         # Extract data
         coords_X, coords_Y, field_X_data, time, \
@@ -70,18 +81,20 @@ for time_idx in time_idxs:
 
         data_file.close()
 
+        ylabel = coord_labels[1] if i == 0 else None
+
         cf = individual_quiver_plot(coords_X, coords_Y, field_X_data, field_Y_data,
                                     testname=testname, plotname=plotname, time=time,
                                     field_name=field_name, slice_name=slice,
                                     slice_idx=slice_idx, slice_label=slice_label, ax=ax,
                                     contours=np.arange(0.0, 2.4, 0.2), contour_method='magnitude',
-                                    quiver_npts=quiver_npts, scale=0.5,
-                                    title=title, no_cbar=True,
-                                    xlabel=coord_labels[0], ylabel=coord_labels[1],
-                                    xlims=coord_lims[0], ylims=coord_lims[1],
+                                    extend_cmap=False, quiver_npts=quiver_npts, scale=0.5,
+                                    title=title, no_cbar=True, colour_scheme=colour_scheme,
+                                    xlabel=coord_labels[0], ylabel=ylabel,
+                                    xlims=coord_lims[0], ylims=coord_lims[1], ylabelpad=ylabelpad,
                                     xticklabels=coord_ticks[0], yticklabels=coord_ticks[1])
 
-    fig.suptitle('Time: %.2f s' % time)
+    fig.suptitle('Time: %06.2f s' % time)
 
     # Move the subplots to the left to make space for colorbar
     fig.subplots_adjust(right=0.9)
@@ -92,4 +105,3 @@ for time_idx in time_idxs:
 
     fig.savefig(plotname, bbox_inches='tight')
     plt.close()
-
