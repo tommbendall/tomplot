@@ -113,8 +113,8 @@ def make_field_plots(dirname, run_id, testname, fields,
 
                         if plotdir is None:
                             plotdir = 'results/'+dirname+'/figures'
-                        plotname = '%s/%s_%s_slice_%s_run_%s_time_%s.png' % (plotdir, testname, field, slice_name,
-                                                                             str(run_id), str(time_idx))
+                        plotname = '%s/%s_%s_slice_%s_run_%s_time_%02d.png' % (plotdir, testname, field, slice_name,
+                                                                               str(run_id), time_idx)
 
                         if slice_name in ['x','y','z']:
 
@@ -221,8 +221,8 @@ def make_field_plots(dirname, run_id, testname, fields,
 
                 if plotdir is None:
                     plotdir = 'results/'+dirname+'/figures'
-                plotname = '%s/%s_%s_run_%s_time_%s.png' % (plotdir, testname, field,
-                                                            str(run_id), str(time_idx))
+                plotname = '%s/%s_%s_run_%s_time_%02d.png' % (plotdir, testname, field,
+                                                              str(run_id), time_idx)
 
                 if topological_dim == 1:
 
@@ -430,8 +430,8 @@ def make_quiver_plots(dirname, run_id, testname, field_info,
 
                     if plotdir is None:
                         plotdir = 'results/'+dirname+'/figures'
-                    plotname = '%s/%s_%s_slice_%s_run_%s_time_%s.png' % (plotdir, testname, field_name, slice_name,
-                                                                         str(run_id), str(time_idx))
+                    plotname = '%s/%s_%s_slice_%s_run_%s_time_%02d.png' % (plotdir, testname, field_name, slice_name,
+                                                                           str(run_id), time_idx)
 
 
                     coords_X, coords_Y, field_X_data, time, \

@@ -49,8 +49,8 @@ for time_idx in time_idxs:
 
     fig = plt.figure(figsize=(16,8))
 
-    plotname = '%s/quiver_%s_%s_time_%s.png' % (plotdir, testname,
-                                                field_name, str(time_idx))
+    plotname = '%s/quiver_%s_%s_time_%02d.png' % (plotdir, testname,
+                                                  field_name, time_idx)
 
     for i, (spherical_centre, title) in enumerate(zip([(0.0,0.0),(np.pi,0.0)], titles)):
         # This code is all adapted from plot_control

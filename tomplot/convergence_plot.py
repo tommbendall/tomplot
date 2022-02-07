@@ -13,7 +13,8 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                                 linestyles=None, linewidth=2, markersize=8,
                                 fontsize=24, title=None, comparison_lines=None,
                                 ax=None, grid=True, xlabel=None, ylabel=None,
-                                xlim=None, ylim=None):
+                                xlim=None, ylim=None, legend_bbox=(1.0,1.0),
+                                legend_ncol=1, label_style='gradient_full'):
     """
     Makes an individual convergence plot for errors from a global netCDF
     diagnostics file.
@@ -189,7 +190,12 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                 ax.plot(variable_data, best_fit_line(variable_data),
                         linestyle='-', color=colour, lw=linewidth)
 
-                label = label+' gradient: %1.3f' % best_fit_line[1]
+                if label_style == 'gradient_full':
+                    label = label+' gradient: %1.3f' % best_fit_line[1]
+                elif label_style == 'gradient_plain':
+                    label = label+': %1.3f' % best_fit_line[1]
+                elif label_style != 'plain':
+                    raise ValueError('label_style not recognised')
 
             # Plot error points
             ax.plot(variable_data, error_data, color=colour,
@@ -258,8 +264,8 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     #--------------------------------------------------------------------------#
 
     handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc='upper left',
-                    bbox_to_anchor=(1.0,1.0), edgecolor='black')
+    lgd = ax.legend(handles, labels, loc='upper left', ncol=legend_ncol,
+                    bbox_to_anchor=legend_bbox, edgecolor='black')
 
     #--------------------------------------------------------------------------#
     # Save and finish plot

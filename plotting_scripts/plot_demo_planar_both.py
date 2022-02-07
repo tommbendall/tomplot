@@ -59,8 +59,8 @@ for time_idx in time_idxs:
 
     fig, axarray = plt.subplots(1, 2, sharex='col', sharey='row', figsize=(16,8))
 
-    plotname = '%s/both_%s_%s_slice_%s_run_%s_time_%s.png' % (plotdir, testname, field_name, slice,
-                                                              str(run_id), str(time_idx))
+    plotname = '%s/both_%s_%s_slice_%s_run_%s_time_%02d.png' % (plotdir, testname, field_name, slice,
+                                                                str(run_id), time_idx)
 
 
     for i, (ax, dirname, quiver_npts, title, ylabelpad) in enumerate(zip(axarray, results_dirnames, [2,1], titles, [-30, None])):
