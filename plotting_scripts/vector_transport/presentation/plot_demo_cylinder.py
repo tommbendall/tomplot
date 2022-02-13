@@ -37,6 +37,6 @@ for run_id in run_ids:
 
         make_quiver_plots(results_dirname, run_id, plot_testname,
                           field_info, plot_times, 'xy', colour_scheme='OrRd',
-                          contours=np.arange(0.0, 1.4, 0.1), contour_method='magnitude',
+                          contours=np.arange(0.0, 5.0, 0.5), contour_method='magnitude',
                           extend_cmap=False, quiver_npts=2, scale=0.5, cbar_label=cbar_label,
                           ylabelpad=-30, xlabel=r'$\varrho \phi \ / $ m')

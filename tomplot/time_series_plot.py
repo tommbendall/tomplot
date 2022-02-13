@@ -12,7 +12,8 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                                 figsize=(8,8), colours=None, linestyles=None,
                                 linewidth=2, fontsize=24, title=None, ax=None,
                                 grid=True, ylabel=None, xlim=None, ylim=None,
-                                time_units='seconds', normalise=False):
+                                time_units='seconds', normalise=False, format='png',
+                                dpi=None):
     """
     Makes an individual time series plot for fields from a global netCDF
     diagnostics file.
@@ -228,9 +229,9 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                 print('Convergence plot directory not specified. '+
                       'Adding to results/'+dirnames[0]+'/figures')
             plotdir = 'results/'+dirnames[0]+'/figures'
-        plotname = plotdir+'/'+testname+'_'+diagnostic+'.png'
+        plotname = plotdir+'/'+testname+'_'+diagnostic+'.'+format
 
         fig.savefig(plotname, bbox_extra_artists=(lgd,),
-                    bbox_inches='tight')
+                    bbox_inches='tight', dpi=dpi)
 
         plt.close()

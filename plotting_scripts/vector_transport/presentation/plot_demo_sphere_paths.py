@@ -46,7 +46,7 @@ import cartopy.crs as ccrs
 crs = ccrs.PlateCarree()
 
 
-for j in range(6):
+for j in range(4):
     print('Making quiver plot %d' % j)
 
     fig = plt.figure(figsize=(16,8))
@@ -76,27 +76,19 @@ for j in range(6):
         ax = fig.add_subplot(1, 2, 1+i,
                              projection=ccrs.Orthographic(lon_centre, lat_centre))
 
-        if j < 5:
-            cf = individual_quiver_plot(coords_X, coords_Y, field_X_data, field_Y_data,
-                                        testname=testname, plotname=plotname,
-                                        time=time, slice_name=slice,
-                                        slice_idx=0, slice_label=slice_label,
-                                        contours=np.linspace(0.0, 3.0, 16),
-                                        contour_method='magnitude',
-                                        quiver_npts=2, scale=5e-6,
-                                        restrict_quivers=True,
-                                        ax=ax, projection='orthographic',
-                                        colour_scheme=colour_scheme,
-                                        spherical_centre=spherical_centre,
-                                        extend_cmap=False,
-                                        no_cbar=True)
-        # Let final plot be blank
-        else:
-            coords_X *= 180.0/np.pi
-            coords_Y *= 180.0/np.pi
-            zeros = np.zeros_like(coords_X)
-            ax.scatter(coords_X, coords_Y, color='white', transform=crs)
-            ax.gridlines()
+        cf = individual_quiver_plot(coords_X, coords_Y, field_X_data, field_Y_data,
+                                    testname=testname, plotname=plotname,
+                                    time=time, slice_name=slice,
+                                    slice_idx=0, slice_label=slice_label,
+                                    contours=np.linspace(0.0, 3.0, 16),
+                                    contour_method='magnitude',
+                                    quiver_npts=2, scale=5e-6,
+                                    restrict_quivers=True,
+                                    ax=ax, projection='orthographic',
+                                    colour_scheme=colour_scheme,
+                                    spherical_centre=spherical_centre,
+                                    extend_cmap=False,
+                                    no_cbar=True)
 
         ax.set_title(title)
 
@@ -176,12 +168,11 @@ for j in range(6):
                         ha='center', va='center', transform=crs)
 
 
-    if j < 5:
-        # Move the subplots to the left to make space for colorbar
-        fig.subplots_adjust(right=0.85)
-        # Add colorbar in its own axis
-        cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
-        fig.colorbar(cf, label=cbar_label, cax=cbar_ax)
+    # Move the subplots to the left to make space for colorbar
+    fig.subplots_adjust(right=0.85)
+    # Add colorbar in its own axis
+    cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
+    fig.colorbar(cf, label=cbar_label, cax=cbar_ax)
 
     fig.savefig(plotname, bbox_inches='tight')
     plt.close()

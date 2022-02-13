@@ -9,7 +9,7 @@ from tomplot import make_field_plots, make_convergence_plots, make_time_series_p
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-shape = 'quads' # or 'tris'
+shape = 'tris' # or 'tris'
 base_results_dirname = 'galewsky_'+shape
 results_options = ['plain','recovered','vorticity']
 plot_times = -1

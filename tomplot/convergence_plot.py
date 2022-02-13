@@ -12,9 +12,11 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                                 figsize=(8,8), colours=None, markers=None,
                                 linestyles=None, linewidth=2, markersize=8,
                                 fontsize=24, title=None, comparison_lines=None,
-                                ax=None, grid=True, xlabel=None, ylabel=None,
+                                ax=None, grid=True, xlabel='default', ylabel='default',
                                 xlim=None, ylim=None, legend_bbox=(1.0,1.0),
-                                legend_ncol=1, label_style='gradient_full'):
+                                legend_ncol=1, label_style='gradient_full',
+                                format='png', dpi=None, titlepad=None,
+                                leg_col_spacing=None, leg_fontsize=None):
     """
     Makes an individual convergence plot for errors from a global netCDF
     diagnostics file.
@@ -207,20 +209,23 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     # Decorations
     #--------------------------------------------------------------------------#
 
-    if xlabel is None:
+    if xlabel == 'default':
         xlabel = get_xlabel(variable, 'convergence')
-    if ylabel is None:
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel == 'default':
         ylabel = get_ylabel(error, 'convergence')
+        ax.set_ylabel(ylabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
 
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(title, pad=titlepad)
 
     if grid:
         ax.grid('on')
@@ -264,8 +269,10 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     #--------------------------------------------------------------------------#
 
     handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc='upper left', ncol=legend_ncol,
-                    bbox_to_anchor=legend_bbox, edgecolor='black')
+    lgd = ax.legend(handles, labels, loc='upper center', ncol=legend_ncol,
+                    bbox_to_anchor=legend_bbox, edgecolor='black',
+                    fontsize=leg_fontsize, handletextpad=0.0,
+                    columnspacing=leg_col_spacing)
 
     #--------------------------------------------------------------------------#
     # Save and finish plot
@@ -279,9 +286,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                 print('Convergence plot directory not specified. '+
                       'Adding to results/'+dirnames[0]+'/figures')
             plotdir = 'results/'+dirnames[0]+'/figures'
-        plotname = plotdir+'/'+testname+'_'+error+'.png'
+        plotname = plotdir+'/'+testname+'_'+error+'.'+format
 
         fig.savefig(plotname, bbox_extra_artists=(lgd,),
-                    bbox_inches='tight')
+                    bbox_inches='tight', dpi=dpi)
 
         plt.close()

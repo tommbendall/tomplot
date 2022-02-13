@@ -18,7 +18,7 @@ from .quiver_plot import individual_quiver_plot
 def make_field_plots(dirname, run_id, testname, fields,
                      time_idxs, slices=None, plotdir=None,
                      override_dirname=False, plot_coords_1d=None,
-                     **kwargs):
+                     format='png', **kwargs):
     """
     A routine for controlling the auto-generation of plots of fields from
     netCDF field data.
@@ -113,8 +113,8 @@ def make_field_plots(dirname, run_id, testname, fields,
 
                         if plotdir is None:
                             plotdir = 'results/'+dirname+'/figures'
-                        plotname = '%s/%s_%s_slice_%s_run_%s_time_%02d.png' % (plotdir, testname, field, slice_name,
-                                                                               str(run_id), time_idx)
+                        plotname = '%s/%s_%s_slice_%s_run_%s_time_%02d.%s' % (plotdir, testname, field, slice_name,
+                                                                               str(run_id), time_idx, format)
 
                         if slice_name in ['x','y','z']:
 
@@ -221,8 +221,8 @@ def make_field_plots(dirname, run_id, testname, fields,
 
                 if plotdir is None:
                     plotdir = 'results/'+dirname+'/figures'
-                plotname = '%s/%s_%s_run_%s_time_%02d.png' % (plotdir, testname, field,
-                                                              str(run_id), time_idx)
+                plotname = '%s/%s_%s_run_%s_time_%02d.%s' % (plotdir, testname, field,
+                                                              str(run_id), time_idx, format)
 
                 if topological_dim == 1:
 
@@ -331,7 +331,8 @@ def make_field_plots(dirname, run_id, testname, fields,
 
 def make_quiver_plots(dirname, run_id, testname, field_info,
                       time_idxs, slices, plotdir=None,
-                      override_dirname=False, plot_coords_1d=None, **kwargs):
+                      override_dirname=False, plot_coords_1d=None,
+                      format='png', **kwargs):
     """
     A routine for controlling the auto-generation of quiver plots of vector
     fields from netCDF field data.
@@ -430,8 +431,8 @@ def make_quiver_plots(dirname, run_id, testname, field_info,
 
                     if plotdir is None:
                         plotdir = 'results/'+dirname+'/figures'
-                    plotname = '%s/%s_%s_slice_%s_run_%s_time_%02d.png' % (plotdir, testname, field_name, slice_name,
-                                                                           str(run_id), time_idx)
+                    plotname = '%s/%s_%s_slice_%s_run_%s_time_%02d.%s' % (plotdir, testname, field_name, slice_name,
+                                                                           str(run_id), time_idx, format)
 
 
                     coords_X, coords_Y, field_X_data, time, \

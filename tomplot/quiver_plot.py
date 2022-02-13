@@ -11,7 +11,7 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
                            figsize=(8,8), field_name=None,
                            extra_field_data=None, extra_field_name=None,
                            slice_name=None, slice_idx=None,
-                           quiver_npts=1,
+                           quiver_npts=1, x_offset=None, y_offset=None,
                            units='xy', scale=None, angles='xy', scale_units='xy',
                            restrict_quivers=False,
                            projection=None,
@@ -24,7 +24,8 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
                            contour_method=None,
                            contours=None,
                            contour_lines=True,
-                           colour_scheme='Blues', restricted_cmap=False,
+                           colour_scheme='Blues', restricted_cmap=None,
+                           colour_levels_scaling=1.2,
                            extend_cmap=True, remove_contour=False,
                            linestyle=None, linewidth=1,
                            linecolours='black',
@@ -34,7 +35,8 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
                            text=None, text_pos=None,
                            xlims=None, ylims=None, xticks=None, yticks=None,
                            xticklabels=None, yticklabels=None,
-                           xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None):
+                           xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None,
+                           dpi=None, gridline_args=None):
     """
     Makes an individual quiver plot of a field from a netCDF
     field output file.
@@ -158,6 +160,7 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
         cmap, line_contours = colourmap_and_contours(colour_contours,
                                                      colour_scheme=colour_scheme,
                                                      restricted_cmap=restricted_cmap,
+                                                     colour_levels_scaling=colour_levels_scaling,
                                                      remove_contour=remove_contour)
 
         extend = 'both' if extend_cmap else 'neither'
@@ -191,6 +194,9 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
             if cbar_label is not None:
                 cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
+    if gridline_args is not None:
+        ax.gridlines(**gridline_args)
+
     #--------------------------------------------------------------------------#
     # Restrict extent of quivers if required
     #--------------------------------------------------------------------------#
@@ -219,15 +225,20 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
     # Plot quivers
     #--------------------------------------------------------------------------#
 
+    x_slice = slice(x_offset, None, quiver_npts)
+    y_slice = slice(y_offset, None, quiver_npts)
+
     if crs is None:
         # separately handle this case as None transform results in no arrows
-        ax.quiver(coords_X[::quiver_npts,::quiver_npts], coords_Y[::quiver_npts,::quiver_npts],
-                  field_data_X[::quiver_npts,::quiver_npts], field_data_Y[::quiver_npts,::quiver_npts],
-                  units=units, scale=scale, scale_units=scale_units, angles=angles)
+        ax.quiver(coords_X[x_slice,y_slice], coords_Y[x_slice,y_slice],
+                  field_data_X[x_slice,y_slice], field_data_Y[x_slice,y_slice],
+                  units=units, scale=scale, scale_units=scale_units, angles=angles,
+                  zorder=3)
     else:
-        ax.quiver(coords_X[::quiver_npts,::quiver_npts], coords_Y[::quiver_npts,::quiver_npts],
-                  field_data_X[::quiver_npts,::quiver_npts], field_data_Y[::quiver_npts,::quiver_npts],
-                  units=units, scale=scale, scale_units=scale_units, angles=angles, transform=crs)
+        ax.quiver(coords_X[x_slice,y_slice], coords_Y[x_slice,y_slice],
+                  field_data_X[x_slice,y_slice], field_data_Y[x_slice,y_slice],
+                  units=units, scale=scale, scale_units=scale_units, angles=angles, transform=crs,
+                  zorder=3)
 
 
     # Add axes labels, set limits and add a title
@@ -258,6 +269,6 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
             return cf
     else:
 
-        fig.savefig(plotname, bbox_inches='tight')
+        fig.savefig(plotname, bbox_inches='tight', dpi=dpi)
 
         plt.close()

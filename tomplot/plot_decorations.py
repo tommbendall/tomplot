@@ -218,7 +218,8 @@ def get_domain_label(direction, length_units='m', angular_units='rad'):
 
 
 def colourmap_and_contours(contours, colour_scheme='Blues',
-                           restricted_cmap=True,
+                           restricted_cmap=None,
+                           colour_levels_scaling=1.2,
                            remove_contour=False):
     """
     Makes the colour map and contour levels for a 2D field plot.
@@ -238,19 +239,35 @@ def colourmap_and_contours(contours, colour_scheme='Blues',
                           middle contour. Default is False.
     """
 
+    if restricted_cmap not in [None, 'both', 'top', 'bottom']:
+        raise ValueError(f'restricted_cmap {restricted_cmap} not recognised')
+
     # First reproduce the contours for the lines from the existing set of contours
     line_contours = contours.copy()
 
     # Scale the colour map to remove the most extreme colours
-    if restricted_cmap:
-        colour_levels_scaling = 1.2  # We scale colour map to avoid extreme colours
+    if restricted_cmap is not None:
+        if restricted_cmap == 'both':
+            if type(colour_levels_scaling) not in [tuple, list]:
+                colour_levels_scaling = [colour_levels_scaling]*2
+            lower_colour = 0.5 * (1.0 - 1/colour_levels_scaling[0])
+            upper_colour = 0.5 * (1.0 + 1/colour_levels_scaling[1])
+            avg_colour_scaling = 0.5*(colour_levels_scaling[0]+colour_levels_scaling[1])
+        elif restricted_cmap == 'top':
+            lower_colour = 0.0
+            upper_colour = 1/colour_levels_scaling
+            avg_colour_scaling = colour_levels_scaling
+        elif restricted_cmap == 'bottom':
+            lower_colour = 1.0 - 1/colour_levels_scaling
+            upper_colour = 1.0
+            avg_colour_scaling = colour_levels_scaling
 
         # Make a colour map for more contours than we'll use
         actual_num_colour_levels = len(contours)
-        pure_num_colour_levels = np.ceil(actual_num_colour_levels*colour_levels_scaling)
+        pure_num_colour_levels = np.ceil(actual_num_colour_levels*avg_colour_scaling)
 
         pure_cmap = cm.get_cmap(colour_scheme, pure_num_colour_levels)
-        new_colours = pure_cmap(np.linspace(0, 1/colour_levels_scaling),
+        new_colours = pure_cmap(np.linspace(lower_colour, upper_colour),
                                 actual_num_colour_levels)
         cmap = ListedColormap(new_colours)
 
@@ -322,13 +339,17 @@ def axes_limits_labels_and_titles(ax, xlabel=None, xlabelpad=None, xlims=None,
                                   xticks=None, xticklabels=None,
                                   ylabel=None, ylabelpad=None, ylims=None,
                                   yticks=None, yticklabels=None,
-                                  title=None, title_method='full', titlepad=None,
+                                  title=None, title_method=None, titlepad=None,
                                   slice_label=None,
                                   time=None, time_method='seconds',
                                   field_min=None, field_max=None):
     """
     Decorates axes with supplied labels and limits, and adds a title.
     """
+
+    if title_method not in [None, 'full', 'minmax', 'time', 'slice']:
+        raise ValueError(f'title_method {title_method} not recognised')
+
     if xlims is not None:
         ax.set_xlim(xlims)
     if ylims is not None:
@@ -352,41 +373,44 @@ def axes_limits_labels_and_titles(ax, xlabel=None, xlabelpad=None, xlims=None,
             if yticklabels[0] == '$-\pi/2$':
                 ylabelpad = -40
         ax.set_ylabel(ylabel, labelpad=ylabelpad)
-    if title is not None:
-        ax.set_title(title, pad=titlepad)
-    elif (title_method is not None and title_method != 'none'):
+    if title is not None or title_method is not None:
+        if title is None:
+            # Set title to be empty string as we will add to it
+            title = ''
+        elif title_method is not None:
+            # Add a space before next bit of title
+            title += ' '
         # We have a method for generating a title if one hasn't been provided
         if title_method == 'slice':
-            title = slice_label
+            title += slice_label
         elif title_method == 'time':
-            title = 'time: '+get_time_string(time, time_method)
+            title += 'time: '+get_time_string(time, time_method)
         elif (title_method == 'minmax' or (title_method == 'full' and slice_label is None and time is None)):
-            title = 'min: %2.2e, max: %2.2e' % (field_min, field_max)
+            title += 'min: %2.2e, max: %2.2e' % (field_min, field_max)
         elif title_method == 'full':
+            # Now we need to work out what information we have to make full title
             if slice_label is None and time is None:
                 if field_min is None:
-                    title = ''
+                    pass
                 else:
-                    title = 'min: %2.2e, max: %2.2e' % (field_min, field_max)
+                    title += 'min: %2.2e, max: %2.2e' % (field_min, field_max)
             elif slice_label is None:
                 if field_min is None:
-                    title = 'time: '+get_time_string(time, time_method)
+                    title += 'time: '+get_time_string(time, time_method)
                 else:
-                    title = 'min: %2.2e, max: %2.2e, ' % (field_min, field_max)
+                    title += 'min: %2.2e, max: %2.2e, ' % (field_min, field_max)
                     title += 'time: '+get_time_string(time, time_method)
             elif time is None:
                 if field_min is None:
-                    title = slice_label
+                    title += slice_label
                 else:
-                    title = slice_label+', min: %2.2e, max: %2.2e' % (field_min, field_max)
+                    title += slice_label+', min: %2.2e, max: %2.2e' % (field_min, field_max)
             else:
                 if field_min is None:
-                    title = slice_label
+                    title += slice_label
                 else:
-                    title = slice_label+', min: %2.2e, max: %2.2e, ' % (field_min, field_max)
+                    title += slice_label+', min: %2.2e, max: %2.2e, ' % (field_min, field_max)
                 title += 'time: '+get_time_string(time, time_method)
-        else:
-            raise ValueError('title_method %s not recognised' % title_method)
         ax.set_title(title, pad=titlepad)
 
 

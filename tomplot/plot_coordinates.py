@@ -52,7 +52,7 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
         num_plot_points = int(data.variables['ny'][0])
     else:
         # We are a sphere or a torus
-        num_plot_points = 100
+        num_plot_points = 101
 
     if slice_idx == 'midpoint':
         slice_idx = int(num_plot_points / 2)
@@ -275,7 +275,7 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
                 num_part = int(data.variables['ny'][0])
             else:
                 # We are a sphere or a torus
-                num_part = 100
+                num_part = 101
             num_list.append(num_part)
 
         # Turn list into tuple

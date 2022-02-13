@@ -21,7 +21,8 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                                   contours=None,
                                   extra_contours=None,
                                   contour_lines=True,
-                                  colour_scheme='Blues', restricted_cmap=False,
+                                  colour_scheme='Blues', restricted_cmap=None,
+                                  colour_levels_scaling=1.2,
                                   extend_cmap=True, remove_contour=False,
                                   linestyle=None, linewidth=1,
                                   linecolours='black',
@@ -31,7 +32,8 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                                   text=None, text_pos=None,
                                   xlims=None, ylims=None, xticks=None, yticks=None,
                                   xticklabels=None, yticklabels=None,
-                                  xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None):
+                                  xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None,
+                                  dpi=None):
     """
     Makes an individual coloured 2D contour plot of a field from a netCDF
     field output file.
@@ -145,6 +147,7 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
     cmap, line_contours = colourmap_and_contours(colour_contours,
                                                  colour_scheme=colour_scheme,
                                                  restricted_cmap=restricted_cmap,
+                                                 colour_levels_scaling=colour_levels_scaling,
                                                  remove_contour=remove_contour)
 
     extend = 'both' if extend_cmap else 'neither'
@@ -211,6 +214,6 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
         return cf
     else:
 
-        fig.savefig(plotname, bbox_inches='tight')
+        fig.savefig(plotname, bbox_inches='tight', dpi=dpi)
 
         plt.close()

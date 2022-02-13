@@ -10,10 +10,12 @@ from tomplot import make_field_plots, make_convergence_plots, make_time_series_p
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-shape = 'quads' # or 'tris'
-results_dirname = 'conv_1_quads_cyl_curly' if shape == 'quads' else 'conv_1_tris_cyl_curly'
-field_labels = ['plain','rec','vort'] if shape == 'quads' else ['plain','rec']
+shape = 'quads' # 'quads or 'tris'
+results_dirname = 'conv_1_quads_cyl_curly_trial' if shape == 'quads' else 'conv_1_tris_cyl_curly_trial'
+field_labels = ['Benchmark','Recovered','Vorticity'] if shape == 'quads' else ['Benchmark','Recovered']
+leg_xcentre = 0.45 if shape == 'quads' else 0.5
 plot_testname = 'cylinder_curly'
+title = 'Quadrilateral cells' if shape == 'quads' else 'Triangular cells'
 
 # ---------------------------------------------------------------------------- #
 # Derived things from options
@@ -31,6 +33,9 @@ data.close()
 if len(run_ids) > 1:
     print('Making convergence plots')
     field_names = ['F_'+str(i) for i in range(num_setups)]
-    make_convergence_plots(results_dirname, 'rncells_per_dim', field_names, run_ids,
+    make_convergence_plots(results_dirname, 'dx', field_names, run_ids,
                            'L2_error', field_labels=field_labels, label_style='gradient_plain',
-                           testname=plot_testname, legend_bbox=(-0.2,1.2), legend_ncol=3)
+                           testname=plot_testname, legend_bbox=(leg_xcentre,1.12), legend_ncol=3,
+                           titlepad=55, titles=title, format='jpg', dpi=300,
+                           ylabels=r'$\ln(||\mathbf{F}-\mathbf{F}_{true}||)$',
+                           leg_col_spacing=0.1, leg_fontsize=20)
