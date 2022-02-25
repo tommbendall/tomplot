@@ -20,6 +20,7 @@ field_label_sets = [['Benchmark','Recovered','Vorticity']]*2
 plotname = 'fig_6_will2_u_convergence'
 titles = ['Quadrilateral cells','Triangular cells']
 ylabels = [r'$\ln\left[||\textbf{u}-\textbf{u}_{true}||_{L_2}/||\textbf{u}_{true}||_{L_2}\right]$',None]
+leg_xcentres = [0.45,0.5]
 
 # ---------------------------------------------------------------------------- #
 # Field plots
@@ -37,8 +38,8 @@ fig, axarray = plt.subplots(1,2,figsize=(16,8),sharey='row')
 
 plotpath = f'{plotdir}/{plotname}.jpg'
 
-for i, (ax, results_dirnames, field_labels, title, ylabel) in \
-    enumerate(zip(axarray, results_dirname_sets, field_label_sets, titles, ylabels)):
+for i, (ax, results_dirnames, field_labels, title, ylabel, leg_xcentre) in \
+    enumerate(zip(axarray, results_dirname_sets, field_label_sets, titles, ylabels, leg_xcentres)):
 
 # ---------------------------------------------------------------------------- #
 # Get run ID and setups info
@@ -57,7 +58,7 @@ for i, (ax, results_dirnames, field_labels, title, ylabel) in \
 
     individual_convergence_plot(results_dirnames, variable, field_name, run_ids,
                                 error, ax=ax, field_labels=field_labels, label_style='gradient_plain',
-                                legend_bbox=(0.5,1.12),
+                                legend_bbox=(leg_xcentre,1.12),
                                 legend_ncol=3, titlepad=55, title=title,
                                 ylabel=ylabel, leg_col_spacing=0.1, leg_fontsize=18)
 

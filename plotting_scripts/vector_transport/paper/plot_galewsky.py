@@ -5,7 +5,7 @@ Makes plots for the shallow water Galewsky jet test case,
 import numpy as np
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset
-from tomplot import extract_2D_data, individual_field_contour_plot
+from tomplot import extract_2D_data, individual_field_contour_plot, individual_time_series_plot
 
 # ---------------------------------------------------------------------------- #
 # Things that can be altered and parameters for the test case
@@ -15,6 +15,7 @@ shapes = ['quads','tris']
 plotdir = 'results/vector_transport_paper'
 results_options = ['plain','recovered','vorticity']
 titles = ['Benchmark,', 'Recovered,', 'Vorticity,']
+diagnostic_fields = ['div_u', 'vorticity', 'energy', 'potential_enstrophy']
 time_idx = -1
 colour_scheme = 'RdBu_r'
 field_name = 'vorticity'
@@ -22,6 +23,11 @@ spherical_centre = (-np.pi/2,np.pi/4)
 slice = 'xy'
 slice_idx = 0
 run_id = 0
+diagnostic = 'total'
+sw_labels = {('total', 'energy'): 'Normalised energy',
+             ('total', 'potential_enstrophy'): 'Normalised potential enstrophy',
+             ('total', 'vorticity'): r'Normalised $\int \zeta $d$x$',
+             ('total', 'div_u'): r'Normalised $\int \nabla \cdot u $d$x$'}
 
 # ---------------------------------------------------------------------------- #
 # Things depending on cell shape
@@ -46,7 +52,7 @@ for shape in shapes:
     font = {'size':24}
     plt.rc('font',**font)
 
-    fig, axarray = plt.subplots(3,1,figsize=(16,24),sharex='col')
+    fig, axarray = plt.subplots(3,1,figsize=(16,16),sharex='col')
 
     plotpath = f'{plotdir}/{plotname}.jpg'
 
@@ -85,23 +91,31 @@ for shape in shapes:
 
     # Move the subplots to the left to make space for colorbar
     # and make them slightly closer together
-    fig.subplots_adjust(bottom=0.1, hspace=0.1)
+    fig.subplots_adjust(bottom=0.1, hspace=0.14)
     # Make collective colour bar
     cbar_label=r'$\zeta \ / $ s$^{-1}$'
     cbar_labelpad=-25
     cbar_ticks=[-1.8e-4, 1.8e-4]
     cbar_format='%.1e'
     # Add colorbar in its own axis
-    cbar_ax = fig.add_axes([0.16, 0.05, 0.7, 0.02])
+    cbar_ax = fig.add_axes([0.16, 0.04, 0.7, 0.02])
     cb = fig.colorbar(cf, orientation='horizontal', cax=cbar_ax,
                       format=cbar_format, ticks=cbar_ticks)
     cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
     # Make suptitle
-    fig.suptitle(suptitle, y=0.92)
+    fig.suptitle(suptitle, y=0.93)
 
     print(f'Plotting to {plotpath}')
     fig.savefig(plotpath, bbox_inches='tight')
     plt.close()
+
+    for diagnostic_field in diagnostic_fields:
+
+        individual_time_series_plot(results_dirnames, diagnostic_field, run_id,
+                                    diagnostic, testname=f'fig_9_gal_{shape}_{diagnostic_field}',
+                                    plotdir=plotdir, field_labels=results_options,
+                                    format='jpg', ylabel=sw_labels[(diagnostic,diagnostic_field)],
+                                    time_units='days', normalise=True, title=suptitle)
 
 

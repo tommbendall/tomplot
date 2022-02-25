@@ -120,6 +120,8 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
     # Loop through fields adding lines to plot
     #--------------------------------------------------------------------------#
 
+    counter = 0
+
     for k, dirname in enumerate(dirnames):
 
         if override_dirname:
@@ -128,8 +130,6 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
             filename = 'results/'+dirname+'/global_output.nc'
 
         data_file = Dataset(filename, 'r')
-
-        counter = 0
 
         for i, (field, run_id_list) in enumerate(zip(fields, run_ids)):
 

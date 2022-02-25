@@ -11,7 +11,7 @@ from tomplot import make_field_plots, make_convergence_plots, make_time_series_p
 
 shape = 'tris' # or 'tris'
 base_results_dirname = 'galewsky_'+shape
-results_options = ['plain','recovered','vorticity']
+results_options = ['vorticity']
 plot_times = -1
 base_angle_list = [np.pi/4]
 base_res_list = [128]

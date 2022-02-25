@@ -295,7 +295,7 @@ def colourmap_and_contours(contours, colour_scheme='Blues',
 
             if not contour_found:
                 # If we get here then we have not found this contour
-                raise ValueError('contour %.1f was not found' % remove_contour)
+                raise ValueError('contour %.3f was not found' % remove_contour)
 
         elif isinstance(remove_contour, int):
             level_to_remove = remove_contour

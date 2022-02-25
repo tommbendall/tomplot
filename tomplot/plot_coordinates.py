@@ -290,7 +290,7 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
         if dim == 2:
             num_plot_points_y = num[1]
         else:
-            num_plot_points_z = num[2]
+            num_plot_points_y = num[2]
     elif slice_name == 'yz':
         num_plot_points_x = num[1]
         num_plot_points_y = num[2]
@@ -334,7 +334,7 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
                                     for j in range(num_plot_points_y)])
 
     else:
-        if plot_coords_1d is not None:
+        if plot_coords_1d is None:
             plot_coords_1d = (np.linspace(domain_extents['x'][0],
                                           domain_extents['x'][1], num[0]),
                               np.linspace(domain_extents['y'][0],

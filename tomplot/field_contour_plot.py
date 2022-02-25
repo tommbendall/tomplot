@@ -21,6 +21,7 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                                   contours=None,
                                   extra_contours=None,
                                   contour_lines=True,
+                                  clabel=False,
                                   colour_scheme='Blues', restricted_cmap=None,
                                   colour_levels_scaling=1.2,
                                   extend_cmap=True, remove_contour=False,
@@ -172,6 +173,9 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                         linewidths=linewidth, colors=linecolours,
                         linestyles=linestyle, transform=crs, extent=extent,
                         origin='lower')
+
+        if clabel:
+            ax.clabel(cl)
 
     if extra_field_data is not None:
         cle = ax.contour(coords_X, coords_Y, extra_field_data,
