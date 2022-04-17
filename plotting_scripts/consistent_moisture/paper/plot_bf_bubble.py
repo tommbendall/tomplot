@@ -11,10 +11,10 @@ from tomplot import individual_field_contour_plot, extract_lfric_2D_data
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-base_results_dirname = 'consistent_moisture_paper/bryan-fritsch-'
+base_results_dirname = 'consistent_moisture_paper/bryan_fritsch-'
 results_opts = ['adv','consist']
-time_idx = -2
-plotname = 'fig_10_bf_fields'
+time_idx = -1
+plotname = 'fig_9_bf_fields'
 cbar_label = r"$\theta_e \ / $ K"
 titles = ['Advective','Consistent']
 colour_scheme = 'OrRd'

@@ -72,13 +72,14 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
         for dim_name in dim_names:
             if dim_name == 'z':
                 num_part = len(np.unique(data[vert_placement][:]))
+            elif domain == 'sphere':
+                num_part = 101
             elif (names[dim_name] == 'x'):
                 num_part = len(np.unique(data[hori_placement+'_x'][:]))
             elif (names[dim_name] == 'y'):
                 num_part = len(data[hori_placement+'_y'][:])
             else:
-                # We are a sphere
-                num_part = 101
+                raise ValueError('Something has gone wrong')
             num_list.append(num_part)
 
         # Turn list into tuple
@@ -122,9 +123,9 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
             plot_coords = np.meshgrid(plot_coords_1d[0], plot_coords_1d[1])
 
             # Turn this into a list of points for interpolating to
-            interp_coords_2d = np.array([[coord_x, coord_y] for coord_x, coord_y in
-                                          zip(plot_coords[0][:][j], plot_coords[1][:][j])
-                                          for j in range(num_plot_points_y)])
+            interp_coords_2d = np.array([[[coord_x, coord_y]
+                                          for coord_x, coord_y in zip(plot_coords[0][:][j], plot_coords[1][:][j])]
+                                         for j in range(num_plot_points_y)])
 
             # Must be at constant z
             domain_label, units = get_domain_label(names['z'], length_units, angular_units)
@@ -171,10 +172,15 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
     if len(names.keys()) == 2:
         raise NotImplementedError('Set up of data coords not implemented')
     else:
-        data_coords_2d = (data.variables[hori_placement+'_'+names['x']][:],
-                          data.variables[hori_placement+'_'+names['y']][:])
+        if domain == 'sphere':
+            # Convert to radians
+            data_coords_2d = (data.variables[hori_placement+'_'+names['x']][:]*np.pi/180.0,
+                              data.variables[hori_placement+'_'+names['y']][:]*np.pi/180.0)
+        else:
+            data_coords_2d = (data.variables[hori_placement+'_'+names['x']][:],
+                            data.variables[hori_placement+'_'+names['y']][:])
 
-    if (domain == 'spherical' and abs(central_lon) > 1e-12):
+    if (domain == 'sphere' and abs(central_lon) > 1e-12):
         raise NotImplementedError('LFRic coords not yet implemented with non-zero central lon')
 
     return plot_coords, data_coords_2d, interp_coords_2d, \
@@ -208,7 +214,7 @@ def get_lfric_domain_properties(data, extrusion_details, central_lon=0.0):
                                    extrusion_details['zmax'])
 
     elif domain == 'sphere':
-        names = {'x':'lon', 'y':'lat'}
+        names = {'x':'x', 'y':'y'}
         domain_extents = {'x': (-np.pi+central_lon, np.pi+central_lon),
                           'y': (-np.pi/2, np.pi/2)}
         if abs(central_lon) < 1e-6:

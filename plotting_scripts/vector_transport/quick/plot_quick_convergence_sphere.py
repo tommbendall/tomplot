@@ -1,5 +1,5 @@
 """
-Makes convergence plots for the cylindrical test case
+Makes convergence plots for the transport test cases
 """
 
 from netCDF4 import Dataset
@@ -13,18 +13,17 @@ from tomplot import individual_convergence_plot
 
 error = 'L2_error'
 variable = 'dx'
-results_dirnames = ['conv_1_quads_cyl_curly','conv_1_tris_cyl_curly']
-field_label_sets = [['Benchmark','Recovered','Vorticity'],['Benchmark','Recovered']]
-leg_xcentres = [0.45,0.5]
-plotname = 'fig_2_cylinder_convergence'
-titles = ['Quadrilateral cells','Triangular cells']
-ylabels = [r'$\ln(||\mathbf{F}-\mathbf{F}_{true}||)$',None]
+base_results_dir = 'conv_2_quads'
+result_opts = ['dt0pt05','dt0pt2','dt0pt5','update_vort']
+field_labels = ['Benchmark','Recovered','Vorticity','SUPG','Fancy']
+base_plotname = 'quick_conv_sph'
+ylabel = r'$\ln(||\mathbf{F}-\mathbf{F}_{true}||)$'
 
 # ---------------------------------------------------------------------------- #
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper'
+plotdir = 'results/vector_transport_paper/quick_figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -32,19 +31,20 @@ plt.rc('font', family='serif')
 font = {'size':24}
 plt.rc('font',**font)
 
-fig, axarray = plt.subplots(1,2,figsize=(16,8),sharey='row')
 
-plotpath = f'{plotdir}/{plotname}.jpg'
+for i, result_opt in enumerate(result_opts):
 
-for i, (ax, results_dirname, field_labels, leg_xcentre, title, ylabel) in \
-    enumerate(zip(axarray, results_dirnames, field_label_sets, leg_xcentres, titles, ylabels)):
+    fig, ax = plt.subplots(1,1,figsize=(8,8))
+
+    plotpath = f'{plotdir}/{base_plotname}_{result_opt}.jpg'
 
 # ---------------------------------------------------------------------------- #
 # Get run ID and setups info
 # ---------------------------------------------------------------------------- #
 
-    data = Dataset('results/'+results_dirname+'/global_output.nc','r')
-    run_ids = data['run_id'][:]
+    results_dirname = f'vector_transport_paper/{base_results_dir}_{result_opt}'
+    data = Dataset(f'results/{results_dirname}/global_output.nc','r')
+    run_ids = data['run_id'][3:]
     num_setups = len(field_labels)
     data.close()
 
@@ -55,11 +55,12 @@ for i, (ax, results_dirname, field_labels, leg_xcentre, title, ylabel) in \
     field_names = ['F_'+str(i) for i in range(num_setups)]
 
     individual_convergence_plot(results_dirname, variable, field_names, run_ids,
-                                error, ax=ax, field_labels=field_labels, label_style='gradient_plain',
-                                legend_bbox=(leg_xcentre,1.12),
-                                legend_ncol=3, titlepad=55, title=title,
-                                ylabel=ylabel, leg_col_spacing=0.1, leg_fontsize=18)
+                                error, field_labels=field_labels, ax=ax,
+                                label_style='gradient_plain',
+                                legend_bbox=(0.5,1.12),
+                                legend_ncol=5, ylabel=ylabel, leg_col_spacing=0.1,
+                                leg_fontsize=16)
 
-print(f'Plotting to {plotpath}')
-fig.savefig(plotpath, bbox_inches='tight')
-plt.close()
+    print(f'Plotting to {plotpath}')
+    fig.savefig(plotpath, bbox_inches='tight')
+    plt.close()

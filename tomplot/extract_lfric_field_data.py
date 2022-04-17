@@ -64,8 +64,8 @@ def extract_lfric_2D_data(data_file, field_name, time_idx,
 
     if slice_name == 'xy':
         # Just do interpolation at that level
-        field_data = griddata(data_coords[:,slice_idx], field_full[slice_idx], interp_coords_2d, method='linear')
-        field_near = griddata(data_coords[:,slice_idx], field_full[slice_idx], interp_coords_2d, method='nearest')
+        field_data = griddata(data_coords, field_full[slice_idx], interp_coords_2d, method='linear')
+        field_near = griddata(data_coords, field_full[slice_idx], interp_coords_2d, method='nearest')
         field_data[np.isnan(field_data)] = field_near[np.isnan(field_data)]
 
     else:

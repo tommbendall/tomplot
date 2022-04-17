@@ -108,22 +108,22 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
         raise ValueError('The lengths of run_ids list and fields list are not equal')
 
     if colours is not None:
-        if len(colours) != len(fields):
+        if len(colours) != len(fields)*len(dirnames):
             raise ValueError('The list of colours should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(colours), len(fields)))
+                             (len(colours), len(fields)*len(dirnames)))
 
     if markers is not None:
-        if len(markers) != len(fields):
+        if len(markers) != len(fields)*len(dirnames):
             raise ValueError('The list of markers should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(markers), len(fields)))
+                             (len(markers), len(fields)*len(dirnames)))
 
     if linestyles is not None:
-        if len(linestyles) != len(fields):
+        if len(linestyles) != len(fields)*len(dirnames):
             raise ValueError('The list of linestyles should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(linestyles), len(fields)))
+                             (len(linestyles), len(fields)*len(dirnames)))
 
     ax_provided = (ax is not None)
 
@@ -181,6 +181,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                 label = field_labels[k]
             else:
                 label = get_label(field)
+
+            print(dirname, field, run_id_list, label)
+
 
             #------------------------------------------------------------------#
             # Plot errors

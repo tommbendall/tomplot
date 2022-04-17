@@ -25,7 +25,7 @@ colour_scheme = 'OrRd'
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper'
+plotdir = 'results/vector_transport_paper/figures'
 field_name, field_X_name, field_Y_name = field_info
 slice = 'xy'
 slice_idx = 0

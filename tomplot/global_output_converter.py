@@ -9,23 +9,32 @@ from netCDF4 import Dataset
 all_errors = ['Min-initial', 'Max-initial', 'L2-initial', 'L2-final',
               'Rel-L2-error', 'Dissipation', 'Dispersion']
 
-def convert_global_output(target_dir, source_dirs, dxs=None,
-                          mode='transport_stats'):
+def convert_global_output(target_dir, source_dirs, mode='transport_stats',
+                          dt=None, run_params=None):
 
     # ------------------------------------------------------------------------ #
     # Checks
     # ------------------------------------------------------------------------ #
 
+    if run_params is None:
+        run_params = {}
+    elif type(run_params) is not dict:
+        raise TypeError(f'run_params should be a dict not type {type(run_params)}')
+
     if type(source_dirs) is not list:
         source_dirs = [source_dirs]
-        dxs = [dxs]
+        # Convert all params into lists
+        for param_key, param_value in run_params.items():
+            run_params[param_key] = [param_value]
     else:
-        if type(dxs) is not list:
-            raise ValueError(f'If source_dirs argument is a list, dxs should '+
-                             f'also be a list and not type {type(dxs)}')
-        elif len(dxs) != len(source_dirs):
-            raise ValueError(f'List of dxs should be of length {len(dxs)} '+
-                             'to match length of source_dirs')
+        for param_key, param_value in run_params.items():
+            if type(param_value) is not list:
+                raise TypeError(f'If source_dirs argument is a list, each '+
+                                f'param in run_params should also be a list, '+
+                                f'but {param_key} is type {type(param_value)}')
+            elif len(param_value) != len(source_dirs):
+                raise ValueError(f'List for {param_key} should be of length '
+                                 f'{len(source_dirs)} to match length of source_dirs')
 
     if mode not in ['transport_stats','gungho_mass']:
         raise ValueError('Converter mode should be "transport_stats" or "gungho"')
@@ -70,10 +79,32 @@ def convert_global_output(target_dir, source_dirs, dxs=None,
                                  in zip(raw_data['timestage1'].values,
                                         raw_data['timestage2'].values)]
             raw_data['timestage'] = point_in_timestep
-            raw_data['time'] = raw_data['timestep'].astype(float)
+            if dt is not None:
+                raw_data['time'] = raw_data['timestep'].astype(float) * dt
+            else:
+                raw_data['time'] = raw_data['timestep'].astype(float)
             # Change values before initial time step to be after time step zero
             raw_data.loc[raw_data.timestage == 'Before_timestep', 'time'] = 0.0
             raw_data.loc[raw_data.timestage == 'Before_timestep', 'timestage'] = 'After_timestep'
+            # Combine all moisture species to get total moisture mass
+            time_list = []
+            stage_list = []
+            mass_list = []
+            unique_times = raw_data.time.unique()
+            for time in unique_times:
+                unique_stages = raw_data[raw_data.time == time].timestage.unique()
+                for stage in unique_stages:
+                    filtered_data = raw_data[(raw_data.time == time) &
+                                             (raw_data.timestage == stage)].mass
+                    total_mass = np.sum(filtered_data)
+                    time_list.append(time)
+                    stage_list.append(stage)
+                    mass_list.append(total_mass)
+            total_data = pd.DataFrame({'timestage':stage_list,
+                                       'time':time_list,
+                                       'mass':mass_list,
+                                       'species':['total']*len(mass_list)})
+            raw_data = pd.concat([raw_data, total_data], ignore_index=True, axis=0)
 
         elif mode == 'transport_stats':
             # No manipulations needed for now
@@ -127,7 +158,11 @@ def convert_global_output(target_dir, source_dirs, dxs=None,
                     data = data_table.sort_values('time').mass.values
                     # Fill to the end
                     idx0 = len(df.time.unique()) - len(data)
-                    output_data[species]['global_quantities'][measure][i][idx0:] = data
+                    # TODO: this is so much slower than slicing. Is there a quicker way?
+                    # I got into a mess with masked arrays and whether I was assigning
+                    # to a pointer or not...
+                    for k, datum in enumerate(data):
+                        output_data[species]['global_quantities'][measure][i,k+idx0] = datum
 
     elif mode == 'transport_stats':
 
@@ -137,8 +172,10 @@ def convert_global_output(target_dir, source_dirs, dxs=None,
         for variable in unique_variables:
             output_data.createGroup(variable)
 
-        output_data.createVariable('dx', float, ('run_id',))
-        output_data.variables['dx'][:] = dxs
+        for param_key, param_value in run_params.items():
+            # Assume that all members of param_value are the same type!
+            output_data.createVariable(param_key, type(param_value[0]), ('run_id',))
+            output_data.variables[param_key][:] = param_value
 
         # Loop through data and separate into error and global data frames
         for i, df in enumerate(data_frame_list):
@@ -153,15 +190,19 @@ def convert_global_output(target_dir, source_dirs, dxs=None,
 
             # Create groups for the first time
             if i == 0:
-                # Errors
-                times = error_data.sort_values('time').time.unique()
-
                 output_data.createDimension('error_time', None)
                 output_data.createVariable('error_time', float, ('run_id','error_time'))
-                output_data['error_time'][i][:] = times
 
                 for variable in unique_variables:
                     output_data[variable].createGroup('errors')
+
+            # Errors
+            times = error_data.sort_values('time').time.unique()
+
+            # TODO: find out how to do this properly
+            # I couldn't work out how to get this to work with slices
+            for j, t in enumerate(times):
+                output_data['error_time'][i,j] = t
 
             # Loop through variables
             for variable in unique_variables:
@@ -179,7 +220,11 @@ def convert_global_output(target_dir, source_dirs, dxs=None,
                     data = data_table.sort_values('time').measure_value.values
                     # Fill to the end
                     idx0 = len(error_data.time.unique()) - len(data)
-                    output_data[variable]['errors'][measure][i][idx0:] = data
+                    # TODO: this is so much slower than slicing. Is there a quicker way?
+                    # I got into a mess with masked arrays and whether I was assigning
+                    # to a pointer or not...
+                    for k, datum in enumerate(data):
+                        output_data[variable]['errors'][measure][i,k+idx0] = datum
 
             # ---------------------------------------------------------------- #
             # Global quantity data
@@ -211,7 +256,11 @@ def convert_global_output(target_dir, source_dirs, dxs=None,
                     data = data_table.sort_values('time').measure_value.values
                     # Fill to the end
                     idx0 = len(quant_data.time.unique()) - len(data)
-                    output_data[variable]['global_quantities'][measure][i][idx0:] = data
+                    # TODO: this is so much slower than slicing. Is there a quicker way?
+                    # I got into a mess with masked arrays and whether I was assigning
+                    # to a pointer or not...
+                    for k, datum in enumerate(data[:]):
+                        output_data[variable]['global_quantities'][measure][i,k+idx0] = datum
 
     else:
         raise NotImplementedError(f'mode {mode} not implemented')

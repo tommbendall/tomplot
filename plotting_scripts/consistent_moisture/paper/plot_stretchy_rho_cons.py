@@ -13,9 +13,9 @@ from tomplot import individual_field_contour_plot, extract_lfric_2D_data
 # ---------------------------------------------------------------------------- #
 
 results_dirname = 'consistent_moisture_paper/stretchy-cons-cons'
-plotname = 'fig_5_rho_stretchy_cons'
+plotname = 'fig_7_rho_stretchy_cons'
 cbar_label = r'$\rho_d \ / $ kg m$^{-3}$'
-titles = [r'$t = 0$',r'$t=\tau/2$']
+titles = [r'$t = 0$',r'$t=\tau/2$',r'$t=\tau$']
 colour_scheme = 'RdBu_r'
 extrusion_details = {'domain':'plane', 'extrusion':'linear',
                      'zmin':0.0, 'zmax':2000, 'topological_dimension':3}
@@ -25,7 +25,7 @@ field_min = 0.0
 field_max = 2.0
 step = 0.2
 xlabel = r'$x \ / $ km'
-ylabels = [r'$z \ / $ km', None]
+ylabels = [r'$z \ / $ km', None, None]
 xlims = [-1,1]
 ylims = [0,2]
 
@@ -50,7 +50,7 @@ plt.rc('font',**font)
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-fig, axarray = plt.subplots(1,2,figsize=(16,8),sharey='row')
+fig, axarray = plt.subplots(1,3,figsize=(18,6),sharey='row')
 
 plotpath = f'{plotdir}/{plotname}.jpg'
 
@@ -63,8 +63,11 @@ for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
     else:
         filename = 'results/'+results_dirname+'/raw_data/lfric_diag.nc'
         data_file = Dataset(filename, 'r')
-        # Find halfway point in time
-        time_idx = int(np.floor((len(data_file['time_instant'][:])-2)/2))
+        if i == 1:
+            # Find halfway point in time
+            time_idx = int(np.ceil((len(data_file['time_instant'][:])-2)/2))
+        else:
+            time_idx = -1
 
 
     # Extract data

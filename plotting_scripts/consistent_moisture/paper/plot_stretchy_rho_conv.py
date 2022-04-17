@@ -13,19 +13,19 @@ from tomplot import individual_field_contour_plot, extract_lfric_2D_data
 # ---------------------------------------------------------------------------- #
 
 results_dirname = 'consistent_moisture_paper/stretchy-conv-cons-240'
-plotname = 'fig_2_rho_stretchy_conv'
+plotname = 'fig_4_rho_stretchy_conv'
 cbar_label = r'$\rho_d \ / $ kg m$^{-3}$'
-titles = [r'$t = 0$',r'$t=\tau/2$']
+titles = [r'$t = 0$',r'$t=\tau/2$',r'$t=\tau$']
 colour_scheme = 'RdBu_r'
 extrusion_details = {'domain':'plane', 'extrusion':'linear',
                      'zmin':0.0, 'zmax':2000, 'topological_dimension':3}
 field_name = 'rho'
 
-field_mins = [0.5, 0.0]
-field_maxes = [1.0, 4.0]
-steps = [0.1, 0.25]
+field_mins = [0.5, 0.0, 0.5]
+field_maxes = [1.0, 4.0, 1.0]
+steps = [0.1, 0.25, 0.1]
 xlabel = r'$x \ / $ km'
-ylabels = [r'$z \ / $ km', None]
+ylabels = [r'$z \ / $ km', None, None]
 xlims = [-1,1]
 ylims = [0,2]
 
@@ -47,7 +47,7 @@ plt.rc('font',**font)
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-fig, axarray = plt.subplots(1,2,figsize=(16,8),sharey='row')
+fig, axarray = plt.subplots(1,3,figsize=(18,6),sharey='row')
 
 plotpath = f'{plotdir}/{plotname}.jpg'
 
@@ -61,8 +61,11 @@ for i, (ax, title, ylabel, field_min, field_max, step) in \
     else:
         filename = 'results/'+results_dirname+'/raw_data/lfric_diag.nc'
         data_file = Dataset(filename, 'r')
-        # Find halfway point in time
-        time_idx = int(np.ceil((len(data_file['time_instant'][:])-2)/2))
+        if i == 1:
+            # Find halfway point in time
+            time_idx = int(np.ceil((len(data_file['time_instant'][:])-2)/2))
+        else:
+            time_idx = -1
 
 
     # Extract data
@@ -81,6 +84,8 @@ for i, (ax, title, ylabel, field_min, field_max, step) in \
     num_contours = int(np.floor((field_max - field_min) / step)) + 1
     contours = np.linspace(field_min, field_max, num_contours)
 
+    print(np.min(field_data), np.max(field_data))
+
     cf = individual_field_contour_plot(coords_X, coords_Y, field_data,
                                        ax=ax, time=time, slice_name=slice,
                                        title=None, title_method=None,
@@ -93,12 +98,13 @@ for i, (ax, title, ylabel, field_min, field_max, step) in \
                                        xlims=xlims, ylims=ylims, xlabel=xlabel,
                                        xticklabels=xlims, yticklabels=ylims)
 
-    # The two plots use different colour bars. Put them above the plots
-    #fig.subplots_adjust(top=0.9)
+    # The plots use different colour bars. Put them below the plots
     if i == 0:
-        cax = fig.add_axes([0.125, 0.0, 0.355, 0.04])
+        cax = fig.add_axes([0.125, 0.0, 0.23, 0.04])
+    elif i == 1:
+        cax = fig.add_axes([0.399, 0.0, 0.23, 0.04])
     else:
-        cax = fig.add_axes([0.5475, 0.0, 0.355, 0.04])
+        cax = fig.add_axes([0.672, 0.0, 0.23, 0.04])
     cb = fig.colorbar(cf, ticks=[field_min, field_max], cax=cax,
                       orientation='horizontal')
     cb.set_label(cbar_label, labelpad=-10)
