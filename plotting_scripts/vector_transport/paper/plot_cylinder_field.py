@@ -12,7 +12,7 @@ from tomplot import individual_quiver_plot, extract_2D_data
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-results_dirname = 'demo_5_cylindrical_curly'
+results_dirname = 'vector_transport_paper/demo_5_cylindrical_curly'
 plot_times = 'all'
 field_labels = ['RTCF2']
 plotname = 'fig_1_cylinder_fields'

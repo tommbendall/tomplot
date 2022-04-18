@@ -1,5 +1,5 @@
 """
-Makes plots for the shallow water Galewsky jet test case,
+Makes field plots for the shallow water Galewsky jet test case,
 """
 
 import numpy as np
@@ -13,8 +13,7 @@ from tomplot import extract_2D_data, individual_field_contour_plot, individual_t
 
 plotdir = 'results/vector_transport_paper/figures'
 results_options = ['plain','recovered','vorticity','vorticity_fancy_SUPG']
-titles = ['Benchmark,', 'Recovered,', 'Vorticity,','SUPG']
-diagnostic_fields = ['energy', 'potential_enstrophy']
+titles = ['Benchmark,', 'Recovered,', 'Vorticity,','SUPG,']
 time_idx = -1
 colour_scheme = 'RdBu_r'
 field_name = 'vorticity'
@@ -22,18 +21,15 @@ spherical_centre = (-np.pi/2,np.pi/4)
 slice = 'xy'
 slice_idx = 0
 run_id = 0
-diagnostic = 'total'
-sw_labels = {('total', 'energy'): 'Normalised energy',
-             ('total', 'potential_enstrophy'): 'Normalised potential enstrophy'}
 
 base_results_dirname = 'galewsky_quads'
-plotname = 'fig_6_galewsky'
+plotname = 'fig_6_galewsky_fields'
 
 # ---------------------------------------------------------------------------- #
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-results_dirnames = [f'results/vector_transport_paper/galewsky_quads_{option}' for option in results_options]
+results_dirnames = [f'vector_transport_paper/galewsky_quads_{option}' for option in results_options]
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -41,7 +37,7 @@ plt.rc('font', family='serif')
 font = {'size':24}
 plt.rc('font',**font)
 
-fig, axarray = plt.subplots(4,1,figsize=(16,20),sharex='col')
+fig, axarray = plt.subplots(4,1,figsize=(18,20),sharex='col')
 
 plotpath = f'{plotdir}/{plotname}.jpg'
 
@@ -49,7 +45,7 @@ for i, (ax, dirname, title, xticklabels, xlabel, xticks) in \
     enumerate(zip(axarray, results_dirnames, titles, [None,None,None,[-270,90]],
                     [None,None,None,r'$\lambda \ / $ deg'], [None,None,None,[-3*np.pi/2,np.pi/2]])):
     # This code is all adapted from plot_control
-    filename = f'{dirname}/nc_fields/field_output_{str(run_id)}.nc'
+    filename = f'results/{dirname}/nc_fields/field_output_{str(run_id)}.nc'
     data_file = Dataset(filename, 'r')
 
     # Extract data
@@ -80,7 +76,7 @@ for i, (ax, dirname, title, xticklabels, xlabel, xticks) in \
 
 # Move the subplots to the left to make space for colorbar
 # and make them slightly closer together
-fig.subplots_adjust(bottom=0.1, hspace=0.14)
+fig.subplots_adjust(bottom=0.09, hspace=0.15)
 # Make collective colour bar
 cbar_label=r'$\zeta \ / $ s$^{-1}$'
 cbar_labelpad=-25
@@ -95,13 +91,4 @@ cb.set_label(cbar_label, labelpad=cbar_labelpad)
 print(f'Plotting to {plotpath}')
 fig.savefig(plotpath, bbox_inches='tight')
 plt.close()
-
-for diagnostic_field in diagnostic_fields:
-
-    individual_time_series_plot(results_dirnames, diagnostic_field, run_id,
-                                diagnostic, testname=f'fig_7_gal_{diagnostic_field}',
-                                plotdir=plotdir, field_labels=results_options,
-                                format='jpg', ylabel=sw_labels[(diagnostic,diagnostic_field)],
-                                time_units='days', normalise=True)
-
 

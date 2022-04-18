@@ -10,12 +10,12 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                                 testname=None, plotdir=None, override_dirname=False,
                                 field_labels=None, field_labels_from=None,
                                 figsize=(8,8), colours=None, linestyles=None,
-                                linewidth=2, fontsize=24, title=None, ax=None,
+                                linewidth=1, fontsize=24, title=None, ax=None,
                                 grid=True, ylabel=None, xlims=None, ylims=None,
                                 time_units='seconds', normalise=False, format='png',
                                 dpi=None, legend_bbox=(1.0,1.0), legend_ncol=1,
                                 label_style='plain', leg_col_spacing=None,
-                                leg_fontsize=None, titlepad=None):
+                                leg_fontsize=None, titlepad=None, no_legend=False):
     """
     Makes an individual time series plot for fields from a global netCDF
     diagnostics file.
@@ -191,7 +191,8 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                 #------------------------------------------------------------------#
 
                 # Plot diagnostics
-                ax.plot(time_data, diagnostic_data, color=colour, label=label, linestyle=linestyle)
+                ax.plot(time_data, diagnostic_data, color=colour, label=label,
+                        linestyle=linestyle, linewidth=linewidth)
 
                 ctr += 1
 
@@ -222,11 +223,12 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
     # Legend
     #--------------------------------------------------------------------------#
 
-    handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc='upper center', ncol=legend_ncol,
-                    bbox_to_anchor=legend_bbox, edgecolor='black',
-                    fontsize=leg_fontsize,
-                    columnspacing=leg_col_spacing)
+    if not no_legend:
+        handles, labels = ax.get_legend_handles_labels()
+        lgd = ax.legend(handles, labels, loc='upper center', ncol=legend_ncol,
+                        bbox_to_anchor=legend_bbox, edgecolor='black',
+                        fontsize=leg_fontsize,
+                        columnspacing=leg_col_spacing)
 
     #--------------------------------------------------------------------------#
     # Save and finish plot

@@ -13,7 +13,7 @@ from tomplot import individual_quiver_plot, extract_2D_data
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-results_dirname = 'demo_4_spherical_hooks'
+results_dirname = 'vector_transport_paper/demo_4_spherical_hooks'
 plotname = 'fig_4_sphere_fields'
 plot_times = 'all'
 run_id = 0
