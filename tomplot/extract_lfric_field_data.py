@@ -17,6 +17,7 @@ def extract_lfric_2D_data(data_file, field_name, time_idx,
 
     # Work out what time variable is called
     try:
+        print(data_file.variables['time'])
         time = data_file.variables['time'][time_idx]
         lfric_initial = False
     except KeyError:
@@ -34,13 +35,23 @@ def extract_lfric_2D_data(data_file, field_name, time_idx,
 
     # Get dimension names
     if lfric_initial:
-        vert_placement = data_file.variables[field_name].dimensions[0]
-        # these will begin with "n" so slice to get rid of this
-        hori_placement = data_file.variables[field_name].dimensions[1][1:]
+        if len(data_file.variables[field_name].dimensions) == 1:
+            # 2D data
+            vert_placement = None
+            hori_placement = data_file.variables[field_name].dimensions[0][1:]
+        else:
+            vert_placement = data_file.variables[field_name].dimensions[0]
+            # these will begin with "n" so slice to get rid of this
+            hori_placement = data_file.variables[field_name].dimensions[1][1:]
     else:
-        vert_placement = data_file.variables[field_name].dimensions[1]
-        # these will begin with "n" so slice to get rid of this
-        hori_placement = data_file.variables[field_name].dimensions[2][1:]
+        if len(data_file.variables[field_name].dimensions) == 2:
+            # 2D data
+            vert_placement = None
+            hori_placement = data_file.variables[field_name].dimensions[1][1:]
+        else:
+            vert_placement = data_file.variables[field_name].dimensions[1]
+            # these will begin with "n" so slice to get rid of this
+            hori_placement = data_file.variables[field_name].dimensions[2][1:]
 
     plot_coords, data_coords, interp_coords_2d, \
     coord_labels, coord_lims, coord_ticks, \
@@ -58,15 +69,27 @@ def extract_lfric_2D_data(data_file, field_name, time_idx,
 
     field_data = np.zeros_like(plot_coords[0])
     if lfric_initial:
-        field_full = data_file.variables[field_name][:,:]
+        if vert_placement is None:
+            field_full = data_file.variables[field_name][:]
+        else:
+            field_full = data_file.variables[field_name][:,:]
     else:
-        field_full = data_file.variables[field_name][time_idx,:,:]
+        if vert_placement is None:
+            field_full = data_file.variables[field_name][time_idx,:]
+        else:
+            field_full = data_file.variables[field_name][time_idx,:,:]
 
     if slice_name == 'xy':
-        # Just do interpolation at that level
-        field_data = griddata(data_coords, field_full[slice_idx], interp_coords_2d, method='linear')
-        field_near = griddata(data_coords, field_full[slice_idx], interp_coords_2d, method='nearest')
-        field_data[np.isnan(field_data)] = field_near[np.isnan(field_data)]
+        if vert_placement is None:
+            # No slicing needed
+            field_data = griddata(data_coords, field_full, interp_coords_2d, method='linear')
+            field_near = griddata(data_coords, field_full, interp_coords_2d, method='nearest')
+            field_data[np.isnan(field_data)] = field_near[np.isnan(field_data)]
+        else:
+            # Just do interpolation at that level
+            field_data = griddata(data_coords, field_full[slice_idx], interp_coords_2d, method='linear')
+            field_near = griddata(data_coords, field_full[slice_idx], interp_coords_2d, method='nearest')
+            field_data[np.isnan(field_data)] = field_near[np.isnan(field_data)]
 
     else:
         # Need to loop through levels

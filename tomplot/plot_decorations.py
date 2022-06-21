@@ -340,7 +340,7 @@ def axes_limits_labels_and_titles(ax, xlabel=None, xlabelpad=None, xlims=None,
                                   ylabel=None, ylabelpad=None, ylims=None,
                                   yticks=None, yticklabels=None,
                                   title=None, title_method=None, titlepad=None,
-                                  slice_label=None,
+                                  title_size=None, slice_label=None,
                                   time=None, time_method='seconds',
                                   field_min=None, field_max=None):
     """
@@ -411,7 +411,7 @@ def axes_limits_labels_and_titles(ax, xlabel=None, xlabelpad=None, xlims=None,
                 else:
                     title += slice_label+', min: %2.2e, max: %2.2e, ' % (field_min, field_max)
                 title += 'time: '+get_time_string(time, time_method)
-        ax.set_title(title, pad=titlepad)
+        ax.set_title(title, pad=titlepad, fontsize=title_size)
 
 
 def get_time_string(time, time_method):

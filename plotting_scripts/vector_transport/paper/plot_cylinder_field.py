@@ -17,7 +17,7 @@ plot_times = 'all'
 field_labels = ['RTCF2']
 plotname = 'fig_1_cylinder_fields'
 cbar_label = r'$|F| \ / $ m s$^{-1}$'
-titles = [r'$t=0$', r'$t=\tau/2$']
+titles = [r'$t=0, \ t=T$', r'$t=T/2$']
 colour_scheme = 'OrRd'
 run_id = 0
 ylabels = [r'$z \ / $ m', None]

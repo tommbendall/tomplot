@@ -4,6 +4,8 @@ data extracted from LFRic
 """
 import numpy as np
 from .plot_decorations import get_domain_label
+from .data_coords import get_lfric_data_coords
+from .domain_properties import get_lfric_domain_properties
 
 
 def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
@@ -21,6 +23,9 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
 
     domain = extrusion_details['domain']
     dim = extrusion_details['topological_dimension']
+
+    if vert_placement is None and slice_name != 'xy':
+        raise ValueError(f'Cannot take slice {slice_name} of 2D data')
 
     if dim == 3:
         dim_names = ['x','y','z']
@@ -71,7 +76,10 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
 
         for dim_name in dim_names:
             if dim_name == 'z':
-                num_part = len(np.unique(data[vert_placement][:]))
+                if vert_placement is None:
+                    num_part = 0
+                else:
+                    num_part = len(np.unique(data[vert_placement][:]))
             elif domain == 'sphere':
                 num_part = 101
             elif (names[dim_name] == 'x'):
@@ -129,8 +137,11 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
 
             # Must be at constant z
             domain_label, units = get_domain_label(names['z'], length_units, angular_units)
-            slice_label = domain_label+r'$=$ %.1f' % plot_coords_1d[2][slice_idx]
-            slice_label += ' '+units
+            if vert_placement is None:
+                slice_label = ''
+            else:
+                slice_label = domain_label+r'$=$ %.1f' % plot_coords_1d[2][slice_idx]
+                slice_label += ' '+units
             coord_lims = [domain_extents['x'], domain_extents['y']]
             coord_ticks = [ticklabels['x'], ticklabels['y']]
 
@@ -149,11 +160,11 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
             coord_ticks = [ticklabels['x'], ticklabels['z']]
 
         elif slice_name == 'yz':
-            plot_coords = np.meshgrid([plot_coords_1d[0][slice_idx]], plot_coords_1d[1], plot_coords_1d[2])
+            plot_coords = np.meshgrid(plot_coords_1d[1], plot_coords_1d[2])
 
             # Turn this into a list of points for interpolating to
-            interp_coords_2d = (plot_coords_1d[0][slice_idx]*np.ones_like(plot_coords[1]),
-                                plot_coords[0])
+            interp_coords_2d = (plot_coords_1d[0][slice_idx]*np.ones_like(plot_coords_1d[1]),
+                                np.array(plot_coords_1d[1]))
 
             # Must be at constant x
             domain_label, units = get_domain_label(names['x'], length_units, angular_units)
@@ -169,76 +180,9 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
     # Extract data coordinates
     #--------------------------------------------------------------------------#
 
-    if len(names.keys()) == 2:
-        raise NotImplementedError('Set up of data coords not implemented')
-    else:
-        if domain == 'sphere':
-            # Convert to radians
-            data_coords_2d = (data.variables[hori_placement+'_'+names['x']][:]*np.pi/180.0,
-                              data.variables[hori_placement+'_'+names['y']][:]*np.pi/180.0)
-        else:
-            data_coords_2d = (data.variables[hori_placement+'_'+names['x']][:],
-                            data.variables[hori_placement+'_'+names['y']][:])
-
-    if (domain == 'sphere' and abs(central_lon) > 1e-12):
-        raise NotImplementedError('LFRic coords not yet implemented with non-zero central lon')
+    data_coords_2d = get_lfric_data_coords(data, hori_placement,
+                                           extrusion_details, central_lon)
 
     return plot_coords, data_coords_2d, interp_coords_2d, \
            coord_labels, coord_lims, coord_ticks, slice_label
 
-
-def get_lfric_domain_properties(data, extrusion_details, central_lon=0.0):
-
-    domain = extrusion_details['domain']
-    extruded = True if extrusion_details['extrusion'] is not None else False
-
-    #--------------------------------------------------------------------------#
-    # Work out which coordinates we are using
-    #--------------------------------------------------------------------------#
-
-    if domain == 'plane':
-        names = {'x':'x', 'y':'y'}
-        domain_extents = {'x': (np.minimum(np.min(data['Mesh2d_edge_edge_x'][:]),
-                                           np.min(data['Mesh2d_edge_node_x'][:])),
-                                np.maximum(np.max(data['Mesh2d_edge_edge_x'][:]),
-                                           np.max(data['Mesh2d_edge_node_x'][:]))),
-                          'y': (np.minimum(np.min(data['Mesh2d_edge_edge_y'][:]),
-                                           np.min(data['Mesh2d_edge_node_y'][:])),
-                                np.maximum(np.max(data['Mesh2d_edge_edge_y'][:]),
-                                           np.max(data['Mesh2d_edge_node_y'][:])))}
-        ticklabels = {'x':None, 'y':None, 'z':None}
-
-        if extrusion_details['extrusion'] is not None:
-            names['z'] = 'z'
-            domain_extents['z'] = (extrusion_details['zmin'],
-                                   extrusion_details['zmax'])
-
-    elif domain == 'sphere':
-        names = {'x':'x', 'y':'y'}
-        domain_extents = {'x': (-np.pi+central_lon, np.pi+central_lon),
-                          'y': (-np.pi/2, np.pi/2)}
-        if abs(central_lon) < 1e-6:
-            xticklabels = (r'$-\pi$', r'$\pi$')
-        elif abs(central_lon - np.pi) < 1e-6:
-            xticklabels = (r'0', r'$2\pi$')
-        elif abs(central_lon + np.pi) < 1e-6:
-            xticklabels = (r'$-2\pi$', r'$0$')
-        elif abs(central_lon + np.pi/2) < 1e-6:
-            xticklabels = (r'$-3\pi/2$', r'$\pi/2$')
-        elif abs(central_lon - np.pi/2) < 1e-6:
-            xticklabels = (r'$-\pi/2$', r'$3\pi/2$')
-        else:
-            xticklabels = None
-
-        ticklabels = {'x':xticklabels,
-                      'y':(r'$-\pi/2$', r'$\pi/2$'),
-                      'z':None}
-        if extrusion_details['extrusion'] is not None:
-            names['z'] = 'h'
-            domain_extents['z'] = (extrusion_details['zmin'],
-                                   extrusion_details['zmax'])
-
-    else:
-        raise ValueError('Domain %s not recognised' % domain)
-
-    return names, domain_extents, ticklabels

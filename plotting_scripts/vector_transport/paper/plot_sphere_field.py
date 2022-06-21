@@ -19,7 +19,7 @@ plot_times = 'all'
 run_id = 0
 field_info = ('F_0', 'F_0_zonal', 'F_0_meridional')
 cbar_label = r'$|F| \ /$ m s$^{-1}$'
-titles = [r'$t=0$', r'$t=\tau$']
+titles = [r'$t=0, \ t=2T$', r'$t=T$']
 colour_scheme = 'OrRd'
 
 # ---------------------------------------------------------------------------- #

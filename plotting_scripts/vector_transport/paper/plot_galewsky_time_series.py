@@ -13,7 +13,7 @@ from tomplot import extract_2D_data, individual_field_contour_plot, individual_t
 
 plotdir = 'results/vector_transport_paper/figures'
 results_options = ['plain','recovered','vorticity','vorticity_fancy_SUPG']
-field_labels = ['Benchmark', 'Recovered', 'Vorticity','SUPG']
+field_labels = ['Benchmark', 'Recovered', 'Vorticity w/o SUPG','Vorticity with SUPG']
 diagnostic_fields = ['energy', 'potential_enstrophy']
 diagnostic = 'total'
 ylabels = ['(E(t)-E(0))/E(0)', '(Q(t)-Q(0))/Q(0)']

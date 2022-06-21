@@ -25,16 +25,18 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                                   colour_scheme='Blues', restricted_cmap=None,
                                   colour_levels_scaling=1.2,
                                   extend_cmap=True, remove_contour=False,
+                                  transparency=1.0,
                                   linestyle=None, linewidth=1,
                                   linecolours='black',
                                   fontsize=24, title=None, title_method='full',
-                                  titlepad=30, ax=None,
+                                  titlepad=30, ax=None, title_size=24,
                                   slice_label=None, time=None, time_method='seconds',
                                   text=None, text_pos=None,
                                   xlims=None, ylims=None, xticks=None, yticks=None,
                                   xticklabels=None, yticklabels=None,
                                   xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None,
-                                  dpi=None):
+                                  dpi=None, gridline_args=None,
+                                  remove_lines=False):
     """
     Makes an individual coloured 2D contour plot of a field from a netCDF
     field output file.
@@ -159,7 +161,11 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
 
     cf = ax.contourf(coords_X, coords_Y, field_data, colour_contours,
                      cmap=cmap, extent=extent, transform=crs,
-                     origin='lower')
+                     origin='lower', alpha=transparency)
+
+    if remove_lines:
+        for c in cf.collections:
+            c.set_edgecolor("face")
 
     if extend_cmap:
         # Set colours for over and under shoots
@@ -199,9 +205,9 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                                       yticks=yticks, yticklabels=yticklabels,
                                       title=title, title_method=title_method, titlepad=titlepad,
                                       slice_label=slice_label, time=time, time_method=time_method,
-                                      field_min=field_min, field_max=field_max)
-    else:
-        ax.gridlines()
+                                      field_min=field_min, field_max=field_max, title_size=title_size)
+    elif gridline_args is not None:
+        ax.gridlines(**gridline_args)
 
     if text is not None:
         if text_pos is None or not isinstance(text_pos, tuple):
@@ -218,6 +224,7 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
         return cf
     else:
 
+        print(f'Saving figure to {plotname}')
         fig.savefig(plotname, bbox_inches='tight', dpi=dpi)
 
         plt.close()

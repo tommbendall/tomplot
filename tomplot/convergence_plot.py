@@ -12,7 +12,8 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                                 figsize=(8,8), colours=None, markers=None,
                                 linestyles=None, linewidth=2, markersize=8,
                                 fontsize=24, title=None, comparison_lines=None,
-                                ax=None, grid=True, xlabel='default', ylabel='default',
+                                ax=None, grid=True, xlabel='default',
+                                ylabel='default', best_fit_deg=1,
                                 xlim=None, ylim=None, legend_bbox=(1.0,1.0),
                                 legend_ncol=1, label_style='gradient_full',
                                 format='png', dpi=None, titlepad=None,
@@ -124,6 +125,14 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             raise ValueError('The list of linestyles should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
                              (len(linestyles), len(fields)*len(dirnames)))
+    
+    if type(best_fit) == list:
+        if len(best_fit) != len(best_fit)*len(dirnames):
+            raise ValueError('The list of best fits should have the same '+
+                             'length as the list of fields. Found %d but expected %d' %
+                             (len(best_fit), len(fields)*len(dirnames)))
+    else:
+        best_fit = [best_fit]*(len(fields)*len(dirnames))
 
     ax_provided = (ax is not None)
 
@@ -173,8 +182,8 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             #------------------------------------------------------------------#
 
             colour = colours[k] if colours is not None else get_colour(testname, field, k)
-            marker = marker[k] if markers is not None else get_marker(testname, field, k)
-            linestyle = linestyle[k] if linestyles is not None else '-'
+            marker = markers[k] if markers is not None else get_marker(testname, field, k)
+            linestyle = linestyles[k] if linestyles is not None else '-'
 
             if field_labels is not None:
                 # Label is just read in
@@ -182,18 +191,16 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             else:
                 label = get_label(field)
 
-            print(dirname, field, run_id_list, label)
-
 
             #------------------------------------------------------------------#
             # Plot errors
             #------------------------------------------------------------------#
 
-            if best_fit:
+            if best_fit[k]:
                 # Get line of best fit first to amend the label
-                best_fit_line = np.poly1d(np.polyfit(variable_data, error_data, deg=1))
+                best_fit_line = np.poly1d(np.polyfit(variable_data, error_data, deg=best_fit_deg))
                 ax.plot(variable_data, best_fit_line(variable_data),
-                        linestyle='-', color=colour, lw=linewidth)
+                        linestyle=linestyle, color=colour, lw=linewidth)
 
                 if label_style == 'gradient_full':
                     label = label+' gradient: %1.3f' % best_fit_line[1]
