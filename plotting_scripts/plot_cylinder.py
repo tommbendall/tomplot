@@ -10,10 +10,12 @@ from tomplot import make_field_plots, make_convergence_plots, make_time_series_p
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-results_dirname = 'conv_1_quads_cyl_curly'
-plot_times = -1
-field_labels = ['plain','vorticity','recovered']
+shape = 'quads' # 'quads or 'tris'
+results_dirname = 'conv_1_quads_cyl_curly_trial' if shape == 'quads' else 'conv_1_tris_cyl_curly_trial'
+field_labels = ['Benchmark','Recovered','Vorticity'] if shape == 'quads' else ['Benchmark','Recovered']
+leg_xcentre = 0.45 if shape == 'quads' else 0.5
 plot_testname = 'cylinder_curly'
+title = 'Quadrilateral cells' if shape == 'quads' else 'Triangular cells'
 
 # ---------------------------------------------------------------------------- #
 # Derived things from options
@@ -25,44 +27,15 @@ num_setups = len(field_labels)
 data.close()
 
 # ---------------------------------------------------------------------------- #
-# Field plots
-# ---------------------------------------------------------------------------- #
-
-print('Making field plots')
-for run_id in run_ids:
-    for i in range(num_setups):
-        print('Field plot %d %d' % (run_id, i))
-        field_names = ['F_'+str(i)+'_zonal', 'F_'+str(i)+'_meridional']
-
-        make_field_plots(results_dirname, run_id, plot_testname,
-                         field_names, -1, 'xy', contours=np.linspace(-1.0, 4.0, 11))
-
-# ---------------------------------------------------------------------------- #
 # Convergence plots
 # ---------------------------------------------------------------------------- #
 
 if len(run_ids) > 1:
     print('Making convergence plots')
     field_names = ['F_'+str(i) for i in range(num_setups)]
-    make_convergence_plots(results_dirname, 'rncells_per_dim', field_names, run_ids,
-                           'L2_error', field_labels=field_labels,
-                           testname=plot_testname)
-
-    field_names = ['F_'+str(i)+'_zonal' for i in range(num_setups)]
-    make_convergence_plots(results_dirname, 'rncells_per_dim', field_names, run_ids,
-                           'L2_error', field_labels=field_labels,
-                           testname=plot_testname+'_zonal')
-
-    field_names = ['F_'+str(i)+'_meridional' for i in range(num_setups)]
-    make_convergence_plots(results_dirname, 'rncells_per_dim', field_names, run_ids,
-                           'L2_error', field_labels=field_labels,
-                           testname=plot_testname+'_meridional')
-
-# ---------------------------------------------------------------------------- #
-# Time series plots
-# ---------------------------------------------------------------------------- #
-
-print('Making time series plots')
-F_labels = ['F_'+str(i) for i in range(num_setups)]
-make_time_series_plots(results_dirname, F_labels, run_ids[-1], 'L2',
-                       field_labels=field_labels, testname=plot_testname)
+    make_convergence_plots(results_dirname, 'dx', field_names, run_ids,
+                           'L2_error', field_labels=field_labels, label_style='gradient_plain',
+                           testname=plot_testname, legend_bbox=(leg_xcentre,1.12), legend_ncol=3,
+                           titlepad=55, titles=title, format='jpg', dpi=300,
+                           ylabels=r'$\ln(||\mathbf{F}-\mathbf{F}_{true}||)$',
+                           leg_col_spacing=0.1, leg_fontsize=20)

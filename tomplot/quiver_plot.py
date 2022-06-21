@@ -11,14 +11,21 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
                            figsize=(8,8), field_name=None,
                            extra_field_data=None, extra_field_name=None,
                            slice_name=None, slice_idx=None,
-                           quiver_npts=1,
+                           quiver_npts=1, x_offset=None, y_offset=None,
                            units='xy', scale=None, angles='xy', scale_units='xy',
+                           restrict_quivers=False,
+                           projection=None,
+                           spherical_centre=(0.0, 0.0),
                            cbar_label=None,
+                           cbar_labelpad=None,
+                           cbar_ticks=None,
+                           cbar_format=None,
                            no_cbar=False,
                            contour_method=None,
                            contours=None,
                            contour_lines=True,
-                           colour_scheme='Blues', restricted_cmap=True,
+                           colour_scheme='Blues', restricted_cmap=None,
+                           colour_levels_scaling=1.2,
                            extend_cmap=True, remove_contour=False,
                            linestyle=None, linewidth=1,
                            linecolours='black',
@@ -28,7 +35,8 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
                            text=None, text_pos=None,
                            xlims=None, ylims=None, xticks=None, yticks=None,
                            xticklabels=None, yticklabels=None,
-                           xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None):
+                           xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None,
+                           dpi=None, gridline_args=None):
     """
     Makes an individual quiver plot of a field from a netCDF
     field output file.
@@ -73,6 +81,29 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
 
         fig = plt.figure(1, figsize=figsize)
         ax = fig.add_subplot(111)
+
+        if projection is None:
+            ax = fig.add_subplot(111)
+        elif projection == 'orthographic':
+            import cartopy.crs as ccrs
+            ax = fig.add_subplot(1, 1, 1,
+                                 projection=ccrs.Orthographic(spherical_centre[0]*180./np.pi,
+                                                              spherical_centre[1]*180./np.pi))
+        else:
+            raise ValueError('Projection %s not implemented' % projection)
+
+    if projection is None:
+        crs = None
+        extent = None
+    elif projection == 'orthographic':
+        import cartopy.crs as ccrs
+        ax.set_global()
+        coords_X *= 360.0/(2*np.pi)
+        coords_Y *= 360.0/(2*np.pi)
+        crs = ccrs.PlateCarree()
+        extent = (0, 360, -90, 90)
+    else:
+        raise ValueError('Projection %s not implemented' % projection)
 
     #--------------------------------------------------------------------------#
     # Determine contour data
@@ -129,6 +160,7 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
         cmap, line_contours = colourmap_and_contours(colour_contours,
                                                      colour_scheme=colour_scheme,
                                                      restricted_cmap=restricted_cmap,
+                                                     colour_levels_scaling=colour_levels_scaling,
                                                      remove_contour=remove_contour)
 
         extend = 'both' if extend_cmap else 'neither'
@@ -139,7 +171,8 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
 
     if contour_method is not None:
         cf = ax.contourf(coords_X, coords_Y, contour_data, colour_contours,
-                         cmap=cmap, extend=extend)
+                         cmap=cmap, extend=extend, transform=crs, extent=extent,
+                         origin='lower')
 
         if extend_cmap:
             # Set colours for over and under shoots
@@ -150,21 +183,63 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
             if linestyle is not None:
                 cl = ax.contour(coords_X, coords_Y, contour_data, line_contours,
                                 linewidths=linewidth, colors=linecolours,
-                                linestyles=linestyle)
+                                linestyles=linestyle, transform=crs, extent=extent,
+                                origin='lower')
 
         # FIXME: should this not be associated with the axis?
-        if cbar_label is None:
+        if cbar_label is None and field_name is not None:
             cbar_label = get_label(field_name)
         if not no_cbar:
-            plt.colorbar(cf, label=cbar_label)
+            cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks)
+            if cbar_label is not None:
+                cb.set_label(cbar_label, labelpad=cbar_labelpad)
+
+    if gridline_args is not None:
+        ax.gridlines(**gridline_args)
+
+    #--------------------------------------------------------------------------#
+    # Restrict extent of quivers if required
+    #--------------------------------------------------------------------------#
+
+    if restrict_quivers:
+        # Assume that we are chopping off the top and bottom 10% of values
+        # TODO: add option for this
+        # TODO: do this in its own function?
+        top_cutoff = np.min(coords_Y) + 0.9*(np.max(coords_Y) - np.min(coords_Y))
+        bot_cutoff = np.min(coords_Y) + 0.1*(np.max(coords_Y) - np.min(coords_Y))
+
+        # Use numpy function to do elementwise masking
+        filter_array = np.logical_and(bot_cutoff <= coords_Y, coords_Y <= top_cutoff)
+        # X coordinate shouldn't be restricted
+        filter_shape = (np.shape(coords_Y)[0],
+                        # Results in a 1D array
+                        int(np.shape(coords_Y[filter_array])[0] / np.shape(coords_Y)[0]))
+
+        # Need to reshape arrays after filtering
+        field_data_X = np.reshape(field_data_X[filter_array], filter_shape)
+        field_data_Y = np.reshape(field_data_Y[filter_array], filter_shape)
+        coords_X = np.reshape(coords_X[filter_array], filter_shape)
+        coords_Y = np.reshape(coords_Y[filter_array], filter_shape)
 
     #--------------------------------------------------------------------------#
     # Plot quivers
     #--------------------------------------------------------------------------#
 
-    ax.quiver(coords_X[::quiver_npts,::quiver_npts], coords_Y[::quiver_npts,::quiver_npts],
-              field_data_X[::quiver_npts,::quiver_npts], field_data_Y[::quiver_npts,::quiver_npts],
-              units=units, scale=scale, scale_units=scale_units, angles=angles)
+    x_slice = slice(x_offset, None, quiver_npts)
+    y_slice = slice(y_offset, None, quiver_npts)
+
+    if crs is None:
+        # separately handle this case as None transform results in no arrows
+        ax.quiver(coords_X[x_slice,y_slice], coords_Y[x_slice,y_slice],
+                  field_data_X[x_slice,y_slice], field_data_Y[x_slice,y_slice],
+                  units=units, scale=scale, scale_units=scale_units, angles=angles,
+                  zorder=3)
+    else:
+        ax.quiver(coords_X[x_slice,y_slice], coords_Y[x_slice,y_slice],
+                  field_data_X[x_slice,y_slice], field_data_Y[x_slice,y_slice],
+                  units=units, scale=scale, scale_units=scale_units, angles=angles, transform=crs,
+                  zorder=3)
+
 
     # Add axes labels, set limits and add a title
     axes_limits_labels_and_titles(ax, xlabel=xlabel, xlabelpad=xlabelpad, xlims=xlims,
@@ -194,6 +269,6 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
             return cf
     else:
 
-        fig.savefig(plotname, bbox_inches='tight')
+        fig.savefig(plotname, bbox_inches='tight', dpi=dpi)
 
         plt.close()

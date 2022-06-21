@@ -12,8 +12,12 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                                 figsize=(8,8), colours=None, markers=None,
                                 linestyles=None, linewidth=2, markersize=8,
                                 fontsize=24, title=None, comparison_lines=None,
-                                ax=None, grid=True, xlabel=None, ylabel=None,
-                                xlim=None, ylim=None):
+                                ax=None, grid=True, xlabel='default',
+                                ylabel='default', best_fit_deg=1,
+                                xlim=None, ylim=None, legend_bbox=(1.0,1.0),
+                                legend_ncol=1, label_style='gradient_full',
+                                format='png', dpi=None, titlepad=None,
+                                leg_col_spacing=None, leg_fontsize=None):
     """
     Makes an individual convergence plot for errors from a global netCDF
     diagnostics file.
@@ -105,22 +109,30 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
         raise ValueError('The lengths of run_ids list and fields list are not equal')
 
     if colours is not None:
-        if len(colours) != len(fields):
+        if len(colours) != len(fields)*len(dirnames):
             raise ValueError('The list of colours should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(colours), len(fields)))
+                             (len(colours), len(fields)*len(dirnames)))
 
     if markers is not None:
-        if len(markers) != len(fields):
+        if len(markers) != len(fields)*len(dirnames):
             raise ValueError('The list of markers should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(markers), len(fields)))
+                             (len(markers), len(fields)*len(dirnames)))
 
     if linestyles is not None:
-        if len(linestyles) != len(fields):
+        if len(linestyles) != len(fields)*len(dirnames):
             raise ValueError('The list of linestyles should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(linestyles), len(fields)))
+                             (len(linestyles), len(fields)*len(dirnames)))
+    
+    if type(best_fit) == list:
+        if len(best_fit) != len(best_fit)*len(dirnames):
+            raise ValueError('The list of best fits should have the same '+
+                             'length as the list of fields. Found %d but expected %d' %
+                             (len(best_fit), len(fields)*len(dirnames)))
+    else:
+        best_fit = [best_fit]*(len(fields)*len(dirnames))
 
     ax_provided = (ax is not None)
 
@@ -170,8 +182,8 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             #------------------------------------------------------------------#
 
             colour = colours[k] if colours is not None else get_colour(testname, field, k)
-            marker = marker[k] if markers is not None else get_marker(testname, field, k)
-            linestyle = linestyle[k] if linestyles is not None else '-'
+            marker = markers[k] if markers is not None else get_marker(testname, field, k)
+            linestyle = linestyles[k] if linestyles is not None else '-'
 
             if field_labels is not None:
                 # Label is just read in
@@ -179,17 +191,23 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             else:
                 label = get_label(field)
 
+
             #------------------------------------------------------------------#
             # Plot errors
             #------------------------------------------------------------------#
 
-            if best_fit:
+            if best_fit[k]:
                 # Get line of best fit first to amend the label
-                best_fit_line = np.poly1d(np.polyfit(variable_data, error_data, deg=1))
+                best_fit_line = np.poly1d(np.polyfit(variable_data, error_data, deg=best_fit_deg))
                 ax.plot(variable_data, best_fit_line(variable_data),
-                        linestyle='-', color=colour, lw=linewidth)
+                        linestyle=linestyle, color=colour, lw=linewidth)
 
-                label = label+' gradient: %1.3f' % best_fit_line[1]
+                if label_style == 'gradient_full':
+                    label = label+' gradient: %1.3f' % best_fit_line[1]
+                elif label_style == 'gradient_plain':
+                    label = label+': %1.3f' % best_fit_line[1]
+                elif label_style != 'plain':
+                    raise ValueError('label_style not recognised')
 
             # Plot error points
             ax.plot(variable_data, error_data, color=colour,
@@ -201,20 +219,23 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     # Decorations
     #--------------------------------------------------------------------------#
 
-    if xlabel is None:
+    if xlabel == 'default':
         xlabel = get_xlabel(variable, 'convergence')
-    if ylabel is None:
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel == 'default':
         ylabel = get_ylabel(error, 'convergence')
+        ax.set_ylabel(ylabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
 
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(title, pad=titlepad)
 
     if grid:
         ax.grid('on')
@@ -258,8 +279,10 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     #--------------------------------------------------------------------------#
 
     handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc='upper left',
-                    bbox_to_anchor=(1.0,1.0), edgecolor='black')
+    lgd = ax.legend(handles, labels, loc='upper center', ncol=legend_ncol,
+                    bbox_to_anchor=legend_bbox, edgecolor='black',
+                    fontsize=leg_fontsize, handletextpad=0.0,
+                    columnspacing=leg_col_spacing)
 
     #--------------------------------------------------------------------------#
     # Save and finish plot
@@ -273,9 +296,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                 print('Convergence plot directory not specified. '+
                       'Adding to results/'+dirnames[0]+'/figures')
             plotdir = 'results/'+dirnames[0]+'/figures'
-        plotname = plotdir+'/'+testname+'_'+error+'.png'
+        plotname = plotdir+'/'+testname+'_'+error+'.'+format
 
         fig.savefig(plotname, bbox_extra_artists=(lgd,),
-                    bbox_inches='tight')
+                    bbox_inches='tight', dpi=dpi)
 
         plt.close()

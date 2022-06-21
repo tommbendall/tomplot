@@ -13,7 +13,7 @@ def individual_field_1d_plot(coords, field_data, testname=None, plotname=None,
                              fontsize=24, title=None, title_method='full', ax=None,
                              grid=True, slice_label=None, time=None, time_method='seconds',
                              xlabel=None, ylabel=None, xlims=None, ylims=None,
-                             xticklabels=None):
+                             xticklabels=None, dpi=None):
     """
     Makes an individual 1D plot of a field from a netCDF field output file.
 
@@ -78,6 +78,6 @@ def individual_field_1d_plot(coords, field_data, testname=None, plotname=None,
         return ax
     else:
 
-        fig.savefig(plotname, bbox_inches='tight')
+        fig.savefig(plotname, bbox_inches='tight', dpi=dpi)
 
         plt.close()

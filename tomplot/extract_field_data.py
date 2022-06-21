@@ -8,7 +8,8 @@ from .plot_coordinates import *
 
 
 def extract_1D_data(data_file, field_name, time_idx,
-                    slice_name=None, slice_idx=None, num_points=None):
+                    slice_name=None, slice_idx=None, num_points=None,
+                    plot_coords_1d=None):
     """
     Extract 1D field data from a netCDF field output file, ready to plot.
 
@@ -25,6 +26,9 @@ def extract_1D_data(data_file, field_name, time_idx,
     :arg num_points: (Optional). The number of coordinate points (in 1D) to use
                      in the plotting grid. If not specified then this will be
                      determined from the data, and if it can't then set to be 100.
+    :arg plot_coords_1d: (Optional) An array of 1D arrays of the points at which
+                         to plot. If not specified then this will be determined
+                         from the data
     """
 
     #--------------------------------------------------------------------------#
@@ -50,7 +54,8 @@ def extract_1D_data(data_file, field_name, time_idx,
     plot_coords, data_coords, interp_coords, \
     coord_label, coord_lims, coord_ticks, \
     slice_label = get_coords_1d(data_file, space_name,
-                                slice_name, slice_idx, num_points)
+                                slice_name, slice_idx, num_points,
+                                plot_coords_1d=plot_coords_1d)
 
     #--------------------------------------------------------------------------#
     # Interpolate field data
@@ -70,7 +75,8 @@ def extract_1D_data(data_file, field_name, time_idx,
 
 
 def extract_2D_data(data_file, field_name, time_idx,
-                    slice_name=None, slice_idx=None, num_points=None):
+                    slice_name=None, slice_idx=None, num_points=None,
+                    central_lon=0.0, plot_coords_1d=None):
     """
     Extract 2D field data from a netCDF field output file, ready to plot.
 
@@ -87,6 +93,11 @@ def extract_2D_data(data_file, field_name, time_idx,
     :arg num_points: (Optional). The number of coordinate points (in 1D) to use
                      in the plotting grid. If not specified then this will be
                      determined from the data, and if it can't then set to be 100.
+    :arg central_lon: (Optional) longitude at centre of plot. Only implemented
+                      for spherical domains.
+    :arg plot_coords_1d: (Optional) An array of 1D arrays of the points at which
+                         to plot. If not specified then this will be determined
+                         from the data
     """
 
     #--------------------------------------------------------------------------#
@@ -111,8 +122,9 @@ def extract_2D_data(data_file, field_name, time_idx,
 
     plot_coords, data_coords, interp_coords, \
     coord_labels, coord_lims, coord_ticks, \
-    slice_label = get_coords_2d(data_file, space_name,
-                                slice_name, slice_idx, num_points)
+    slice_label = get_coords_2d(data_file, space_name, slice_name, slice_idx,
+                                num_points, central_lon=central_lon,
+                                plot_coords_1d=plot_coords_1d)
 
     #--------------------------------------------------------------------------#
     # Interpolate field data

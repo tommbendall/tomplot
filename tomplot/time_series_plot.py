@@ -10,9 +10,12 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                                 testname=None, plotdir=None, override_dirname=False,
                                 field_labels=None, field_labels_from=None,
                                 figsize=(8,8), colours=None, linestyles=None,
-                                linewidth=2, fontsize=24, title=None, ax=None,
-                                grid=True, ylabel=None, xlim=None, ylim=None,
-                                time_units='seconds', normalise=False):
+                                linewidth=1, fontsize=24, title=None, ax=None,
+                                grid=True, ylabel=None, xlims=None, ylims=None,
+                                time_units='seconds', normalise=False, format='png',
+                                dpi=None, legend_bbox=(1.0,1.0), legend_ncol=1,
+                                label_style='plain', leg_col_spacing=None,
+                                leg_fontsize=None, titlepad=None, no_legend=False):
     """
     Makes an individual time series plot for fields from a global netCDF
     diagnostics file.
@@ -87,17 +90,17 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
         raise ValueError('The lengths of run_ids list and fields list are not equal')
 
     if colours is not None:
-        if len(colours) != len(fields):
+        if len(colours) != len(fields)*len(dirnames):
             raise ValueError('The list of colours should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(colours), len(fields)))
+                             (len(colours), len(fields)*len(dirnames)))
 
 
     if linestyles is not None:
-        if len(linestyles) != len(fields):
+        if len(linestyles) != len(fields)*len(dirnames):
             raise ValueError('The list of linestyles should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
-                             (len(linestyles), len(fields)))
+                             (len(linestyles), len(fields)*len(dirnames)))
 
     ax_provided = (ax is not None)
 
@@ -119,6 +122,8 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
     # Loop through fields adding lines to plot
     #--------------------------------------------------------------------------#
 
+    ctr = 0
+
     for k, dirname in enumerate(dirnames):
 
         if override_dirname:
@@ -127,8 +132,6 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
             filename = 'results/'+dirname+'/global_output.nc'
 
         data_file = Dataset(filename, 'r')
-
-        counter = 0
 
         for i, (field, run_id_list) in enumerate(zip(fields, run_ids)):
 
@@ -167,23 +170,31 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                 # Determine marker colours, shapes and labels
                 #------------------------------------------------------------------#
 
-                colour = colours[i] if colours is not None else get_colour(testname, field, counter)
-                linestyle = linestyle[i] if linestyles is not None else '-'
+                colour = colours[ctr] if colours is not None else get_colour(testname, field, ctr)
+                linestyle = linestyles[ctr] if linestyles is not None else '-'
 
                 if field_labels is not None:
                     # Label is just read in
-                    label = field_labels[counter]
+                    label = field_labels[ctr]
                 else:
                     label = get_label(field)
 
+                if label_style == 'range_full':
+                    label = label+' range: %1.3e' % (np.max(diagnostic_data) - np.min(diagnostic_data))
+                elif label_style == 'range_plain':
+                    label = label+': %1.3e' % (np.max(diagnostic_data) - np.min(diagnostic_data))
+                elif label_style != 'plain':
+                    raise ValueError('label_style not recognised')
+
                 #------------------------------------------------------------------#
                 # Plot diagnostics
                 #------------------------------------------------------------------#
 
                 # Plot diagnostics
-                ax.plot(time_data, diagnostic_data, color=colour, label=label, linestyle=linestyle)
+                ax.plot(time_data, diagnostic_data, color=colour, label=label,
+                        linestyle=linestyle, linewidth=linewidth)
 
-                counter += 1
+                ctr += 1
 
         data_file.close()
 
@@ -198,12 +209,12 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
-    if xlim is not None:
-        ax.set_xlim(xlim)
-    if ylim is not None:
-        ax.set_ylim(ylim)
+    if xlims is not None:
+        ax.set_xlim(xlims)
+    if ylims is not None:
+        ax.set_ylim(ylims)
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(title, pad=titlepad)
 
     if grid:
         ax.grid('on')
@@ -212,9 +223,12 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
     # Legend
     #--------------------------------------------------------------------------#
 
-    handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc='upper left',
-                    bbox_to_anchor=(1.0,1.0), edgecolor='black')
+    if not no_legend:
+        handles, labels = ax.get_legend_handles_labels()
+        lgd = ax.legend(handles, labels, loc='upper center', ncol=legend_ncol,
+                        bbox_to_anchor=legend_bbox, edgecolor='black',
+                        fontsize=leg_fontsize,
+                        columnspacing=leg_col_spacing)
 
     #--------------------------------------------------------------------------#
     # Save and finish plot
@@ -228,9 +242,9 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                 print('Convergence plot directory not specified. '+
                       'Adding to results/'+dirnames[0]+'/figures')
             plotdir = 'results/'+dirnames[0]+'/figures'
-        plotname = plotdir+'/'+testname+'_'+diagnostic+'.png'
+        plotname = plotdir+'/'+testname+'_'+diagnostic+'.'+format
 
         fig.savefig(plotname, bbox_extra_artists=(lgd,),
-                    bbox_inches='tight')
+                    bbox_inches='tight', dpi=dpi)
 
         plt.close()
