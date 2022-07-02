@@ -114,11 +114,10 @@ for i, (ax, title, ylabel, results_dirname) \
 
     # Extract data
     for diag_field_name in diag_field_names:
-        coords_X, coords_Y, field_data, time, \
-        coord_labels, coord_lims, coord_ticks,  \
-        slice_label = extract_lfric_2D_data(init_data_file, diag_field_name, init_time_idx,
-                                        slice_name=slice_name, slice_idx=slice_idx,
-                                        extrusion_details=extrusion_details)
+        coords_X, coords_Y, field_data, data_metadata = \
+            extract_lfric_2D_data(init_data_file, diag_field_name, init_time_idx,
+                                  slice_name=slice_name, slice_idx=slice_idx,
+                                  extrusion_details=extrusion_details)
 
         if diag_field_name == 'exner':
             data_values[diag_field_name] = exner_in_wth(field_data)
@@ -134,6 +133,12 @@ for i, (ax, title, ylabel, results_dirname) \
 
     init_data_file.close()
     data_file.close()
+
+    time = data_metadata['time']
+    coord_labels = data_metadata['coord_labels']
+    coord_lims = data_metadata['coord_lims']
+    coord_ticks = data_metadata['coord_ticks']
+    slice_label = data_metadata['slice_label']
 
     coords_X = coords_X*0.001
     coords_Y = coords_Y*0.001

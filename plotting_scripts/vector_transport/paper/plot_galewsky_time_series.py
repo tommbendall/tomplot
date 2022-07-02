@@ -4,8 +4,7 @@ Makes time series plots for the shallow water Galewsky jet test case,
 
 import numpy as np
 import matplotlib.pyplot as plt
-from netCDF4 import Dataset
-from tomplot import extract_2D_data, individual_field_contour_plot, individual_time_series_plot
+from tomplot import individual_time_series_plot
 
 # ---------------------------------------------------------------------------- #
 # Things that can be altered and parameters for the test case

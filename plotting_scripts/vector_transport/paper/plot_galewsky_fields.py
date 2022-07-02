@@ -49,15 +49,20 @@ for i, (ax, dirname, title, xticklabels, xlabel, xticks) in \
     data_file = Dataset(filename, 'r')
 
     # Extract data
-    coords_X, coords_Y, field_data, time, \
-    coord_labels, coord_lims, coord_ticks,  \
-    slice_label = extract_2D_data(data_file, field_name, time_idx,
-                                    slice_name=slice, slice_idx=slice_idx,
-                                    central_lon=spherical_centre[0],
-                                    plot_coords_1d=(np.linspace(-3*np.pi/2, np.pi/2, 201),
-                                                    np.linspace(1./9*np.pi/2, 8./9*np.pi/2, 101)))
+    coords_X, coords_Y, field_data, data_metadata = \
+        extract_2D_data(data_file, field_name, time_idx,
+                        slice_name=slice, slice_idx=slice_idx,
+                        central_lon=spherical_centre[0],
+                        plot_coords_1d=(np.linspace(-3*np.pi/2, np.pi/2, 201),
+                                        np.linspace(1./9*np.pi/2, 8./9*np.pi/2, 101)))
 
     data_file.close()
+
+    time = data_metadata['time']
+    coord_labels = data_metadata['coord_labels']
+    coord_lims = data_metadata['coord_lims']
+    coord_ticks = data_metadata['coord_ticks']
+    slice_label = data_metadata['slice_label']
 
     cf = individual_field_contour_plot(coords_X, coords_Y, field_data, ax=ax,
                                         title=title, title_method='minmax',

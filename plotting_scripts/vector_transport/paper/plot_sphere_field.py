@@ -57,17 +57,21 @@ for i, (spherical_centre, time_idx, title) in enumerate(zip([(0.0,0.0),(np.pi,0.
     data_file = Dataset(filename, 'r')
 
     # Extract data
-    coords_X, coords_Y, field_X_data, time, \
-    coord_labels, coord_lims, coord_ticks,  \
-    slice_label = extract_2D_data(data_file, field_X_name, time_idx,
-                                  slice_name=slice, slice_idx=slice_idx,
-                                  central_lon=spherical_centre[0])
+    coords_X, coords_Y, field_X_data, data_metadata = \
+        extract_2D_data(data_file, field_X_name, time_idx,
+                        slice_name=slice, slice_idx=slice_idx,
+                        central_lon=spherical_centre[0])
 
-    coords_X, coords_Y, field_Y_data, time, \
-    coord_labels, coord_lims, coord_ticks,  \
-    slice_label = extract_2D_data(data_file, field_Y_name, time_idx,
-                                  slice_name=slice, slice_idx=slice_idx,
-                                  central_lon=spherical_centre[0])
+    coords_X, coords_Y, field_Y_data, data_metadata = \
+        extract_2D_data(data_file, field_Y_name, time_idx,
+                        slice_name=slice, slice_idx=slice_idx,
+                        central_lon=spherical_centre[0])
+
+    time = data_metadata['time']
+    coord_labels = data_metadata['coord_labels']
+    coord_lims = data_metadata['coord_lims']
+    coord_ticks = data_metadata['coord_ticks']
+    slice_label = data_metadata['slice_label']
 
     data_file.close()
 
