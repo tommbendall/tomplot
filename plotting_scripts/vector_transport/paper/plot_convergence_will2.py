@@ -62,5 +62,6 @@ for i, (ax, field_name, title, ylabel, leg_xcentre) in \
                                 ylabel=ylabel, leg_col_spacing=0.1, leg_fontsize=18)
 
 print(f'Plotting to {plotpath}')
+fig.subplots_adjust(wspace=0.28)
 fig.savefig(plotpath, bbox_inches='tight')
 plt.close()
