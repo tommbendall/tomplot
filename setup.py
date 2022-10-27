@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-setup(name="Tomplot",
+setup(name="tomplot",
       version="0.1",
       description="A python plotting library for PDEs",
       author="Thomas M. Bendall",

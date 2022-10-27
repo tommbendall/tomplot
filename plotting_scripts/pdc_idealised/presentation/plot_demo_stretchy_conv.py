@@ -72,16 +72,21 @@ for time_idx in time_idxs:
             this_data_file = data_file
 
         # Extract data
-        coords_X, coords_Y, field_data, time, \
-        coord_labels, coord_lims, coord_ticks,  \
-        slice_label = extract_lfric_2D_data(this_data_file, field_name, this_time_idx,
-                                            slice_name=slice_name, slice_idx=slice_idx,
-                                            extrusion_details=extrusion_details,
-                                            central_lon=spherical_centre[0])
+        coords_X, coords_Y, field_data, data_metadata = \
+            extract_lfric_2D_data(this_data_file, field_name, this_time_idx,
+                                  slice_name=slice_name, slice_idx=slice_idx,
+                                  extrusion_details=extrusion_details,
+                                  central_lon=spherical_centre[0])
 
         lon_centre, lat_centre = spherical_centre[0]*180.0/np.pi, spherical_centre[1]*180.0/np.pi
         ax = fig.add_subplot(1, 2, 1+i,
                              projection=ccrs.Orthographic(lon_centre, lat_centre))
+
+        time = data_metadata['time']
+        coord_labels = data_metadata['coord_labels']
+        coord_lims = data_metadata['coord_lims']
+        coord_ticks = data_metadata['coord_ticks']
+        slice_label = data_metadata['slice_label']
 
 
         cf = individual_field_contour_plot(coords_X, coords_Y, field_data,

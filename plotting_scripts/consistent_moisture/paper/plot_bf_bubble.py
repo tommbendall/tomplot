@@ -78,11 +78,10 @@ for i, (ax, results_dirname, title, ylabel) in enumerate(zip(axarray, results_di
 
     # Extract data
     for field_name in field_names:
-        coords_X, coords_Y, field_data, time, \
-        coord_labels, coord_lims, coord_ticks,  \
-        slice_label = extract_lfric_2D_data(data_file, field_name, time_idx,
-                                           slice_name=slice, slice_idx=slice_idx,
-                                           extrusion_details=extrusion_details)
+        coords_X, coords_Y, field_data, data_metadata = \
+            extract_lfric_2D_data(data_file, field_name, time_idx,
+                                  slice_name=slice, slice_idx=slice_idx,
+                                  extrusion_details=extrusion_details)
 
         data_values[field_name] = field_data
 

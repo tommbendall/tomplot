@@ -100,5 +100,8 @@ def extract_lfric_2D_data(data_file, field_name, time_idx,
 
             field_data[level] = slice_data
 
-    return plot_coords[0], plot_coords[1], field_data, time, coord_labels, \
-           coord_lims, coord_ticks, slice_label
+    data_metadata = {'time': time, 'slice_label': slice_label,
+                     'coord_labels': coord_labels, 'coord_lims': coord_lims,
+                     'coord_ticks': coord_ticks}
+
+    return plot_coords[0], plot_coords[1], field_data, data_metadata

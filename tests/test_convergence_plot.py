@@ -5,7 +5,6 @@ In this file we test the routines for generating convergence plots.
 from tomplot import *
 import os
 import numpy as np
-import pytest
 
 def test_convergence_plot():
 
@@ -18,7 +17,7 @@ def test_convergence_plot():
     # Get NetCDF file                                                          #
     #--------------------------------------------------------------------------#
 
-    file_name = 'tests/data/global_output.nc'
+    file_name = 'tests/data/tomdata_sphere/global_output.nc'
     plotdir = 'tests/figures'
 
     if not os.path.exists(file_name):

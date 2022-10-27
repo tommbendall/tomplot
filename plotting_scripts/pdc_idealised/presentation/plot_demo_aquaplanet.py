@@ -95,31 +95,35 @@ for time_idx in time_idxs:
                 pass
             else:
                 if nice_radiation and time_idx in [5,13] and j == 2:
-                    coords_X, coords_Y, prev_field_data, time, \
-                    coord_labels, coord_lims, coord_ticks,  \
-                    slice_label = extract_lfric_2D_data(data_file, field_name, (this_time_idx-1),
-                                                        slice_name=slice_name, slice_idx=slice_idx,
-                                                        extrusion_details=extrusion_details,
-                                                        central_lon=spherical_centre[0],
-                                                        num_points=100)
-                    coords_X, coords_Y, next_field_data, time, \
-                    coord_labels, coord_lims, coord_ticks,  \
-                    slice_label = extract_lfric_2D_data(data_file, field_name, (this_time_idx+1),
-                                                        slice_name=slice_name, slice_idx=slice_idx,
-                                                        extrusion_details=extrusion_details,
-                                                        central_lon=spherical_centre[0],
-                                                        num_points=100)
+                    coords_X, coords_Y, prev_field_data, data_metadata = \
+                        extract_lfric_2D_data(data_file, field_name, (this_time_idx-1),
+                                              slice_name=slice_name, slice_idx=slice_idx,
+                                              extrusion_details=extrusion_details,
+                                              central_lon=spherical_centre[0],
+                                              num_points=100)
+                    coords_X, coords_Y, next_field_data, data_metadata = \
+                        extract_lfric_2D_data(data_file, field_name, (this_time_idx+1),
+                                              slice_name=slice_name, slice_idx=slice_idx,
+                                              extrusion_details=extrusion_details,
+                                              central_lon=spherical_centre[0],
+                                              num_points=100)
 
                     field_data = 0.5*(prev_field_data + next_field_data)
 
                 else:
-                    coords_X, coords_Y, field_data, time, \
-                    coord_labels, coord_lims, coord_ticks,  \
-                    slice_label = extract_lfric_2D_data(data_file, field_name, this_time_idx,
-                                                        slice_name=slice_name, slice_idx=slice_idx,
-                                                        extrusion_details=extrusion_details,
-                                                        central_lon=spherical_centre[0],
-                                                        num_points=100)
+                    coords_X, coords_Y, field_data, data_metadata = \
+                        extract_lfric_2D_data(data_file, field_name, this_time_idx,
+                                              slice_name=slice_name, slice_idx=slice_idx,
+                                              extrusion_details=extrusion_details,
+                                              central_lon=spherical_centre[0],
+                                              num_points=100)
+
+                time = data_metadata['time']
+                coord_labels = data_metadata['coord_labels']
+                coord_lims = data_metadata['coord_lims']
+                coord_ticks = data_metadata['coord_ticks']
+                slice_label = data_metadata['slice_label']
+
 
                 cf = individual_field_contour_plot(coords_X, coords_Y, field_data,
                                                    ax=ax, title_method=None,

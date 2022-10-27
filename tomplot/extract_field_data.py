@@ -71,7 +71,12 @@ def extract_1D_data(data_file, field_name, time_idx,
     # Guarantee that plot_coords and field_data will be the same shape
     plot_coords = np.reshape(plot_coords, np.shape(field_data))
 
-    return plot_coords, field_data, time, coord_label, coord_lims, coord_ticks, slice_label
+    data_metadata = {'time': time, 'slice_label': slice_label,
+                     'coord_labels': coord_label, 'coord_lims': coord_lims,
+                     'coord_ticks': coord_ticks}
+
+
+    return plot_coords, field_data, data_metadata
 
 
 def extract_2D_data(data_file, field_name, time_idx,
@@ -137,4 +142,8 @@ def extract_2D_data(data_file, field_name, time_idx,
     field_near = griddata(data_coords, field_full, interp_coords, method='nearest')
     field_data[np.isnan(field_data)] = field_near[np.isnan(field_data)]
 
-    return plot_coords[0], plot_coords[1], field_data, time, coord_labels, coord_lims, coord_ticks, slice_label
+    data_metadata = {'time': time, 'slice_label': slice_label,
+                     'coord_labels': coord_labels, 'coord_lims': coord_lims,
+                     'coord_ticks': coord_ticks}
+
+    return plot_coords[0], plot_coords[1], field_data, data_metadata

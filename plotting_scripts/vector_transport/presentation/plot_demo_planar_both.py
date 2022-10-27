@@ -69,17 +69,21 @@ for time_idx in time_idxs:
         data_file = Dataset(filename, 'r')
 
         # Extract data
-        coords_X, coords_Y, field_X_data, time, \
-        coord_labels, coord_lims, coord_ticks,  \
-        slice_label = extract_2D_data(data_file, field_X_name, time_idx,
-                                      slice_name=slice, slice_idx=slice_idx)
+        coords_X, coords_Y, field_X_data, data_metadata = \
+            extract_2D_data(data_file, field_X_name, time_idx,
+                            slice_name=slice, slice_idx=slice_idx)
 
-        coords_X, coords_Y, field_Y_data, time, \
-        coord_labels, coord_lims, coord_ticks,  \
-        slice_label = extract_2D_data(data_file, field_Y_name, time_idx,
-                                      slice_name=slice, slice_idx=slice_idx)
+        coords_X, coords_Y, field_Y_data, data_metadata = \
+            extract_2D_data(data_file, field_Y_name, time_idx,
+                            slice_name=slice, slice_idx=slice_idx)
 
         data_file.close()
+
+        time = data_metadata['time']
+        coord_labels = data_metadata['coord_labels']
+        coord_lims = data_metadata['coord_lims']
+        coord_ticks = data_metadata['coord_ticks']
+        slice_label = data_metadata['slice_label']
 
         ylabel = coord_labels[1] if i == 0 else None
 

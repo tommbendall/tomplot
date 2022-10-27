@@ -71,13 +71,18 @@ for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
 
 
     # Extract data
-    coords_X, coords_Y, field_data, time, \
-    coord_labels, coord_lims, coord_ticks,  \
-    slice_label = extract_lfric_2D_data(data_file, field_name, time_idx,
-                                        slice_name=slice, slice_idx=slice_idx,
-                                        extrusion_details=extrusion_details)
+    coords_X, coords_Y, field_data, data_metadata = \
+        extract_lfric_2D_data(data_file, field_name, time_idx,
+                             slice_name=slice, slice_idx=slice_idx,
+                             extrusion_details=extrusion_details)
 
     data_file.close()
+
+    time = data_metadata['time']
+    coord_labels = data_metadata['coord_labels']
+    coord_lims = data_metadata['coord_lims']
+    coord_ticks = data_metadata['coord_ticks']
+    slice_label = data_metadata['slice_label']
 
     # Scale coordinate fields to km
     coords_X *= 0.001
