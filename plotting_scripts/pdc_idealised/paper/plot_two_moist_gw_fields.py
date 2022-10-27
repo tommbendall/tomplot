@@ -65,7 +65,7 @@ def exner_in_wth(exner):
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/pdc_idealised_paper/figures'
+plotdir = '/data/users/tbendall/results/pdc_idealised_paper/figures'
 slice_name = 'xz'
 slice_idx = 0
 time_idx = -1

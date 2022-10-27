@@ -12,7 +12,7 @@ from tomplot import individual_field_contour_plot, extract_lfric_2D_data
 
 results_dirname = 'pdc_idealised_paper/stretchy_sphere_conv_C96_C48/raw_data'
 plot_times = 'all'
-base_plotname = 'results/pdc_idealised_paper/stretchy_sphere_conv_all/stretchy_rho'
+base_plotname = '/data/users/tbendall/results/pdc_idealised_paper/stretchy_sphere_conv_all/stretchy_rho'
 cbar_label = r'$m_X \ / $ kg kg$^{-1}$'
 colour_scheme = 'OrRd'
 extrusion_details = {'domain':'sphere', 'extrusion':'linear',
@@ -31,7 +31,7 @@ contours = np.linspace(field_min, field_max, num_contours)
 
 slice_name = 'xy'
 slice_idx = 0
-data_file = Dataset('results/'+results_dirname+'/lfric_diag.nc','r')
+data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_diag.nc','r')
 time_idxs = range(len(data_file['time'][:]))
 
 # ---------------------------------------------------------------------------- #

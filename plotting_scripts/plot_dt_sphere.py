@@ -23,7 +23,7 @@ for dt in dts:
 
     results_dirname = base_results_dirname+dt
 
-    data = Dataset('results/'+results_dirname+'/global_output.nc','r')
+    data = Dataset('/data/users/tbendall/results/'+results_dirname+'/global_output.nc','r')
     run_ids = data['run_id'][:]
     num_setups = len(field_labels)
     data.close()

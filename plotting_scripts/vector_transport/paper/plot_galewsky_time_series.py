@@ -10,7 +10,7 @@ from tomplot import individual_time_series_plot
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper/figures'
+plotdir = '/data/users/tbendall/results/vector_transport_paper/figures'
 results_options = ['plain','recovered','vorticity','vorticity_fancy_SUPG']
 field_labels = ['Benchmark', 'Recovered', 'Vorticity w/o SUPG','Vorticity with SUPG']
 diagnostic_fields = ['energy', 'potential_enstrophy']
@@ -28,7 +28,7 @@ plotname = 'fig_7_galewsky_time_series'
 # Time Series plots
 # ---------------------------------------------------------------------------- #
 
-results_dirnames = [f'vector_transport_paper/galewsky_quads_{option}' for option in results_options]
+results_dirnames = [f'/data/users/tbendall/results/vector_transport_paper/galewsky_quads_{option}' for option in results_options]
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)

@@ -14,7 +14,7 @@ from tomplot import individual_field_contour_plot, extract_lfric_2D_data
 base_results_dirname = 'consistent_moisture_paper/bryan_fritsch-'
 results_opts = ['adv','consist']
 time_idx = -1
-plotname = 'fig_9_bf_fields'
+plotname = 'fig_10_bf_fields'
 cbar_label = r"$\theta_e \ / $ K"
 titles = ['Advective','Consistent']
 colour_scheme = 'OrRd'
@@ -50,7 +50,7 @@ def diagnostic_field(data_dict):
 # ---------------------------------------------------------------------------- #
 
 results_dirnames = [base_results_dirname+opt for opt in results_opts]
-plotdir = 'results/consistent_moisture_paper/figures'
+plotdir = '/data/users/tbendall/results/consistent_moisture_paper/figures'
 slice = 'xz'
 slice_idx = 0
 
@@ -70,7 +70,7 @@ plotpath = f'{plotdir}/{plotname}.jpg'
 
 for i, (ax, results_dirname, title, ylabel) in enumerate(zip(axarray, results_dirnames, titles, ylabels)):
     # This code is all adapted from plot_control
-    filename = 'results/'+results_dirname+'/raw_data/lfric_diag.nc'
+    filename = '/data/users/tbendall/results/'+results_dirname+'/raw_data/lfric_diag.nc'
     data_file = Dataset(filename, 'r')
 
     # Set up dictionary to store multiple sets of data
@@ -88,6 +88,12 @@ for i, (ax, results_dirname, title, ylabel) in enumerate(zip(axarray, results_di
     data_file.close()
 
     field_data = diagnostic_field(data_values)
+
+    time = data_metadata['time']
+    coord_labels = data_metadata['coord_labels']
+    coord_lims = data_metadata['coord_lims']
+    coord_ticks = data_metadata['coord_ticks']
+    slice_label = data_metadata['slice_label']
 
     # Scale coordinate fields to km
     coords_X *= 0.001

@@ -225,8 +225,18 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
     # Plot quivers
     #--------------------------------------------------------------------------#
 
-    x_slice = slice(x_offset, None, quiver_npts)
-    y_slice = slice(y_offset, None, quiver_npts)
+    if type(quiver_npts) in (tuple,list):
+        quiver_npts_x = quiver_npts[0]
+        quiver_npts_y = quiver_npts[1]
+    elif type(quiver_npts) in [int, float]:
+        quiver_npts_x = quiver_npts
+        quiver_npts_y = quiver_npts
+    else:
+        raise TypeError(f'Type {type(quiver_npts)} is not supported')
+    
+
+    x_slice = slice(x_offset, None, quiver_npts_x)
+    y_slice = slice(y_offset, None, quiver_npts_y)
 
     if crs is None:
         # separately handle this case as None transform results in no arrows

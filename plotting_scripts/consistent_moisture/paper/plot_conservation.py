@@ -11,8 +11,8 @@ from tomplot import individual_convergence_plot, individual_time_series_plot
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-base_dirname = 'consistent_moisture_paper'
-plotname = 'fig_8_conservation'
+base_dirname = '/data/users/tbendall/results/consistent_moisture_paper'
+plotname = 'fig_9_conservation'
 titles = ['Transport Test','Rising Bubble']
 ylabels = [r'$\left(M(t) - M_0\right)/M_0$','']
 all_dirnames = [['stretchy-conv-adv-120', 'stretchy-conv-cons-120'],
@@ -26,7 +26,7 @@ all_run_ids = [[4],[0]]
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/consistent_moisture_paper/figures'
+plotdir = '/data/users/tbendall/results/consistent_moisture_paper/figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -45,13 +45,14 @@ for i, (dirnames, ax, title, ylabel, field_name, measure, run_ids) \
 # Consistency plots
 # ---------------------------------------------------------------------------- #
 
-    results_dirnames = [f'{base_dirname}/{dirname}' for dirname in dirnames]
+    results_dirnames = [f'{base_dirname}/{dirname}/global_output.nc' for dirname in dirnames]
     individual_time_series_plot(results_dirnames, field_name, run_ids,
                                 measure, ax=ax, field_labels=field_labels,
                                 label_style='range_plain',
                                 legend_bbox=(0.5,1.15), colours=['black','black'],
                                 linestyles=['--','-'], normalise=True,
                                 legend_ncol=2, titlepad=70, title=title,
+                                override_dirname=True,
                                 ylabel=ylabel, leg_col_spacing=0.5, leg_fontsize=18)
 
 print(f'Plotting to {plotpath}')

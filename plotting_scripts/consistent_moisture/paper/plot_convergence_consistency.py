@@ -2,19 +2,17 @@
 Makes convergence and consistency plots for the transport-only test
 """
 
-from netCDF4 import Dataset
 import matplotlib.pyplot as plt
-import numpy as np
 from tomplot import individual_convergence_plot, individual_time_series_plot
 
 # ---------------------------------------------------------------------------- #
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-base_dirname = 'consistent_moisture_paper'
-plotname = 'fig_6_convergence_consistency'
+base_dirname = '/data/users/tbendall/results/consistent_moisture_paper'
+plotname = 'fig_7_convergence_consistency'
 titles = ['Convergence','Consistency']
-ylabels = [r'$\ln(||m_X-m_X^{true}||)$',r'$\left(||q(t)||-||q_0||\right)/||q_0||$']
+ylabels = [r'$\ln(||m_X-m_X^{true}||/||m_X^{true}||)$',r'$\left(||q(t)||-||q_0||\right)/||q_0||$']
 
 # Things for convergence plot
 conv_dirnames = ['stretchy-conv-adv-120','stretchy-conv-cons-120']
@@ -37,7 +35,7 @@ cons_yticks = [-0.1, 0.2]
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/consistent_moisture_paper/figures'
+plotdir = '/data/users/tbendall/results/consistent_moisture_paper/figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -57,7 +55,7 @@ for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
 
     if i == 0:
 
-        results_dirnames = [f'{base_dirname}/{dirname}' for dirname in conv_dirnames]
+        results_dirnames = [f'{base_dirname}/{dirname}/global_output.nc' for dirname in conv_dirnames]
         individual_convergence_plot(results_dirnames, conv_variable, conv_field_name,
                                     conv_run_ids, error, ax=ax,
                                     field_labels=conv_field_labels,
@@ -65,6 +63,7 @@ for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
                                     label_style='gradient_plain',
                                     legend_bbox=(0.5,1.12),
                                     legend_ncol=2, titlepad=55, title=title,
+                                    override_dirname=True,
                                     ylabel=ylabel, leg_col_spacing=0.1, leg_fontsize=18)
 
 # ---------------------------------------------------------------------------- #
@@ -72,12 +71,12 @@ for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
 # ---------------------------------------------------------------------------- #
 
     else:
-        results_dirname = f'{base_dirname}/{cons_dirname}'
+        results_dirname = f'{base_dirname}/{cons_dirname}/global_output.nc'
         individual_time_series_plot(results_dirname, cons_field_names, cons_run_ids,
                                     cons_diagnostic, ax=ax, field_labels=cons_labels,
                                     label_style='range_plain',  normalise=True,
                                     legend_bbox=(0.5,1.12), colours=['black','black'],
-                                    linestyles=['--','-'],
+                                    linestyles=['--','-'], override_dirname=True,
                                     legend_ncol=2, titlepad=55, title=title,
                                     ylabel=ylabel, leg_col_spacing=0.5, leg_fontsize=18,
                                     xlims=cons_xticks, ylims=cons_yticks)

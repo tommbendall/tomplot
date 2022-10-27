@@ -23,7 +23,7 @@ all_run_ids = [[0]]
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/pdc_idealised_paper/figures'
+plotdir = '/data/users/tbendall/results/pdc_idealised_paper/figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)

@@ -209,9 +209,15 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                 elif label_style != 'plain':
                     raise ValueError('label_style not recognised')
 
+            # Put a line through data points if a linestyle is specified
+            if not best_fit[k] and linestyles is not None:
+                data_ls = linestyles[k]
+            else:
+                data_ls = ''
+
             # Plot error points
             ax.plot(variable_data, error_data, color=colour,
-                    marker=marker, label=label, linestyle='', ms=markersize)
+                    marker=marker, label=label, linestyle=data_ls, ms=markersize)
 
         data_file.close()
 

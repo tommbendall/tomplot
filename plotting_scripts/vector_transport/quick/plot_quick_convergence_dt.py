@@ -21,7 +21,7 @@ ylabel = r'$\ln(||\mathbf{F}-\mathbf{F}_{true}||)$'
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper/quick_figures'
+plotdir = '/data/users/tbendall/results/vector_transport_paper/quick_figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -40,7 +40,7 @@ for field in ['F_rec', 'F_vort']:
     fig, ax = plt.subplots(1,1,figsize=(8,8))
 
     plotpath = f'{plotdir}/{base_plotname}_{field}.jpg'
-    results_dirname = 'vector_transport_paper/conv_1_dt_all'
+    results_dirname = '/data/users/tbendall/results/vector_transport_paper/conv_1_dt_all'
 
     field_names = [field]*len(all_run_ids)
 

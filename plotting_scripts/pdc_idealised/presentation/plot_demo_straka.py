@@ -37,7 +37,7 @@ contours = np.linspace(field_min, field_max, 12)
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/pdc_idealised_paper/figures'
+plotdir = '/data/users/tbendall/results/pdc_idealised_paper/figures'
 slice_name = 'xz'
 slice_idx = 0
 time_idx = -1
@@ -60,7 +60,7 @@ plotpath = f'{plotdir}/{plotname}.jpg'
 for i, (ax, title, ylabel, results_dirname) \
     in enumerate(zip(axarray, titles, ylabels, results_dirnames)):
 
-    data_file = Dataset('/data/users/tbendall/'+results_dirname+'/lfric_diag.nc','r')
+    data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_diag.nc','r')
 
     coords_X, coords_Y, field_data, data_metadata = \
         extract_lfric_2D_data(data_file, field_name, time_idx,

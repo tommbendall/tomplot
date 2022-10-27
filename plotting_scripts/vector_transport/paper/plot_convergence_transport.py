@@ -24,7 +24,7 @@ ylabels = [r'$\ln(||\mathbf{F}-\mathbf{F}_{true}||)$',None]
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper/figures'
+plotdir = '/data/users/tbendall/results/vector_transport_paper/figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -44,7 +44,7 @@ for i, (ax, result_opt, leg_xcentre, title, ylabel) in \
 # ---------------------------------------------------------------------------- #
 
     results_dirname = f'vector_transport_paper/{result_opt}'
-    data = Dataset(f'results/{results_dirname}/global_output.nc','r')
+    data = Dataset(f'/data/users/tbendall/results/{results_dirname}/global_output.nc','r')
     run_ids = data['run_id'][:]
     num_setups = len(field_labels)
     data.close()

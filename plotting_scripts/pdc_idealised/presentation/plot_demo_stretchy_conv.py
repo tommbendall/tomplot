@@ -13,7 +13,7 @@ from tomplot import individual_field_contour_plot, extract_lfric_2D_data
 # ---------------------------------------------------------------------------- #
 
 results_dirname = 'pdc_demo_data/stretchy_conv'
-base_plotname = 'results/pdc_idealised_paper/figures/stretchy_rho_demo'
+base_plotname = '/data/users/tbendall/results/pdc_idealised_paper/figures/stretchy_rho_demo'
 cbar_label = r'$m_X \ / $ kg kg$^{-1}$'
 colour_scheme = 'OrRd'
 extrusion_details = {'domain':'sphere', 'extrusion':'linear',
@@ -35,8 +35,8 @@ titles = [r'Front', r'Back']
 slice_name = 'xy'
 slice_idx = 0
 
-init_data_file = Dataset('/data/users/tbendall/'+results_dirname+'/lfric_initial.nc','r')
-data_file = Dataset('/data/users/tbendall/'+results_dirname+'/lfric_diag.nc','r')
+init_data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_initial.nc','r')
+data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_diag.nc','r')
 
 # Add 1 to include so that the initial data is time_idx = 0
 time_idxs = range(len(data_file['time'][:])+1)

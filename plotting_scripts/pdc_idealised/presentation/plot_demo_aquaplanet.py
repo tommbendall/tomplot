@@ -37,7 +37,7 @@ all_contours = [np.linspace(0.0, 0.025, 41),
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/pdc_idealised_paper/figures'
+plotdir = '/data/users/tbendall/results/pdc_idealised_paper/figures'
 slice_name = 'xy'
 time_gap = 1.5
 spherical_centre = (np.pi,0.0)

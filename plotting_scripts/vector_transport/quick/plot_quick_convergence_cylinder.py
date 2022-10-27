@@ -23,7 +23,7 @@ ylabel = r'$\ln(||\mathbf{F}-\mathbf{F}_{true}||)$'
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper/quick_figures'
+plotdir = '/data/users/tbendall/results/vector_transport_paper/quick_figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -43,7 +43,7 @@ for i, result_opt in enumerate(result_opts):
 # ---------------------------------------------------------------------------- #
 
     results_dirname = f'vector_transport_paper/{base_results_dir}_{result_opt}'
-    data = Dataset(f'results/{results_dirname}/global_output.nc','r')
+    data = Dataset(f'/data/users/tbendall/results/{results_dirname}/global_output.nc','r')
     if i == 0:
         run_ids = data['run_id'][3:-1]
     else:

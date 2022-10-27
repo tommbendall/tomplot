@@ -148,8 +148,6 @@ def get_lfric_domain_properties(data, extrusion_details, central_lon=0.0):
             domain_extents['z'] = (extrusion_details['zmin'],
                                    extrusion_details['zmax'])
         
-        print('Domain_extents', domain_extents)
-
     elif domain == 'sphere':
         names = {'x':'x', 'y':'y'}
         domain_extents = {'x': (-np.pi+central_lon, np.pi+central_lon),

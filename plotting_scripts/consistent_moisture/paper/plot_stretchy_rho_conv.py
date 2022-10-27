@@ -13,7 +13,7 @@ from tomplot import individual_field_contour_plot, extract_lfric_2D_data
 # ---------------------------------------------------------------------------- #
 
 results_dirname = 'consistent_moisture_paper/stretchy-conv-cons-240'
-plotname = 'fig_4_rho_stretchy_conv'
+plotname = 'fig_5_rho_stretchy_conv'
 cbar_label = r'$\rho_d \ / $ kg m$^{-3}$'
 titles = [r'$t = 0$',r'$t=\tau/2$',r'$t=\tau$']
 colour_scheme = 'RdBu_r'
@@ -33,7 +33,7 @@ ylims = [0,2]
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/consistent_moisture_paper/figures'
+plotdir = '/data/users/tbendall/results/consistent_moisture_paper/figures'
 slice = 'xz'
 slice_idx = 0
 
@@ -55,11 +55,11 @@ for i, (ax, title, ylabel, field_min, field_max, step) in \
     enumerate(zip(axarray, titles, ylabels, field_mins, field_maxes, steps)):
 
     if i == 0: # Initial condition, open lfric_initial.nc
-        filename = 'results/'+results_dirname+'/raw_data/lfric_initial.nc'
+        filename = '/data/users/tbendall/results/'+results_dirname+'/raw_data/lfric_initial.nc'
         data_file = Dataset(filename, 'r')
         time_idx = 0
     else:
-        filename = 'results/'+results_dirname+'/raw_data/lfric_diag.nc'
+        filename = '/data/users/tbendall/results/'+results_dirname+'/raw_data/lfric_diag.nc'
         data_file = Dataset(filename, 'r')
         if i == 1:
             # Find halfway point in time

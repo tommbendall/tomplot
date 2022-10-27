@@ -17,7 +17,6 @@ def extract_lfric_2D_data(data_file, field_name, time_idx,
 
     # Work out what time variable is called
     try:
-        print(data_file.variables['time'])
         time = data_file.variables['time'][time_idx]
         lfric_initial = False
     except KeyError:

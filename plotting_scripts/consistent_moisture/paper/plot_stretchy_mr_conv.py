@@ -6,14 +6,15 @@ configuration of the stretchy test.
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 import numpy as np
-from tomplot import individual_field_contour_plot, extract_lfric_2D_data
+from tomplot import individual_field_contour_plot, extract_lfric_2D_data, \
+                    individual_quiver_plot
 
 # ---------------------------------------------------------------------------- #
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
 results_dirname = 'consistent_moisture_paper/stretchy-conv-cons-240'
-plotname = 'fig_5_mr_stretchy_conv'
+plotname = 'fig_6_mr_stretchy_conv'
 cbar_label = r'$m_v \ / $ kg kg$^{-1}$'
 titles = [r'$t = 0$',r'$t=\tau/2$',r'$t=\tau$']
 colour_scheme = 'OrRd'
@@ -36,7 +37,7 @@ contours = np.linspace(field_min, field_max, num_contours)
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/consistent_moisture_paper/figures'
+plotdir = '/data/users/tbendall/results/consistent_moisture_paper/figures'
 slice = 'xz'
 slice_idx = 0
 
@@ -57,11 +58,11 @@ plotpath = f'{plotdir}/{plotname}.jpg'
 for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
 
     if i == 0: # Initial condition, open lfric_initial.nc
-        filename = 'results/'+results_dirname+'/raw_data/lfric_initial.nc'
+        filename = '/data/users/tbendall/results/'+results_dirname+'/raw_data/lfric_initial.nc'
         data_file = Dataset(filename, 'r')
         time_idx = 0
     else:
-        filename = 'results/'+results_dirname+'/raw_data/lfric_diag.nc'
+        filename = '/data/users/tbendall/results/'+results_dirname+'/raw_data/lfric_diag.nc'
         data_file = Dataset(filename, 'r')
         if i == 1:
             # Find halfway point in time
@@ -82,8 +83,6 @@ for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
     coord_ticks = data_metadata['coord_ticks']
     slice_label = data_metadata['slice_label']
 
-    data_file.close()
-
     # Scale coordinate fields to km
     coords_X *= 0.001
     coords_Y *= 0.001
@@ -100,6 +99,35 @@ for i, (ax, title, ylabel) in enumerate(zip(axarray, titles, ylabels)):
                                        xlims=xlims, ylims=ylims, xlabel=xlabel,
                                        xticklabels=xlims, yticklabels=ylims)
 
+    coords_X_w2, coords_Y_w2, u_X_data, _ = \
+        extract_lfric_2D_data(data_file, 'u1', time_idx,
+                              slice_name=slice, slice_idx=slice_idx,
+                              extrusion_details=extrusion_details,
+                              num_points=(240,1,240))
+
+    coords_X_w2 *= 0.001
+    coords_Y_w2 *= 0.001
+
+    # X-Z slices have to be along Z-levels, so this is extracted in Wtheta
+    _, _, u_Y_data_wt, _ = \
+        extract_lfric_2D_data(data_file, 'u3', time_idx,
+                              slice_name=slice, slice_idx=slice_idx,
+                              extrusion_details=extrusion_details,
+                              num_points=(240,1,241))
+
+    data_file.close()
+
+    def convert_wt_to_w3(wt_data, w3_shape):
+        w3_data = np.zeros(w3_shape)
+        for k in range(np.shape(wt_data)[0]-1):
+            w3_data[k,:] = 0.5*(wt_data[k,:] + wt_data[k+1,:])
+        return w3_data
+
+    u_Y_data = convert_wt_to_w3(u_Y_data_wt, np.shape(u_X_data))
+
+    _ = individual_quiver_plot(coords_X_w2, coords_Y_w2, u_X_data, u_Y_data,
+                               ax=ax, title_method=None, no_cbar=True,
+                               quiver_npts=10, scale=20, x_offset=5)
 
 # Move the subplots to the left to make space for colorbar
 fig.subplots_adjust(right=0.9, wspace=0.1)
