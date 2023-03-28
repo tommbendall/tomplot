@@ -3,7 +3,7 @@ This returns the coordinates of the data points for a specified field from
 some output data file.
 """
 import numpy as np
-from .domain_properties import get_domain_properties, get_lfric_domain_properties
+from .domain_properties import get_domain_properties, get_lfric_domain_properties, work_out_gusto_domain
 
 def get_td_data_coords(data, space_name, central_lon=0.0):
 
@@ -11,8 +11,13 @@ def get_td_data_coords(data, space_name, central_lon=0.0):
     # Work out which coordinates we are using
     #--------------------------------------------------------------------------#
 
-    domain = data.variables['domain'][0]
-    names, _, _ = get_domain_properties(data, central_lon)
+    if 'domain' in data.variables.keys():
+        domain = data.variables['domain'][0]
+        extruded = True if data.variables['extrusion'][0] == 'True' else False
+    else:
+        domain, extruded, _ = work_out_gusto_domain(data)
+
+    names, _, _ = get_domain_properties(data, domain, extruded, central_lon)
 
     #--------------------------------------------------------------------------#
     # Extract data coordinates

@@ -1,5 +1,6 @@
 import numpy as np
 from .plot_lfric_coords import get_lfric_coords_2d
+from .extrusions import generate_extrusion
 
 def extract_lfric_2D_data(data_file, field_name, time_idx,
                           extrusion_details=None, slice_name=None,
@@ -98,6 +99,15 @@ def extract_lfric_2D_data(data_file, field_name, time_idx,
             slice_data[np.isnan(slice_data)] = slice_near[np.isnan(slice_data)]
 
             field_data[level] = slice_data
+
+    if slice_name in ['xz', 'yz']:
+        # Transform extrusion for plot coordinates, if required
+        # Interpolation should have happened in eta-space
+        vertical_coords_1d = generate_extrusion(extrusion_details, vert_placement,
+                                                np.shape(plot_coords)[1])
+        for row_idx in range(np.shape(plot_coords)[1]):
+            plot_coords[1][row_idx][:] = vertical_coords_1d[row_idx]
+
 
     data_metadata = {'time': time, 'slice_label': slice_label,
                      'coord_labels': coord_labels, 'coord_lims': coord_lims,

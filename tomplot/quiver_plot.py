@@ -89,13 +89,17 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
             ax = fig.add_subplot(1, 1, 1,
                                  projection=ccrs.Orthographic(spherical_centre[0]*180./np.pi,
                                                               spherical_centre[1]*180./np.pi))
+        elif projection == 'robinson':
+            import cartopy.crs as ccrs
+            ax = fig.add_subplot(1, 1, 1,
+                                 projection=ccrs.Robinson(spherical_centre[0]*180./np.pi))
         else:
             raise ValueError('Projection %s not implemented' % projection)
 
     if projection is None:
         crs = None
         extent = None
-    elif projection == 'orthographic':
+    elif projection in ['orthographic', 'robinson']:
         import cartopy.crs as ccrs
         ax.set_global()
         coords_X *= 360.0/(2*np.pi)

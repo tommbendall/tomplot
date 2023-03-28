@@ -12,6 +12,9 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
                                 figsize=(8,8), colours=None, linestyles=None,
                                 linewidth=1, fontsize=24, title=None, ax=None,
                                 grid=True, ylabel=None, xlims=None, ylims=None,
+                                xticks=None, yticks=None,
+                                xlabelpad=None, ylabelpad=None,
+                                xticklabels=None, yticklabels=None,
                                 time_units='seconds', normalise=False, format='png',
                                 dpi=None, legend_bbox=(1.0,1.0), legend_ncol=1,
                                 label_style='plain', leg_col_spacing=None,
@@ -206,13 +209,22 @@ def individual_time_series_plot(dirnames, fields, run_ids, diagnostic,
     if ylabel is None:
         ylabel = get_ylabel(diagnostic, 'time series')
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel, labelpad=xlabelpad)
+    ax.set_ylabel(ylabel, labelpad=ylabelpad)
 
     if xlims is not None:
         ax.set_xlim(xlims)
     if ylims is not None:
         ax.set_ylim(ylims)
+    if xticks is not None:
+        ax.set_xticks(xticks)
+    if yticks is not None:
+        ax.set_yticks(yticks)
+    if xticklabels is not None:
+        ax.set_xticklabels(xticklabels)
+    if yticklabels is not None:
+        ax.set_yticklabels(yticklabels)
+
     if title is not None:
         ax.set_title(title, pad=titlepad)
 

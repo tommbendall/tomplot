@@ -15,6 +15,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                                 ax=None, grid=True, xlabel='default',
                                 ylabel='default', best_fit_deg=1,
                                 xlim=None, ylim=None, legend_bbox=(1.0,1.0),
+                                xlabelpad=None, ylabelpad=None,
+                                xticks=None, yticks=None,
+                                xticklabels=None, yticklabels=None,
                                 legend_ncol=1, label_style='gradient_full',
                                 format='png', dpi=None, titlepad=None,
                                 leg_col_spacing=None, leg_fontsize=None):
@@ -228,18 +231,26 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     if xlabel == 'default':
         xlabel = get_xlabel(variable, 'convergence')
     if xlabel is not None:
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(xlabel, labelpad=xlabelpad)
     if ylabel == 'default':
         ylabel = get_ylabel(error, 'convergence')
-        ax.set_ylabel(ylabel)
     if ylabel is not None:
-        ax.set_ylabel(ylabel)
+        ax.set_ylabel(ylabel, labelpad=ylabelpad)
 
 
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
+    if xticks is not None:
+        ax.set_xticks(xticks)
+    if yticks is not None:
+        ax.set_yticks(yticks)
+    if xticklabels is not None:
+        ax.set_xticklabels(xticklabels)
+    if yticklabels is not None:
+        ax.set_yticklabels(yticklabels)
+
     if title is not None:
         ax.set_title(title, pad=titlepad)
 

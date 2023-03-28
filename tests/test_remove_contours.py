@@ -2,34 +2,48 @@
 In this file we test the function for making a 2D field plot with a removed contour
 """
 
-from firedrake import Function, SpatialCoordinate, sin, pi
 from tomplot import *
-from transportdrake import Outputting, build_mesh, build_spaces
-import os
 import numpy as np
-
-def test_remove_contour():
-
-    have_i_passed = False
-
-    domain = 'plane'
-    n = 20
-    L = 10
-    file_name = 'tests/data/test_remove_contour/field_output_0.nc'
-
-    if not os.path.exists(file_name):
-        raise IOError('Unable to find the model file for this run')
-
-    #--------------------------------------------------------------------------#
-    # Plot field                                                               #
-    #--------------------------------------------------------------------------#
-
-    run_id = 0
-    make_field_plots(file_name, run_id, 'test_unremoved_contour',
-                     'f', 'all', remove_contour=False,
-                     plotdir='tests/figures', override_dirname=True)
+import pytest
 
 
-    have_i_passed = True
+@pytest.mark.parametrize("num_contours", ["odd", "even"])
+def test_remove_contour(num_contours):
 
-    assert have_i_passed
+    if num_contours == "odd":
+        remove_contour = 0.0
+        restricted_cmaps = [None, 'both']
+        colour_levels_scalings = [None, (1.3,1.3)]
+        colour_scheme = 'RdBu_r'
+    else:
+        remove_contour = 0.0
+        restricted_cmaps = [None, 'top']
+        colour_levels_scalings = [None, 1.2]
+        colour_scheme = 'OrRd'
+
+
+    x = np.linspace(0, 10, 11)
+    y = np.linspace(-5,5,15) if num_contours == 'odd' else np.linspace(-1,10,12)
+
+    coords_X, coords_Y = np.meshgrid(x, y, indexing='ij')
+    field = coords_Y
+
+    for restricted_cmap, colour_levels_scaling in zip(restricted_cmaps, colour_levels_scalings):
+
+        plt.close()
+
+        fig, ax = plt.subplots(1,1,figsize=(8,8))
+
+        cf = individual_field_contour_plot(coords_X, coords_Y, field,
+                                          ax=ax, colour_scheme=colour_scheme,
+                                          contours=y, no_cbar=True, title=None,
+                                          title_method=None,
+                                          remove_contour=remove_contour,
+                                          colour_levels_scaling=colour_levels_scaling,
+                                          restricted_cmap=restricted_cmap)
+
+        # Add colorbar in its own axis
+        cbar_ax = fig.add_axes([0.92, 0.11, 0.02, 0.77])
+        cb = fig.colorbar(cf, cax=cbar_ax)
+
+        plt.show()

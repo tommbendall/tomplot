@@ -19,9 +19,14 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
                                   cbar_format=None,
                                   no_cbar=False,
                                   contours=None,
+                                  tricontour=False,
                                   extra_contours=None,
                                   contour_lines=True,
+                                  cmap=None,
+                                  line_contours=None,
                                   clabel=False,
+                                  clabel_levels=None, clabel_fmt=None,
+                                  clabel_locations=None, clabel_fontsize=None,
                                   colour_scheme='Blues', restricted_cmap=None,
                                   colour_levels_scaling=1.2,
                                   extend_cmap=True, remove_contour=False,
@@ -89,13 +94,17 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
             ax = fig.add_subplot(1, 1, 1,
                                  projection=ccrs.Orthographic(spherical_centre[0]*180./np.pi,
                                                               spherical_centre[1]*180./np.pi))
+        elif projection == 'robsinson':
+            import cartopy.crs as ccrs
+            ax = fig.add_subplot(1, 1, 1,
+                                 projection=ccrs.Robinson(spherical_centre[0]*180./np.pi))
         else:
             raise ValueError('Projection %s not implemented' % projection)
 
     if projection is None:
         crs = None
         extent = None
-    elif projection == 'orthographic':
+    elif projection in ['orthographic','robinson']:
         import cartopy.crs as ccrs
         ax.set_global()
         coords_X *= 360.0/(2*np.pi)
@@ -147,11 +156,15 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
     # Set up colour bar details
     #--------------------------------------------------------------------------#
 
-    cmap, line_contours = colourmap_and_contours(colour_contours,
-                                                 colour_scheme=colour_scheme,
-                                                 restricted_cmap=restricted_cmap,
-                                                 colour_levels_scaling=colour_levels_scaling,
-                                                 remove_contour=remove_contour)
+    if cmap is None:
+        cmap, line_contours_new = colourmap_and_contours(colour_contours,
+                                                         colour_scheme=colour_scheme,
+                                                         restricted_cmap=restricted_cmap,
+                                                         colour_levels_scaling=colour_levels_scaling,
+                                                         remove_contour=remove_contour)
+
+    if line_contours is None:
+        line_contours = line_contours_new
 
     extend = 'both' if extend_cmap else 'neither'
 
@@ -159,9 +172,14 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
     # Plot
     #--------------------------------------------------------------------------#
 
-    cf = ax.contourf(coords_X, coords_Y, field_data, colour_contours,
-                     cmap=cmap, extent=extent, transform=crs,
-                     origin='lower', alpha=transparency)
+    if tricontour:
+        cf = ax.tricontourf(coords_X, coords_Y, field_data, colour_contours,
+                            cmap=cmap, extent=extent, transform=crs,
+                            origin='lower', alpha=transparency)
+    else:
+        cf = ax.contourf(coords_X, coords_Y, field_data, colour_contours,
+                         cmap=cmap, extent=extent, transform=crs,
+                         origin='lower', alpha=transparency)
 
     if remove_lines:
         for c in cf.collections:
@@ -175,15 +193,23 @@ def individual_field_contour_plot(coords_X, coords_Y, field_data,
     if contour_lines:
         if linestyle is None and extra_field_data is not None:
             linestyles = 'solid'
-        cl = ax.contour(coords_X, coords_Y, field_data, line_contours,
-                        linewidths=linewidth, colors=linecolours,
-                        linestyles=linestyle, transform=crs, extent=extent,
-                        origin='lower')
+        if tricontour:
+            cl = ax.tricontour(coords_X, coords_Y, field_data, line_contours,
+                               linewidths=linewidth, colors=linecolours,
+                               linestyles=linestyle, transform=crs, extent=extent,
+                               origin='lower')
+        else:
+            cl = ax.contour(coords_X, coords_Y, field_data, line_contours,
+                            linewidths=linewidth, colors=linecolours,
+                            linestyles=linestyle, transform=crs, extent=extent,
+                            origin='lower')
 
-        if clabel:
-            ax.clabel(cl)
+        if clabel == True:
+            ax.clabel(cl, levels=clabel_levels, fontsize=clabel_fontsize, manual=clabel_locations, fmt=clabel_fmt)
 
     if extra_field_data is not None:
+        if tricontour:
+            raise NotImplementedError
         cle = ax.contour(coords_X, coords_Y, extra_field_data,
                          extra_contours, linewidths=linewidth,
                          colors=linecolours, linestyles='dashed',
