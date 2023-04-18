@@ -89,13 +89,17 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
             ax = fig.add_subplot(1, 1, 1,
                                  projection=ccrs.Orthographic(spherical_centre[0]*180./np.pi,
                                                               spherical_centre[1]*180./np.pi))
+        elif projection == 'robinson':
+            import cartopy.crs as ccrs
+            ax = fig.add_subplot(1, 1, 1,
+                                 projection=ccrs.Robinson(spherical_centre[0]*180./np.pi))
         else:
             raise ValueError('Projection %s not implemented' % projection)
 
     if projection is None:
         crs = None
         extent = None
-    elif projection == 'orthographic':
+    elif projection in ['orthographic', 'robinson']:
         import cartopy.crs as ccrs
         ax.set_global()
         coords_X *= 360.0/(2*np.pi)
@@ -225,8 +229,18 @@ def individual_quiver_plot(coords_X, coords_Y, field_data_X, field_data_Y,
     # Plot quivers
     #--------------------------------------------------------------------------#
 
-    x_slice = slice(x_offset, None, quiver_npts)
-    y_slice = slice(y_offset, None, quiver_npts)
+    if type(quiver_npts) in (tuple,list):
+        quiver_npts_x = quiver_npts[0]
+        quiver_npts_y = quiver_npts[1]
+    elif type(quiver_npts) in [int, float]:
+        quiver_npts_x = quiver_npts
+        quiver_npts_y = quiver_npts
+    else:
+        raise TypeError(f'Type {type(quiver_npts)} is not supported')
+    
+
+    x_slice = slice(x_offset, None, quiver_npts_x)
+    y_slice = slice(y_offset, None, quiver_npts_y)
 
     if crs is None:
         # separately handle this case as None transform results in no arrows

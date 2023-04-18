@@ -24,12 +24,12 @@ colour_scheme = 'OrRd'
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/'+results_dirnames[0]+'/figures'
+plotdir = '/data/users/tbendall/results/'+results_dirnames[0]+'/figures'
 field_name, field_X_name, field_Y_name = field_info
 testname = 'planar_demo'
 slice = 'xy'
 slice_idx = 0
-filename = 'results/'+results_dirnames[0]+'/nc_fields/field_output_'+str(run_id)+'.nc'
+filename = '/data/users/tbendall/results/'+results_dirnames[0]+'/nc_fields/field_output_'+str(run_id)+'.nc'
 data_file = Dataset(filename, 'r')
 time_idxs = range(len(data_file['time'][:]))
 data_file.close()
@@ -65,7 +65,7 @@ for time_idx in time_idxs:
 
     for i, (ax, dirname, quiver_npts, title, ylabelpad) in enumerate(zip(axarray, results_dirnames, [2,1], titles, [-30, None])):
         # This code is all adapted from plot_control
-        filename = 'results/'+dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
+        filename = '/data/users/tbendall/'+dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
         data_file = Dataset(filename, 'r')
 
         # Extract data

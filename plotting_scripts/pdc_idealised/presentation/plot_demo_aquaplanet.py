@@ -20,7 +20,7 @@ plotname = 'aquaplanet_demo'
 cbar_label = r"$\theta \ / $ K"
 titles = [r'$\Delta x_{phys}=\frac{1}{2}\Delta x_{dyn}$',
           r'$\Delta x_{phys}=\Delta x_{dyn}$',
-          r'$\Delta x_{phys}=2\Delta x_{dyn}$,']
+          r'$\Delta x_{phys}=2\Delta x_{dyn}$']
 colour_scheme = 'Blues_r'
 extrusion_details = {'domain':'sphere', 'extrusion':'linear',
                      'zmin':0.0, 'zmax':40000, 'topological_dimension':3}
@@ -37,7 +37,7 @@ all_contours = [np.linspace(0.0, 0.025, 41),
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/pdc_idealised_paper/figures'
+plotdir = '/data/users/tbendall/results/pdc_idealised_paper/figures'
 slice_name = 'xy'
 time_gap = 1.5
 spherical_centre = (np.pi,0.0)
@@ -65,7 +65,7 @@ data_file.close()
 
 for time_idx in time_idxs:
 
-    plotpath = f'{plotdir}/{plotname}_{time_idx:02d}.jpg'
+    plotpath = f'{plotdir}/{plotname}_{time_idx:02d}_presentation.jpg'
     fig = plt.figure(figsize=(15,5))
 
     if init_case and time_idx > 0:
@@ -140,8 +140,8 @@ for time_idx in time_idxs:
         # I think titles don't work with orographic projection?
         ax.set_title(title, pad=20)
 
-    suptitle = r'$t=$ '+f'{(time_idx*time_gap):.1f} hr'
-    fig.suptitle(suptitle, y=1.02)
+    # suptitle = r'$t=$ '+f'{(time_idx*time_gap):.1f} hr'
+    # fig.suptitle(suptitle, y=1.02)
 
     print(f'Plotting to {plotpath}')
     fig.savefig(plotpath, bbox_inches='tight')

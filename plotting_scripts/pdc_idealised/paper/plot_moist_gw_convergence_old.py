@@ -29,7 +29,7 @@ all_run_ids = [[[0,3,5,10,14,17,25,29], [2,7,12,15,24,27], [1,6,11,15,26,28]],
 #
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/pdc_idealised_paper/figures'
+plotdir = '/data/users/tbendall/results/pdc_idealised_paper/figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)

@@ -24,12 +24,12 @@ colour_scheme = 'OrRd'
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/'+results_dirname+'/figures'
+plotdir = '/data/users/tbendall/results/'+results_dirname+'/figures'
 field_name, field_X_name, field_Y_name = field_info
 testname = 'hooks_demo'
 slice = 'xy'
 slice_idx = 0
-filename = 'results/'+results_dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
+filename = '/data/users/tbendall/results/'+results_dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
 data_file = Dataset(filename, 'r')
 time_idxs = range(len(data_file['time'][:]))
 data_file.close()

@@ -11,7 +11,7 @@ from tomplot import extract_2D_data, individual_field_contour_plot
 # Things that can be altered and parameters for the test case
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper/figures'
+plotdir = '/data/users/tbendall/results/vector_transport_paper/figures'
 results_options = ['plain','recovered','vorticity','vorticity_fancy_SUPG']
 titles = ['Benchmark,', 'Recovered,', 'Vorticity w/o SUPG,','Vorticity with SUPG,']
 time_idx = -1
@@ -45,7 +45,7 @@ for i, (ax, dirname, title, xticklabels, xlabel, xticks) in \
     enumerate(zip(axarray, results_dirnames, titles, [None,None,None,[-270,90]],
                     [None,None,None,r'$\lambda \ / $ deg'], [None,None,None,[-3*np.pi/2,np.pi/2]])):
     # This code is all adapted from plot_control
-    filename = f'results/{dirname}/nc_fields/field_output_{str(run_id)}.nc'
+    filename = f'/data/users/tbendall/results/{dirname}/nc_fields/field_output_{str(run_id)}.nc'
     data_file = Dataset(filename, 'r')
 
     # Extract data

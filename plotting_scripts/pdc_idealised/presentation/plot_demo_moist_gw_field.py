@@ -40,7 +40,7 @@ def exner_in_wth(exner):
 
 results_dirname = 'pdc_demo_data/moist_gw_60'
 plot_times = 'all'
-base_plotname = 'results/pdc_idealised_paper/figures/moist_gw_demo'
+base_plotname = '/data/users/tbendall/results/pdc_idealised_paper/figures/moist_gw_demo'
 cbar_label = r"$\theta_e' \ / $ K"
 colour_scheme = 'RdBu_r'
 extrusion_details = {'domain':'plane', 'extrusion':'linear',
@@ -66,8 +66,8 @@ cbar_ticks = [field_min, field_max]
 # Derived things from options
 # ---------------------------------------------------------------------------- #
 
-init_data_file = Dataset('/data/users/tbendall/'+results_dirname+'/lfric_initial.nc','r')
-data_file = Dataset('/data/users/tbendall/'+results_dirname+'/lfric_diag.nc','r')
+init_data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_initial.nc','r')
+data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_diag.nc','r')
 
 # Add 1 to include so that the initial data is time_idx = 0 and don't do every time!
 time_idxs = range(0,len(data_file['time'][:])+1,2)
@@ -88,11 +88,10 @@ for time_idx in time_idxs:
 
     # Extract data
     for diag_field_name in diag_field_names:
-        coords_X, coords_Y, field_data, time, \
-        coord_labels, coord_lims, coord_ticks,  \
-        slice_label = extract_lfric_2D_data(this_data_file, diag_field_name, time_idx-1,
-                                            slice_name=slice_name, slice_idx=slice_idx,
-                                            extrusion_details=extrusion_details)
+        coords_X, coords_Y, field_data, data_metadata = \
+            extract_lfric_2D_data(this_data_file, diag_field_name, time_idx-1,
+                                  slice_name=slice_name, slice_idx=slice_idx,
+                                  extrusion_details=extrusion_details)
 
         if diag_field_name == 'exner':
             data_values[diag_field_name] = exner_in_wth(field_data)

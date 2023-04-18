@@ -2,8 +2,8 @@ from tomplot import compute_field_measures, DiagnosticInfo
 import numpy as np
 
 
-target_dir = '/net/home/h01/tbendall/results/moist_gw_new_convergence'
-base_data_dir = '/data/users/tbendall/moist_gw_data_new'
+target_dir = '/data/users/tbendall/results/moist_gw_all_convergence'
+base_data_dir = '/data/users/tbendall/moist_gw_data_all'
 true_source_dir = f'{base_data_dir}/D1200_P1200'
 variable_name = 'theta_e'
 prognostic_variables = ['theta', 'exner', 'm_v']
@@ -21,9 +21,13 @@ extrusion_details = {'domain':'plane', 'extrusion':'linear',
 #              [600, 200], [600, 300], [600, 60], [600, 75], [60, 120],
 #              [60, 60], [60, 600], [75, 150], [75, 600], [75, 75]]
 
-res_pairs = [[100, 100], [120, 120], [150, 150], [200, 200], [300, 150],
-             [300, 300], [300, 600], [400, 400], [60, 60], [75, 75],
-             [300, 100], [300, 75], [300, 60], [300, 900], [300, 1200]]
+res_pairs = [[60, 60], [75, 75], [100, 100], [120, 120], [150, 150],
+             [200, 200], [300, 300], [400, 400], [600,600],
+             [100, 50], [100, 200], [100, 300], [100, 400], [100, 600],
+             [200, 50], [200, 100], [200, 400], [200, 600], [200, 800],
+             [300, 60], [300, 75], [300, 100], [300, 150], [300, 600], [300, 900], [300, 1200],
+             [400, 50], [400, 80], [400, 100], [400, 200], [400, 800], [400, 1200],
+             [600, 120], [600, 150], [600, 200], [600, 300] ]
 
 
 coarse_dirs = [f'D{nxs[0]}_P{nxs[1]}' for nxs in res_pairs]

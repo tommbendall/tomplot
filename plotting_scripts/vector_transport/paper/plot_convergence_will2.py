@@ -26,7 +26,7 @@ leg_xcentres = [0.45,0.5]
 # Field plots
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper/figures'
+plotdir = '/data/users/tbendall/results/vector_transport_paper/figures'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
@@ -46,7 +46,7 @@ for i, (ax, field_name, title, ylabel, leg_xcentre) in \
 # ---------------------------------------------------------------------------- #
 
     results_dirnames = [f'vector_transport_paper/{result_opt}' for result_opt in result_opts]
-    data = Dataset(f'results/{results_dirnames[0]}/global_output.nc','r')
+    data = Dataset(f'/data/users/tbendall/results/{results_dirnames[0]}/global_output.nc','r')
     run_ids = data['run_id'][:]
     num_setups = len(field_labels)
     data.close()

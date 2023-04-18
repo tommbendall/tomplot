@@ -41,7 +41,7 @@ def exner_in_wth(exner):
 
 results_dirname = 'pdc_moist_gw'
 plot_times = 'all'
-base_plotname = 'results/pdc_idealised_paper/figures/quick_final'
+base_plotname = '/data/users/tbendall/results/pdc_idealised_paper/figures/quick_final'
 cbar_label = r'$m_X \ / $ kg kg$^{-1}$'
 colour_scheme = 'OrRd'
 extrusion_details = {'domain':'plane', 'extrusion':'linear',
@@ -59,8 +59,8 @@ diag_field_names = ['m_v','exner','theta']
 # Derived things from options
 # ---------------------------------------------------------------------------- #
 
-init_data_file = Dataset('results/'+results_dirname+'/lfric_initial.nc','r')
-data_file = Dataset('results/'+results_dirname+'/lfric_diag.nc','r')
+init_data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_initial.nc','r')
+data_file = Dataset('/data/users/tbendall/results/'+results_dirname+'/lfric_diag.nc','r')
 
 # ---------------------------------------------------------------------------- #
 # Field plots

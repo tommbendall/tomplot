@@ -161,7 +161,6 @@ def get_lfric_coords_2d(data, hori_placement, vert_placement, slice_name,
 
         elif slice_name == 'yz':
             plot_coords = np.meshgrid(plot_coords_1d[1], plot_coords_1d[2])
-
             # Turn this into a list of points for interpolating to
             interp_coords_2d = (plot_coords_1d[0][slice_idx]*np.ones_like(plot_coords_1d[1]),
                                 np.array(plot_coords_1d[1]))

@@ -17,7 +17,7 @@ plot_times = -1
 # Derived things from options
 # ---------------------------------------------------------------------------- #
 
-data = Dataset('results/'+results_dirname+'/global_output.nc','r')
+data = Dataset('/data/users/tbendall/results/'+results_dirname+'/global_output.nc','r')
 run_ids = data['run_id'][-2:]
 data.close()
 

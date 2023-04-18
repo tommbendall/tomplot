@@ -3,7 +3,7 @@ This provides routines for setting up coordinates for plotting fields on
 """
 import numpy as np
 from .plot_decorations import get_domain_label
-from .domain_properties import get_domain_properties
+from .domain_properties import get_domain_properties, work_out_gusto_domain
 from .data_coords import get_td_data_coords
 
 def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
@@ -30,7 +30,8 @@ def get_coords_1d(data, space_name, slice_name, slice_idx=0, num_points=None,
     #--------------------------------------------------------------------------#
 
     domain = data.variables['domain'][0]
-    names, domain_extents, ticklabels = get_domain_properties(data, central_lon)
+    extruded = True if data.variables['extrusion'][0] == 'True' else False
+    names, domain_extents, ticklabels = get_domain_properties(data, domain, extruded, central_lon)
 
     if slice_name is None:
         slice_name = 'x'
@@ -193,9 +194,16 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
                          from the data
     """
 
-    domain = data.variables['domain'][0]
-    extruded = True if data.variables['extrusion'][0] == 'True' else False
-    dim = data.variables['topological_dimension'][0]
+    if 'domain' in data.variables.keys():
+        # Old transportdrake data and we can read information off
+        domain = data.variables['domain'][0]
+        extruded = True if data.variables['extrusion'][0] == 'True' else False
+        dim = data.variables['topological_dimension'][0]
+    else:
+        # New gusto data, need to work out what is going on
+        if slice_name is None:
+            raise NotImplementedError
+        domain, extruded, dim = work_out_gusto_domain(data)
 
     if dim < 2:
         raise ValueError('The domain must be two dimensional or higher')
@@ -219,8 +227,7 @@ def get_coords_2d(data, space_name, slice_name, slice_idx=0, num_points=None,
     # Work out which coordinates we are using
     #--------------------------------------------------------------------------#
 
-    domain = data.variables['domain'][0]
-    names, domain_extents, ticklabels = get_domain_properties(data, central_lon)
+    names, domain_extents, ticklabels = get_domain_properties(data, domain, extruded, central_lon)
 
     coord_lims = [domain_extents[slice_name[0]], domain_extents[slice_name[1]]]
     coord_ticks = [ticklabels[slice_name[0]], ticklabels[slice_name[1]]]

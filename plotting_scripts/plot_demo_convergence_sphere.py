@@ -19,7 +19,7 @@ plot_testname = 'sphere_hooks'
 # Derived things from options
 # ---------------------------------------------------------------------------- #
 
-data = Dataset('results/'+results_dirname+'/global_output.nc','r')
+data = Dataset('/data/users/tbendall/results/'+results_dirname+'/global_output.nc','r')
 run_ids = data['run_id'][:]
 num_setups = len(field_labels)
 data.close()

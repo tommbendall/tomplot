@@ -25,11 +25,11 @@ colour_scheme = 'OrRd'
 # Things that are likely the same
 # ---------------------------------------------------------------------------- #
 
-plotdir = 'results/vector_transport_paper/figures'
+plotdir = '/data/users/tbendall/results/vector_transport_paper/figures'
 field_name, field_X_name, field_Y_name = field_info
 slice = 'xy'
 slice_idx = 0
-filename = 'results/'+results_dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
+filename = '/data/users/tbendall/results/'+results_dirname+'/nc_fields/field_output_'+str(run_id)+'.nc'
 
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)

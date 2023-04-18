@@ -255,10 +255,10 @@ def colourmap_and_contours(contours, colour_scheme='Blues',
             avg_colour_scaling = 0.5*(colour_levels_scaling[0]+colour_levels_scaling[1])
         elif restricted_cmap == 'top':
             lower_colour = 0.0
-            upper_colour = 1/colour_levels_scaling
+            upper_colour = 1.0/colour_levels_scaling
             avg_colour_scaling = colour_levels_scaling
         elif restricted_cmap == 'bottom':
-            lower_colour = 1.0 - 1/colour_levels_scaling
+            lower_colour = 1.0 - 1.0/colour_levels_scaling
             upper_colour = 1.0
             avg_colour_scaling = colour_levels_scaling
 
@@ -275,7 +275,7 @@ def colourmap_and_contours(contours, colour_scheme='Blues',
         cmap = cm.get_cmap(colour_scheme, len(contours))
 
     # Remove a particular contour
-    if remove_contour != False:
+    if type(remove_contour) is not bool:
         if remove_contour == 'middle':
             # Find middle contour
             # Only works for an odd number of lines!
