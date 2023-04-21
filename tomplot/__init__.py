@@ -9,8 +9,8 @@ from tomplot.extrusions import *
 from tomplot.field_1D_plot import *
 from tomplot.field_contour_plot import *
 from tomplot.global_output_converter import *
-from tomplot.plot_control import *
 from tomplot.plot_coordinates import *
 from tomplot.plot_lfric_coords import *
 from tomplot.plot_decorations import *
+from tomplot.tomplot_tools import *
 from tomplot.time_series_plot import *

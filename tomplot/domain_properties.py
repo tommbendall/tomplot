@@ -62,8 +62,20 @@ def get_domain_properties(data, domain, extruded, central_lon=0.0):
             space_name = 'theta'
         else:
             raise NotImplementedError('Need a space name to work out domain details')
-        
-        if domain == 'plane':
+
+        # TODO: fill these in
+        if domain == 'interval':
+            if extruded:
+                names = {'x':'x', 'z':'z'}
+                domain_extents = {'x':(0, np.max(data.variables[f'x_{space_name}'])),
+                                  'z':(0, np.max(data.variables[f'z_{space_name}']))}
+            else:
+                names = {'x':'x'}
+                domain_extents = {'x':(0, np.max(data.variables[f'x_{space_name}']))}
+
+            ticklabels = {'x':None, 'y':None, 'z':None}
+
+        elif domain == 'plane':
             names = {'x':'x', 'y':'y'}
             domain_extents = {'x': (0, np.max(data.variables[f'x_{space_name}'])),
                               'y': (0, np.max(data.variables[f'y_{space_name}']))}
@@ -73,7 +85,7 @@ def get_domain_properties(data, domain, extruded, central_lon=0.0):
                 raise NotImplementedError
         else:
             raise NotImplementedError
-    
+
     else:
 
         #----------------------------------------------------------------------#
@@ -208,7 +220,7 @@ def get_lfric_domain_properties(data, extrusion_details, central_lon=0.0):
             names['z'] = 'z'
             domain_extents['z'] = (extrusion_details['zmin'],
                                    extrusion_details['zmax'])
-        
+
     elif domain == 'sphere':
         names = {'x':'x', 'y':'y'}
         domain_extents = {'x': (-np.pi+central_lon, np.pi+central_lon),

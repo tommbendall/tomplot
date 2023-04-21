@@ -1,0 +1,63 @@
+
+# ---------------------------------------------------------------------------- #
+# Specify critical things at top which everyone needs to do
+# ---------------------------------------------------------------------------- #
+
+data_path = , or data_file =
+plot_path =
+
+
+
+# ---------------------------------------------------------------------------- #
+# Loop for creating different plots
+# ---------------------------------------------------------------------------- #
+for time_idx in time_idxs:
+
+    # Make figure
+    fig = plt.figure(...)
+
+
+    # ------------------------------------------------------------------------ #
+    # Loop through subplots
+    # ------------------------------------------------------------------------ #
+    for subplot in subplots:
+
+        # Add subplot and include projection if specified
+
+        # -------------------------------------------------------------------- #
+        # Extract and manipulate data
+        # -------------------------------------------------------------------- #
+
+
+        # -------------------------------------------------------------------- #
+        # Pre-plotting -- some of this may be outside of subplot loop
+        # -------------------------------------------------------------------- #
+
+        # Auto-generate contours, if desired
+
+        # Make colour map
+
+        # Auto-generate title, if desired
+
+        # Auto-generate axes limits and labels
+
+        # -------------------------------------------------------------------- #
+        # Plot
+        # -------------------------------------------------------------------- #
+
+        # -------------------------------------------------------------------- #
+        # Post-plotting tweaks
+        # -------------------------------------------------------------------- #
+
+        # Generally there shouldn't be much here, but put things here if they
+        # aren't covered by the general design
+
+    # ------------------------------------------------------------------------ #
+    # Shared items
+    # ------------------------------------------------------------------------ #
+
+    # e.g. shared colour bar goes here
+    # global title would also go here
+
+    # Save figure
+    fig.savefig(plot_name, ...)

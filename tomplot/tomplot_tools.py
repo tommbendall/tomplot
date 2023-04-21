@@ -1,0 +1,210 @@
+"""
+Tools provided by tomplot for making nice figures, that may be common for
+multiple types of figure.
+"""
+
+import numpy as np
+import matplotlib.cm as cm
+from matplotlib.colors import ListedColormap
+
+
+__all__ = ['automake_field_axis_labels', 'automake_field_title', 'automake_cmap']
+
+def automake_field_axis_labels(ax, data_metadata):
+    """
+    Sets labels, ticks, ticklabels and limits for the axes for a field plot,
+    based on the metadata that tomplot uses to describe the plotted field data.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot the field on.
+        data_metadata (dict): a dictionary, whose keys are strings describing
+            aspects of the axes to be set, and whose values are the values to
+            set them to. Active keys are: "xlims", "ylims", "xlabel", "ylabel",
+            "xticks", "yticks", "xticklabels", "yticklabels", "xlabelpad" and
+            "ylabelpad".
+
+    Returns:
+        :class:`AxesSubplot`: the pyplot axes object which has been adjusted.
+    """
+
+    if 'xlims' in data_metadata.keys():
+        ax.set_xlim(data_metadata['xlims'])
+    if 'ylims' in data_metadata.keys():
+        ax.set_ylim(data_metadata['ylims'])
+
+    if 'xlabel' in data_metadata.keys():
+        if 'xlabelpad' in data_metadata.keys():
+            xlabelpad = data_metadata['xlabelpad']
+        else:
+            xlabelpad = None
+        ax.set_xlabel(data_metadata['xlabel'], labelpad=xlabelpad)
+    if 'ylabel' in data_metadata.keys():
+        if 'ylabelpad' in data_metadata.keys():
+            ylabelpad = data_metadata['ylabelpad']
+        else:
+            ylabelpad = None
+        ax.set_ylabel(data_metadata['ylabel'], labelpad=ylabelpad)
+
+    if 'xticks' in data_metadata.keys():
+        ax.set_xticks(data_metadata['xticks'])
+    if 'yticks' in data_metadata.keys():
+        ax.set_yticks(data_metadata['yticks'])
+
+    if 'xticklabels' in data_metadata.keys():
+        ax.set_xticklabels(data_metadata['xticklabels'])
+    if 'yticklabels' in data_metadata.keys():
+        ax.set_yticklabels(data_metadata['yticklabels'])
+
+    return ax
+
+
+def automake_field_title(ax, title, titlepad=None, fontsize=None,
+                         minmax=False, minmax_format='.2f', field_data=None):
+    """
+    Adds a title to a subplot.
+
+    If the `minmax` argument is set to True, the field's minimum and maximum
+    values are included in the title.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot the field on.
+        title (str): the title to add to the subplot, or the base of the title
+            to add if other elements (such as mins/maxes) are being added.
+        titlepad (float, optional): amount of padd. Defaults to None.
+        fontsize(float, optional): size of the text to use. Defaults to None.
+        minmax(bool, optional): whether to append the field's min and max values
+            to the title. Defaults to False.
+        minmax_format (str, optional): format to use for the field's min and max
+            values in the title. Defaults to ".2f". Examples would be ".2f" or
+            "3.1e".
+        field_data (numpy.ndarray, optional): the field data used to give the
+            min and max values. Defaults to None, but must be specified if the
+            `minmax` argument is set to True.
+
+    Returns:
+        :class:`AxesSubplot`: the pyplot axes object which has been adjusted.
+    """
+
+    if minmax:
+        if field_data is None:
+            raise ValueError('If generating title using "minmax", '+
+                             'field data must be provided')
+        field_min = np.min(field_data)
+        field_max = np.max(field_data)
+
+        format_str = '{:'+minmax_format+'}'
+
+
+    if title in [None, '']:
+        full_title = ''
+    elif not minmax:
+        full_title = title
+    else:
+        full_title = f'{title}, min: {format_str.format(field_min)}, '+ \
+                              f'max: {format_str.format(field_max)}'
+
+    ax.set_title(full_title, pad=titlepad, fontsize=fontsize)
+
+    return ax
+
+
+def automake_cmap(contours, color_scheme='Blues',
+                  restricted_cmap=None, restriction_scaling=1.2,
+                  remove_contour=False, extend_cmap=False):
+
+    if restricted_cmap not in [None, 'both', 'top', 'bottom']:
+        raise ValueError(f'restricted_cmap {restricted_cmap} not recognised')
+
+    # First reproduce the contours for the lines from the existing set of contours
+    line_contours = contours.copy()
+
+    # Scale the colour map to remove the most extreme colours
+    if restricted_cmap is not None:
+        if restricted_cmap == 'both':
+            if type(restriction_scaling) not in [tuple, list]:
+                restriction_scaling = [restriction_scaling]*2
+            lower_colour = 0.5 * (1.0 - 1/restriction_scaling[0])
+            upper_colour = 0.5 * (1.0 + 1/restriction_scaling[1])
+            avg_colour_scaling = 0.5*(restriction_scaling[0]+restriction_scaling[1])
+        elif restricted_cmap == 'top':
+            lower_colour = 0.0
+            upper_colour = 1.0/restriction_scaling
+            avg_colour_scaling = restriction_scaling
+        elif restricted_cmap == 'bottom':
+            lower_colour = 1.0 - 1.0/restriction_scaling
+            upper_colour = 1.0
+            avg_colour_scaling = restriction_scaling
+
+        # Make a colour map for more contours than we'll use
+        actual_num_colour_levels = len(contours)
+        pure_num_colour_levels = np.ceil(actual_num_colour_levels*avg_colour_scaling)
+
+        pure_cmap = cm.get_cmap(color_scheme, pure_num_colour_levels)
+        new_colours = pure_cmap(np.linspace(lower_colour, upper_colour),
+                                actual_num_colour_levels)
+        cmap = ListedColormap(new_colours)
+
+    else:
+        cmap = cm.get_cmap(color_scheme, len(contours))
+
+    # Remove a particular contour
+    if remove_contour is not None:
+        if remove_contour == 'middle':
+            # Find middle contour
+            # Only works for an odd number of lines!
+            if len(contours) % 2 == 1:
+                level_to_remove = int(np.floor((len(contours) - 1) / 2))
+            else:
+                raise ValueError('Can only use remove_contour method "middle" '+
+                                 'when there are an odd number of contour lines')
+        elif isinstance(remove_contour, float):
+            # Search through contours to find this specific contour
+            contour_found = False
+            for i, contour in enumerate(contours):
+                if np.isclose(contour, remove_contour):
+                    level_to_remove = i
+                    contour_found = True
+                    break
+
+            if not contour_found:
+                # If we get here then we have not found this contour
+                raise ValueError('contour %.3f was not found' % remove_contour)
+
+        elif isinstance(remove_contour, int):
+            level_to_remove = remove_contour
+        else:
+            raise ValueError('remove_contour %s not recognised' % remove_contour)
+
+        # Remove contour line
+        try:
+            # For lists
+            line_contours.pop(level_to_remove)
+        except AttributeError:
+            # For numpy arrays
+            line_contours = np.delete(line_contours, level_to_remove)
+
+        # Remove colour from colour map
+        cmap = remove_colour(cmap, level_to_remove, len(contours))
+
+    return cmap, line_contours
+
+
+def remove_colour(old_cmap, level_to_remove, num_levels):
+    """
+    Replaces two colours in a colour map with a shared colour, in effect
+    removing a contour from the colour map.
+
+    :arg cmap:            a colour map object
+    :arg level_to_remove: the index of the contour to be removed
+    :arg num_levels:      the total number of contour levels
+    """
+
+    newcolours = old_cmap(np.linspace(0, 1.0, num_levels-1))
+    merged_colour = old_cmap(level_to_remove/num_levels)
+    newcolours[level_to_remove-1] = merged_colour
+    newcolours[level_to_remove] = merged_colour
+    new_cmap = ListedColormap(newcolours)
+
+    return new_cmap
+
+

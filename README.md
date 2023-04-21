@@ -4,8 +4,7 @@ The Only Matplotlib PDE Library Of Tom
 tomplot is an interface to matplotlib for quickly making neat plots for
 numerical models of PDEs.
 
-It is intended for use with LFRic and some Firedrake packages, such as
-transportdrake.
+It is intended for use with LFRic and some Firedrake packages, such as gusto.
 
 ### Why?
 
