@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 
 __all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines"]
 
-def plot_contoured_field(ax, coords_X, coords_Y, field_data, contours, method,
+def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
+                         line_contours=None, projection=None,
                          plot_filled_contours=True, plot_contour_lines=True,
-                         projection=None,
                          # Options relating to filled contours
                          cmap=None, remove_lines=False, transparency=1.0,
                          # Options relating to line contours
@@ -41,18 +41,23 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, contours, method,
             The shape of this array must correspond to that of the field data.
         field_data (`numpy.ndarray`): the field data to be plotted. The shape of
             this array must match that of the coordinates.
-        contours (iter): an iterable object containing the values to use to
-            contour the field. In the case of a scatter plot, these values
-            determine the bins used for colouring the points.
         method (str): determines the method to use to plot the field. Valid
             options are "contour", "tricontour" or "scatter" (which cannot be
             used to plot contour lines).
+        contours (iter): an iterable object containing the values to use to
+            contour the field. In the case of a scatter plot, these values
+            determine the bins used for colouring the points. If the
+            `line_contours` argument is specified, then this is only the set of
+            contours used for the filled contours.
+        line_contours (iter, optional): an iterable object containing the values
+            to use to plot contour lines. Defaults to None, in which case
+            contour lines are plotted with the `contours` argument.
+        projection (:class:`Projection`, optional): a cartopy projection object.
+            Defaults to None.
         plot_filled_contours (bool, optional): whether to plot (coloured) filled
             contours. Defaults to True.
         plot_contour_lines (bool, optional): whether to plot the contour lines.
             Defaults to True.
-        projection (:class:`Projection`, optional): a cartopy projection object.
-            Defaults to None.
         cmap (`matplotlib.cmap`, optional): the colour map to be used for the
             the coloured field. Defaults to None, in which case the default
             matplotlib option is called (usually viridis).
@@ -154,15 +159,19 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, contours, method,
     #--------------------------------------------------------------------------#
 
     if plot_contour_lines:
+        # If line contours aren't specified, get these from filled contours
+        if line_contours is None:
+            line_contours = contours
+
         if method == 'contour':
-            cl = ax.contour(coords_X, coords_Y, field_data, contours,
+            cl = ax.contour(coords_X, coords_Y, field_data, line_contours,
                             linewidths=contour_linewidths,
                             colors=contour_linecolors,
                             linestyles=contour_linestyles, origin='lower',
                             extent=transform_extent, transform=transform_crs)
 
         elif method == 'tricontour':
-            cl = ax.tricontour(coords_X, coords_Y, field_data, contours,
+            cl = ax.tricontour(coords_X, coords_Y, field_data, line_contours,
                                linewidths=contour_linewidths,
                                colors=contour_linecolors,
                                linestyles=contour_linestyles, origin='lower',

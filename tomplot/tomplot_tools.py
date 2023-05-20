@@ -157,7 +157,8 @@ def automake_cmap(contours, color_scheme='Blues',
             else:
                 raise ValueError('Can only use remove_contour method "middle" '+
                                  'when there are an odd number of contour lines')
-        elif isinstance(remove_contour, float):
+        elif isinstance(remove_contour, float) or isinstance(remove_contour, int):
+            remove_contour = float(remove_contour)
             # Search through contours to find this specific contour
             contour_found = False
             for i, contour in enumerate(contours):
@@ -170,8 +171,6 @@ def automake_cmap(contours, color_scheme='Blues',
                 # If we get here then we have not found this contour
                 raise ValueError('contour %.3f was not found' % remove_contour)
 
-        elif isinstance(remove_contour, int):
-            level_to_remove = remove_contour
         else:
             raise ValueError('remove_contour %s not recognised' % remove_contour)
 
