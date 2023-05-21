@@ -23,7 +23,7 @@ figsize = (12,6)
 
 # Things that differ with each subplot
 field_names = ['rho', 'theta_perturbation']
-all_contours = [np.arange(0.6, 1.3, step=0.1), np.linspace(-2.0, 2.0, 11)]
+all_contours = [np.arange(0.4, 1.3, step=0.1), np.linspace(-2.0, 2.0, 11)]
 cbar_labels = [r'$\rho \ / $ kg m$^3$', r"$\theta' \ / $ K"]
 
 
@@ -34,7 +34,7 @@ cbar_labels = [r'$\rho \ / $ kg m$^3$', r"$\theta' \ / $ K"]
 # This is declared BEFORE figure and ax are initialised
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
-font = {'size':24}
+font = {'size':16}
 plt.rc('font',**font)
 
 # ---------------------------------------------------------------------------- #
@@ -59,10 +59,10 @@ for ax, field_name, contours, cbar_label in \
     coords_Y *= 0.001
 
     remove_contour = 0.0 if field_name == 'theta_perturbation' else None
-    cmap, contours = automake_cmap(contours, remove_contour=remove_contour)
+    cmap, line_contours = automake_cmap(contours, remove_contour=remove_contour)
 
     cf, cl = plot_contoured_field(ax, coords_X, coords_Y, field_data,
-                                 contours, method='contour', cmap=cmap)
+                                  'contour', contours, line_contours, cmap=cmap)
 
     add_colorbar(ax, cf, cbar_label)
     if field_name == 'rho':

@@ -1,5 +1,5 @@
 """
-In this file we test the function for making a 2D field plot with a removed contour
+This tests the function for making a 2D field plot with a removed contour
 """
 
 import matplotlib.pyplot as plt

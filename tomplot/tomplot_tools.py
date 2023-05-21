@@ -109,35 +109,70 @@ def automake_field_title(ax, title, titlepad=None, fontsize=None,
 
 
 def automake_cmap(contours, color_scheme='Blues',
-                  restricted_cmap=None, restriction_scaling=1.2,
-                  remove_contour=False, extend_cmap=False):
+                  cmap_rescale_type=None, cmap_rescaling=0.8,
+                  remove_contour=None, extend_cmap=False):
+    """
+    Generates a color map based on contours and a named color scheme. This
+    provides options to linearly rescale the colors in the color map, and to
+    blend neighbouring colors to "remove" a contour.
 
-    if restricted_cmap not in [None, 'both', 'top', 'bottom']:
-        raise ValueError(f'restricted_cmap {restricted_cmap} not recognised')
+    Args:
+        contours (iter): list or array of the edges of color bins to be used
+            in generating the color map.
+        color_scheme (str, optional): specifies which color scheme to use in
+            making the color map. Defaults to `Blues`. For named maps, see
+            https://matplotlib.org/stable/gallery/color/colormap_reference.html
+        cmap_rescale_type (str, optional): whether to rescale the colors in the
+            color map, and if so from which end of the color map. Allowed args
+            are None, 'top', 'bottom' and 'both'. Defaults to None.
+        cmap_rescaling (float, optional): the rescaling to apply to the color
+            map. If `cmap_rescale_type` is 'both', then a tuple of two values
+            can be provided here. Defaults to 0.8, which "shrinks" the color map
+            towards the central colors.
+        remove_contour (float/str, optional): whether to blend two color
+            bins, thus "removing" a contour. Can be a float, corresponding to
+            the value of contour to be removed, or the string 'middle', which
+            removes the central contour. Defaults to None.
+        extend_cmap (bool, optional): whether to allow the color map to be
+            extended beyond the values specified in `contours`. Defaults to
+            False.
+
+    Raises:
+        ValueError: if `remove_contour` is 'middle' but the number of contours
+            is not an odd integer.
+
+    Returns:
+        cmap: the color map to be generated.
+        iter: a list or numpy array of contour lines, taking into account any
+            removed contour.
+    """
+
+    if cmap_rescale_type not in [None, 'both', 'top', 'bottom']:
+        raise ValueError(f'cmap_rescale_type {cmap_rescale_type} not recognised')
 
     # First reproduce the contours for the lines from the existing set of contours
     line_contours = contours.copy()
 
     # Scale the colour map to remove the most extreme colours
-    if restricted_cmap is not None:
-        if restricted_cmap == 'both':
-            if type(restriction_scaling) not in [tuple, list]:
-                restriction_scaling = [restriction_scaling]*2
-            lower_colour = 0.5 * (1.0 - 1/restriction_scaling[0])
-            upper_colour = 0.5 * (1.0 + 1/restriction_scaling[1])
-            avg_colour_scaling = 0.5*(restriction_scaling[0]+restriction_scaling[1])
-        elif restricted_cmap == 'top':
+    if cmap_rescale_type is not None:
+        if cmap_rescale_type == 'both':
+            if type(cmap_rescaling) not in [tuple, list]:
+                cmap_rescaling = [cmap_rescaling]*2
+            lower_colour = 0.5 * (1.0 - cmap_rescaling[0])
+            upper_colour = 0.5 * (1.0 + cmap_rescaling[1])
+            avg_colour_scaling = 0.5*(cmap_rescaling[0]+cmap_rescaling[1])
+        elif cmap_rescale_type == 'top':
             lower_colour = 0.0
-            upper_colour = 1.0/restriction_scaling
-            avg_colour_scaling = restriction_scaling
-        elif restricted_cmap == 'bottom':
-            lower_colour = 1.0 - 1.0/restriction_scaling
+            upper_colour = cmap_rescaling
+            avg_colour_scaling = cmap_rescaling
+        elif cmap_rescale_type == 'bottom':
+            lower_colour = 1.0 - cmap_rescaling
             upper_colour = 1.0
-            avg_colour_scaling = restriction_scaling
+            avg_colour_scaling = cmap_rescaling
 
         # Make a colour map for more contours than we'll use
         actual_num_colour_levels = len(contours)
-        pure_num_colour_levels = np.ceil(actual_num_colour_levels*avg_colour_scaling)
+        pure_num_colour_levels = np.ceil(actual_num_colour_levels/avg_colour_scaling)
 
         pure_cmap = cm.get_cmap(color_scheme, pure_num_colour_levels)
         new_colours = pure_cmap(np.linspace(lower_colour, upper_colour),
