@@ -8,6 +8,7 @@ from tomplot import (automake_cmap, plot_contoured_field,
 import numpy as np
 import pytest
 
+
 def rescaling_settings(cmap_arrangement, cmap_rescale_type, setup_func):
 
     tracer_max = 305.0
@@ -105,11 +106,13 @@ def cmap_combos(cmap_arrangements, cmap_rescale_types):
     import itertools
     return list(itertools.product(cmap_arrangements, cmap_rescale_types))
 
+
 @pytest.mark.parametrize("cmap_arrangement, cmap_rescale_type",
-    # All combinations of odd/even with both/bottom/top
-    cmap_combos(["linear_odd", "linear_even"], ["both", "bottom", "top"]) +
-    # Also add a diverging cmap (only rescaling "both" makes sense here)
-    [("divergent", "both"), ("divergent_removed", "both")])
+                         # All combinations of odd/even with both/bottom/top
+                         cmap_combos(["linear_odd", "linear_even"],
+                                     ["both", "bottom", "top"])
+                         # Also add a diverging cmap (only rescaling "both" makes sense here)
+                         + [("divergent", "both"), ("divergent_removed", "both")])
 def test_cmap_rescaling(cmap_arrangement, cmap_rescale_type, plot_setup):
 
     # Not currently bothered about getting exact colours, just general scaling

@@ -8,6 +8,7 @@ from tomplot import (automake_cmap, plot_contoured_field,
 import numpy as np
 import pytest
 
+
 def remove_contour_settings(situation, setup_func):
 
     tracer_max = 305.0
@@ -23,7 +24,7 @@ def remove_contour_settings(situation, setup_func):
         contours = np.linspace(contour_min, contour_max, num_bins+1)
         contour_step = (contour_max - contour_min) / num_bins
         answer_contours = [contour_min + contour_step*i for i in range(num_bins_over_2)] \
-                           + [contour_step*(1+i) for i in range(num_bins_over_2)]
+            + [contour_step*(1+i) for i in range(num_bins_over_2)]
         title = 'Remove middle contour'
 
     elif situation == "odd":
@@ -60,7 +61,7 @@ def remove_contour_settings(situation, setup_func):
         contour_step = (contour_max - contour_min) / num_bins
         contours = np.linspace(contour_min, contour_max, num_bins+1)
         answer_contours = [contour_min + contour_step*i for i in range(num_bins_over_2)] \
-                           + [contour_step*(1+i) for i in range(num_bins_over_2)]
+            + [contour_step*(1+i) for i in range(num_bins_over_2)]
         title = 'Remove zero contour with odd number of contours'
 
     elif situation == "even_zero":
@@ -131,4 +132,3 @@ def test_remove_contour(situation, plot_setup):
 
     plot_name = f'remove_contour_{situation}.png'
     setup.make_plots(plot_name)
-

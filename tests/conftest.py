@@ -9,6 +9,7 @@ import pytest
 import matplotlib.pyplot as plt
 from os.path import abspath, dirname
 
+
 # ---------------------------------------------------------------------------- #
 # Set up config object
 # ---------------------------------------------------------------------------- #
@@ -19,9 +20,11 @@ opts = ('coords_X', 'coords_Y', 'field_data', 'colour_scheme',
 PlotSetup = namedtuple('PlotSetup', opts)
 PlotSetup.__new__.__defaults__ = (None,)*len(opts)
 
+
 # ---------------------------------------------------------------------------- #
 # Add routine for making plots to config object
 # ---------------------------------------------------------------------------- #
+
 def make_plots(self, plot_name):
     path_to_here = abspath(dirname(__file__))
 
@@ -35,27 +38,33 @@ def make_plots(self, plot_name):
         plt.savefig(plot_path, bbox_inches='tight')
     return None
 
+
 setattr(PlotSetup, "make_plots", make_plots)
+
 
 # ---------------------------------------------------------------------------- #
 # Initial conditions
 # ---------------------------------------------------------------------------- #
+
 # An initial condition to be plotted with a divergent colour map
 def dipole_initial_condition(x, y, Lx, Ly, tracer_background, tracer_max):
     r = np.sqrt(((x - Lx/2) / (Lx/5))**2 + ((y - Ly/2) / (Ly/5))**2)
     return 2*((x - Lx/2) / (Lx/5))*(tracer_max - tracer_background) * np.exp(-r**2)
+
 
 # An initial condition to be plotted with a linear colour map, but featuring
 # a small perturbation that we may wish not to plot
 def two_gaussian_initial_condition(x, y, Lx, Ly, tracer_background, tracer_max):
     r1 = np.sqrt(((x - Lx/2) / (Lx/5))**2 + ((y - Ly/3) / (Ly/5))**2)
     r2 = np.sqrt(((x - 3*Lx/4) / (Lx/10))**2 + ((y - 3*Ly/4) / (Ly/10))**2)
-    return (tracer_background + (tracer_max - tracer_background) * np.exp(-r1**2) +
-            (tracer_max - tracer_background) / 20.0 * np.exp(-r2**2))
+    return (tracer_background + (tracer_max - tracer_background) * np.exp(-r1**2)
+            + (tracer_max - tracer_background) / 20.0 * np.exp(-r2**2))
+
 
 # ---------------------------------------------------------------------------- #
 # Specific PlotSetup objects
 # ---------------------------------------------------------------------------- #
+
 def dipole(tracer_background, tracer_max, show_plots,
            save_plots, overwrite_plots):
 
@@ -72,6 +81,7 @@ def dipole(tracer_background, tracer_max, show_plots,
     return PlotSetup(coords_X, coords_Y, field_data, colour_scheme,
                      tracer_background, tracer_max, show_plots, save_plots,
                      overwrite_plots)
+
 
 def two_gaussian(tracer_background, tracer_max,
                  show_plots, save_plots, overwrite_plots):
@@ -90,17 +100,21 @@ def two_gaussian(tracer_background, tracer_max,
                      tracer_background, tracer_max, show_plots,
                      save_plots, overwrite_plots)
 
+
 # ---------------------------------------------------------------------------- #
 # Routines for allowing plots to be shown from tests
 # ---------------------------------------------------------------------------- #
+
 def pytest_addoption(parser):
     parser.addoption("--show_plots", action="store_true", default=False)
     parser.addoption("--save_plots", action="store_true", default=False)
     parser.addoption("--overwrite_plots", action="store_true", default=False)
 
+
 # ---------------------------------------------------------------------------- #
 # The pytest fixture
 # ---------------------------------------------------------------------------- #
+
 @pytest.fixture(scope="session")
 def plot_setup(pytestconfig):
 
@@ -108,8 +122,8 @@ def plot_setup(pytestconfig):
     save_plots = pytestconfig.getoption("save_plots")
     overwrite_plots = pytestconfig.getoption("overwrite_plots")
     if save_plots and overwrite_plots:
-        raise ValueError('Cannot save plots and overwrite plots. ' +
-                         'Supply only one of these options')
+        raise ValueError('Cannot save plots and overwrite plots. '
+                         + 'Supply only one of these options')
 
     def _plot_setup(initial_condition, tracer_background, tracer_max):
         if initial_condition == "dipole":

@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 
-
 __all__ = ['automake_field_axis_labels', 'automake_field_title', 'automake_cmap']
+
 
 def automake_field_axis_labels(ax, data_metadata):
     """
@@ -87,21 +87,20 @@ def automake_field_title(ax, title, titlepad=None, fontsize=None,
 
     if minmax:
         if field_data is None:
-            raise ValueError('If generating title using "minmax", '+
-                             'field data must be provided')
+            raise ValueError('If generating title using "minmax", '
+                             + 'field data must be provided')
         field_min = np.min(field_data)
         field_max = np.max(field_data)
 
         format_str = '{:'+minmax_format+'}'
-
 
     if title in [None, '']:
         full_title = ''
     elif not minmax:
         full_title = title
     else:
-        full_title = f'{title}, min: {format_str.format(field_min)}, '+ \
-                              f'max: {format_str.format(field_max)}'
+        full_title = f'{title}, min: {format_str.format(field_min)}, ' \
+            + f'max: {format_str.format(field_max)}'
 
     ax.set_title(full_title, pad=titlepad, fontsize=fontsize)
 
@@ -190,8 +189,8 @@ def automake_cmap(contours, color_scheme='Blues',
             if len(contours) % 2 == 1:
                 level_to_remove = int(np.floor((len(contours) - 1) / 2))
             else:
-                raise ValueError('Can only use remove_contour method "middle" '+
-                                 'when there are an odd number of contour lines')
+                raise ValueError('Can only use remove_contour method "middle" '
+                                 + 'when there are an odd number of contour lines')
         elif isinstance(remove_contour, float) or isinstance(remove_contour, int):
             remove_contour = float(remove_contour)
             # Search through contours to find this specific contour
@@ -240,5 +239,3 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     new_cmap = ListedColormap(newcolours)
 
     return new_cmap
-
-

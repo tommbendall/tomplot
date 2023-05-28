@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 __all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines"]
 
+
 def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                          line_contours=None, projection=None,
                          plot_filled_contours=True, plot_contour_lines=True,
@@ -90,33 +91,33 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
             these objects is not created, None will be returned.
     """
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Checks
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if method not in ['contour', 'tricontour', 'scatter']:
         raise ValueError(
-            f'Method {method} to field contour plot not recognised. ' +
-            'Valid options are "contour", "tricontour" or "scatter"')
+            f'Method {method} to field contour plot not recognised. '
+            + 'Valid options are "contour", "tricontour" or "scatter"')
 
     if not (plot_filled_contours or plot_contour_lines):
-        raise ValueError('field_contour_plot invalid option: '+
-                         'both plot_filled_contours and plot_contour_lines '+
-                         'are set to False. One must be True!')
+        raise ValueError('field_contour_plot invalid option: '
+                         + 'both plot_filled_contours and plot_contour_lines '
+                         + 'are set to False. One must be True!')
 
     if remove_lines and plot_contour_lines:
-        raise ValueError('field_contour_plot invalid option: '+
-                         'the remove_lines argument can only be True if the '+
-                         'plot_contour_lines argument is False')
+        raise ValueError('field_contour_plot invalid option: '
+                         + 'the remove_lines argument can only be True if the '
+                         + 'plot_contour_lines argument is False')
 
     if remove_lines and method == 'scatter':
-        raise ValueError('field_contour_plot invalid option: '+
-                         'the remove_lines argument cannot be used with '+
-                         'the "scatter" method')
+        raise ValueError('field_contour_plot invalid option: '
+                         + 'the remove_lines argument cannot be used with '
+                         + 'the "scatter" method')
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Things related to a Cartopy projection
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     # By default, these variables are None and do nothing
     if projection is not None:
@@ -127,9 +128,9 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
         transform_extent = None
         transform_crs = None
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Plot coloured fillings between contours
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if plot_filled_contours:
         # Plot field using cmap, depending on the method
@@ -154,9 +155,9 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
     else:
         cf = None
 
-    #--------------------------------------------------------------------------#
+    # ----------------------------------------------------------------------- #
     # Plot contour lines
-    #--------------------------------------------------------------------------#
+    # ----------------------------------------------------------------------- #
 
     if plot_contour_lines:
         # If line contours aren't specified, get these from filled contours
@@ -179,18 +180,19 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
         elif method == 'scatter':
             raise ValueError(
-                'Scatter method not compatible with plotting line contours. '+
-                'If you want to use the scatter method then set the '+
-                'plot_contour_lines argument to False.')
+                'Scatter method not compatible with plotting line contours. '
+                + 'If you want to use the scatter method then set the '
+                + 'plot_contour_lines argument to False.')
 
     else:
         cl = None
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Finish
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     return cf, cl
+
 
 # This is a separate routine to "plot_contoured_field" so that:
 # (a) colorbars can be easily applied to some (but not all) subplot axes
@@ -223,6 +225,7 @@ def add_colorbar(ax, cf, cbar_label, cbar_format=None, cbar_ticks=None,
         cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
     # TODO: can we add this to the ax instead?
+
 
 # This is a separate routine to "plot_contoured_field" so that the number of
 # arguments to "plot_contoured_field" can be minimised, because I find that I
