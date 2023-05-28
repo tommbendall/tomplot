@@ -15,7 +15,7 @@ from tomplot import plot_contoured_field, extract_2D_data, add_colorbar, \
 
 # Parameters for data extraction and figure creation that must be specified
 results_filename = '/home/thomas/firedrake/src/gusto/results/dry_bryan_fritsch/field_output.nc'
-plotname = '/home/thomas/firedrake/src/gusto/tomplot/test_plots/test_dry_bf.png'
+plotname = '/home/thomas/firedrake/src/gusto/tomplot/figures/test_dry_bf.png'
 time_idx = -1
 figsize = (12,6)
 
