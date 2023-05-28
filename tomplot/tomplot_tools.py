@@ -7,7 +7,8 @@ import numpy as np
 import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 
-__all__ = ['automake_field_axis_labels', 'automake_field_title', 'automake_cmap']
+__all__ = ['automake_field_axis_labels', 'automake_field_title', 'automake_cmap',
+           'automake_minmax']
 
 
 def automake_field_axis_labels(ax, data_metadata):
@@ -141,7 +142,7 @@ def automake_cmap(contours, color_scheme='Blues',
             is not an odd integer.
 
     Returns:
-        cmap: the color map to be generated.
+        `matplotlib.Colormap`: the color map to be generated.
         iter: a list or numpy array of contour lines, taking into account any
             removed contour.
     """
@@ -227,9 +228,13 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     Replaces two colours in a colour map with a shared colour, in effect
     removing a contour from the colour map.
 
-    :arg cmap:            a colour map object
-    :arg level_to_remove: the index of the contour to be removed
-    :arg num_levels:      the total number of contour levels
+    Args:
+        old_cmap (`matplotlib.Colormap`): a colour map object
+        level_to_remove (int): the index of the contour to be removed
+        num_levels(int): the total number of contour levels
+
+    Returns:
+        `matplotlib.Colormap`: a new colour map.
     """
 
     newcolours = old_cmap(np.linspace(0, 1.0, num_levels-1))
@@ -239,3 +244,85 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     new_cmap = ListedColormap(newcolours)
 
     return new_cmap
+
+
+def roundup(number, digits=0):
+    """
+    Rounds a number up, to a specified precision.
+    
+    Args:
+        number (float): the number to be rounded.
+        digits (int): the digits up to which to perform the rounding.
+
+    Returns:
+        float: the rounded number.
+    """
+    import math
+
+    n = 10**-digits
+    return round(math.ceil(number / n) * n, digits)
+
+
+def rounddown(number, digits=0):
+    """
+    Rounds a number down, to a specified precision.
+    
+    Args:
+        number (float): the number to be rounded.
+        digits (int): the digits up to which to perform the rounding.
+
+    Returns:
+        float: the rounded number.
+    """
+    import math
+
+    n = 10**-digits
+    return round(math.floor(number / n) * n, digits)
+
+
+def automake_limits(data):
+    """
+    Finds rounded min and max values to give nice limits. Can be used to create
+    nice contours for previously uninspected data.
+
+    Args:
+        data (`numpy.array`): 
+    """
+    import math
+
+    raw_max = np.amax(data)
+    raw_min = np.amin(data)
+    if (raw_max - raw_min > 0):
+        digits = math.floor(-np.log10(raw_max - raw_min))
+    else:
+        digits = 1
+    if (raw_min < 0 and raw_max > 0):
+        # Assume diverging profile, so make symmetrical around 0
+        max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
+        data_max = roundup(max_abs, digits=digits)
+        data_min = - data_max
+    else:
+        data_min = rounddown(raw_min, digits=digits)
+        data_max = roundup(raw_max, digits=digits)
+
+    # We may need to adjust this if we've made a colour bar that it too wide
+    raw_diff = raw_max - raw_min
+    col_diff = data_max - data_min
+    if raw_diff < 0.5*col_diff:
+        stored_data_min = data_min
+        if (raw_min < 0 and raw_max > 0):
+            bins = 8 if raw_diff < 0.25*col_diff else 4
+        else:
+            bins = 5 if raw_diff < 0.2*col_diff else 4
+        for bin_edge in np.linspace(data_min, data_max, bins+1):
+            if raw_min < bin_edge:
+                break
+            else:
+                data_min = bin_edge
+        for bin_edge in np.linspace(data_max, stored_data_min, bins+1):
+            if raw_max > bin_edge:
+                break
+            else:
+                data_max = bin_edge
+
+    return data_min, data_max
