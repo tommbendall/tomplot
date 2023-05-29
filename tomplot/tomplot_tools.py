@@ -8,7 +8,7 @@ import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 
 __all__ = ['automake_field_axis_labels', 'automake_field_title', 'automake_cmap',
-           'automake_minmax']
+           'rounded_limits']
 
 
 def automake_field_axis_labels(ax, data_metadata):
@@ -249,7 +249,7 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
 def roundup(number, digits=0):
     """
     Rounds a number up, to a specified precision.
-    
+
     Args:
         number (float): the number to be rounded.
         digits (int): the digits up to which to perform the rounding.
@@ -266,7 +266,7 @@ def roundup(number, digits=0):
 def rounddown(number, digits=0):
     """
     Rounds a number down, to a specified precision.
-    
+
     Args:
         number (float): the number to be rounded.
         digits (int): the digits up to which to perform the rounding.
@@ -280,32 +280,41 @@ def rounddown(number, digits=0):
     return round(math.floor(number / n) * n, digits)
 
 
-def automake_limits(data):
+def rounded_limits(data, divergent_flag=False):
     """
     Finds rounded min and max values to give nice limits. Can be used to create
     nice contours for previously uninspected data.
 
     Args:
-        data (`numpy.array`): 
+        data (`numpy.array`):
+        divergent_flag (boolean, optional): whether to enforce that a divergent
+            profile is expected, to give results that are symmetric around 0.
+            Defaults to False.
     """
     import math
 
     raw_max = np.amax(data)
     raw_min = np.amin(data)
     if (raw_max - raw_min > 0):
-        digits = math.floor(-np.log10(raw_max - raw_min))
+        digits = math.floor(-np.log10(raw_max - raw_min)) + 1
     else:
         digits = 1
+
     if (raw_min < 0 and raw_max > 0):
-        # Assume diverging profile, so make symmetrical around 0
+        # How symmetric are these around zero?
         max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
-        data_max = roundup(max_abs, digits=digits)
-        data_min = - data_max
+        min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
+        if divergent_flag or min_abs > 0.5*max_abs:
+            data_max = roundup(max_abs, digits=digits)
+            data_min = - data_max
+        else:
+            data_max = roundup(raw_max, digits=digits)
+            data_min = rounddown(raw_min, digits=digits)
     else:
         data_min = rounddown(raw_min, digits=digits)
         data_max = roundup(raw_max, digits=digits)
 
-    # We may need to adjust this if we've made a colour bar that it too wide
+    # We may need to adjust this if we've made a colour bar that is too wide
     raw_diff = raw_max - raw_min
     col_diff = data_max - data_min
     if raw_diff < 0.5*col_diff:
