@@ -66,11 +66,12 @@ def two_gaussian_initial_condition(x, y, Lx, Ly, tracer_background, tracer_max):
 # ---------------------------------------------------------------------------- #
 
 def dipole(tracer_background, tracer_max, show_plots,
-           save_plots, overwrite_plots):
+           save_plots, overwrite_plots, high_res=False):
 
+    npoints_1d = 40 if high_res else 15
     Lx = Ly = 10.0
-    x_1d = np.linspace(0, Lx, 15)
-    y_1d = np.linspace(0, Ly, 15)
+    x_1d = np.linspace(0, Lx, npoints_1d)
+    y_1d = np.linspace(0, Ly, npoints_1d)
     coords_X, coords_Y = np.meshgrid(x_1d, y_1d, indexing='ij')
 
     field_data = dipole_initial_condition(coords_X, coords_Y, Lx, Ly,
@@ -84,11 +85,12 @@ def dipole(tracer_background, tracer_max, show_plots,
 
 
 def two_gaussian(tracer_background, tracer_max,
-                 show_plots, save_plots, overwrite_plots):
+                 show_plots, save_plots, overwrite_plots, high_res=False):
 
+    npoints_1d = 30 if high_res else 15
     Lx = Ly = 10.0
-    x_1d = np.linspace(0, Lx, 15)
-    y_1d = np.linspace(0, Ly, 15)
+    x_1d = np.linspace(0, Lx, npoints_1d)
+    y_1d = np.linspace(0, Ly, npoints_1d)
     coords_X, coords_Y = np.meshgrid(x_1d, y_1d, indexing='ij')
 
     field_data = two_gaussian_initial_condition(coords_X, coords_Y, Lx, Ly,
@@ -125,13 +127,13 @@ def plot_setup(pytestconfig):
         raise ValueError('Cannot save plots and overwrite plots. '
                          + 'Supply only one of these options')
 
-    def _plot_setup(initial_condition, tracer_background, tracer_max):
+    def _plot_setup(initial_condition, tracer_background, tracer_max, high_res=False):
         if initial_condition == "dipole":
             return dipole(tracer_background, tracer_max, show_plots,
-                          save_plots, overwrite_plots)
+                          save_plots, overwrite_plots, high_res)
         elif initial_condition == "two_gaussian":
             return two_gaussian(tracer_background, tracer_max, show_plots,
-                                save_plots, overwrite_plots)
+                                save_plots, overwrite_plots, high_res)
         else:
             raise ValueError(
                 f'Config initial condition {initial_condition} not recognised')

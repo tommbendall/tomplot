@@ -8,7 +8,7 @@ import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 
 __all__ = ['automake_field_axis_labels', 'automake_field_title', 'automake_cmap',
-           'rounded_limits']
+           'automake_field_markersize', 'rounded_limits']
 
 
 def automake_field_axis_labels(ax, data_metadata):
@@ -246,6 +246,39 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     return new_cmap
 
 
+def automake_field_markersize(data):
+    """
+    Generates a markersize to use when using the "scatter" method for plotting
+    2D fields.
+
+    Args:
+        data (`numpy.array`): the data to be plotted.
+    
+    Returns:
+        float: the markersize.
+    """
+
+    from scipy.optimize import curve_fit
+
+    n_points = np.max(np.shape(data))
+
+    c_value = int((n_points/6)**0.5)
+
+    def exponential(x, a, b, c):
+        return a*np.exp(-b*x)+c
+
+    # C Value sample points
+    x = [12, 48, 108, 168, 192, 448]
+    # Markersize values
+    y = [40, 25, 12, 6, 1, 0.1]
+
+    # Create the fit
+    pcoeffs, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1))
+
+    # Now derive the value (don't return a value less than 1)
+    return max(round(exponential(c_value, *pcoeffs)), 1)
+
+
 def roundup(number, digits=0):
     """
     Rounds a number up, to a specified precision.
@@ -286,7 +319,7 @@ def rounded_limits(data, divergent_flag=False):
     nice contours for previously uninspected data.
 
     Args:
-        data (`numpy.array`):
+        data (`numpy.array`): the data to find rounded mins and maxes of.
         divergent_flag (boolean, optional): whether to enforce that a divergent
             profile is expected, to give results that are symmetric around 0.
             Defaults to False.
