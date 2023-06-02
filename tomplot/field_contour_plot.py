@@ -5,6 +5,7 @@ generally as (filled) contours or with coloured points as a scatter plot.
 Some auxiliary routines are also provided.
 """
 import matplotlib.pyplot as plt
+import numpy as np
 from .tomplot_tools import automake_field_markersize
 
 __all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines"]
@@ -79,7 +80,7 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
         contour_linecolors (str, optional): the colour to be used for the
             contour lines. Can be a string or an array of size matching the
             contours. Defaults to 'black'.
-        markersize (float, optional): the size of markers to use 
+        markersize (float, optional): the size of markers to use
 
     Raises:
         ValueError: if the `remove_lines` option and `plot_contour_lines` are
@@ -126,6 +127,20 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                          +'markersize is set but can only be used with the '
                          +'"scatter" method')
 
+    if method == 'tricontour':
+        if len(np.shape(coords_X)) > 1:
+            coords_X = np.array(coords_X).flatten()
+            print('WARNING: field_contour_plot with "tricontour" method '
+                  + 'requires flattened data. Flattening coords_X for you.')
+        if len(np.shape(coords_Y)) > 1:
+            coords_Y = np.array(coords_Y).flatten()
+            print('WARNING: field_contour_plot with "tricontour" method '
+                  + 'requires flattened data. Flattening coords_Y for you.')
+        if len(np.shape(field_data)) > 1:
+            field_data = np.array(field_data).flatten()
+            print('WARNING: field_contour_plot with "tricontour" method '
+                  + 'requires flattened data. Flattening field_data for you.')
+
     # ------------------------------------------------------------------------ #
     # Things related to a Cartopy projection
     # ------------------------------------------------------------------------ #
@@ -157,9 +172,10 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
         elif method == 'scatter':
             if markersize is None:
-                markersize = automake_field_markersize(field_data)
+                markersize = automake_field_markersize(field_data, ax=ax)
             cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
-                            vmin=contours[0], vmax=contours[-1])
+                            vmin=contours[0], vmax=contours[-1], cmap=cmap,
+                            alpha=transparency)
 
         # Contour lines may appear as gaps in plot. These can be filled here
         if remove_lines:

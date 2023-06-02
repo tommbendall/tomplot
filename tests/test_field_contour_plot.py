@@ -3,7 +3,8 @@ This tests the plotting of 2D fields through coloured contours.
 """
 
 import matplotlib.pyplot as plt
-from tomplot import add_colorbar, automake_field_title, plot_contoured_field
+from tomplot import (add_colorbar, automake_field_title,
+                     automake_cmap, plot_contoured_field)
 import numpy as np
 import pytest
 
@@ -18,17 +19,14 @@ def test_field_contour_plot(method, plot_setup):
     data_background = 20.0
     data_max = 40.0
     data_diff = data_max - data_background
-    setup = plot_setup('dipole', data_background, data_max, high_res=True)
+    setup = plot_setup('dipole', data_background, data_max, npoints_1d=30)
     contours = np.linspace(-data_diff, data_diff, 11)
     title = f'2D field contour plot with {method} method'
 
     coords_X, coords_Y = setup.coords_X, setup.coords_Y
     field_data = setup.field_data
 
-    if method == 'tricontour':
-        coords_X = coords_X.flatten()
-        coords_Y = coords_Y.flatten()
-        field_data = field_data.flatten()
+    cmap, _ = automake_cmap(contours, setup.colour_scheme)
 
     # ------------------------------------------------------------------------ #
     # Make plot
@@ -39,10 +37,14 @@ def test_field_contour_plot(method, plot_setup):
     _, ax = plt.subplots(1, 1, figsize=(5, 5))
 
     cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data,
-                                 method, contours, plot_contour_lines=False)
+                                 method, contours, cmap=cmap,
+                                 plot_contour_lines=False)
 
     add_colorbar(ax, cf, '')
     automake_field_title(ax, title)
 
     plot_name = f'field_contour_plot_{method}.png'
     setup.make_plots(plot_name)
+
+    if method == 'scatter':
+        assert False, 'Why does cmap look wrong for scatter method?'

@@ -66,9 +66,8 @@ def two_gaussian_initial_condition(x, y, Lx, Ly, tracer_background, tracer_max):
 # ---------------------------------------------------------------------------- #
 
 def dipole(tracer_background, tracer_max, show_plots,
-           save_plots, overwrite_plots, high_res=False):
+           save_plots, overwrite_plots, npoints_1d=15):
 
-    npoints_1d = 40 if high_res else 15
     Lx = Ly = 10.0
     x_1d = np.linspace(0, Lx, npoints_1d)
     y_1d = np.linspace(0, Ly, npoints_1d)
@@ -85,9 +84,8 @@ def dipole(tracer_background, tracer_max, show_plots,
 
 
 def two_gaussian(tracer_background, tracer_max,
-                 show_plots, save_plots, overwrite_plots, high_res=False):
+                 show_plots, save_plots, overwrite_plots, npoints_1d=15):
 
-    npoints_1d = 30 if high_res else 15
     Lx = Ly = 10.0
     x_1d = np.linspace(0, Lx, npoints_1d)
     y_1d = np.linspace(0, Ly, npoints_1d)
@@ -127,13 +125,13 @@ def plot_setup(pytestconfig):
         raise ValueError('Cannot save plots and overwrite plots. '
                          + 'Supply only one of these options')
 
-    def _plot_setup(initial_condition, tracer_background, tracer_max, high_res=False):
+    def _plot_setup(initial_condition, tracer_background, tracer_max, npoints_1d=15):
         if initial_condition == "dipole":
             return dipole(tracer_background, tracer_max, show_plots,
-                          save_plots, overwrite_plots, high_res)
+                          save_plots, overwrite_plots, npoints_1d)
         elif initial_condition == "two_gaussian":
             return two_gaussian(tracer_background, tracer_max, show_plots,
-                                save_plots, overwrite_plots, high_res)
+                                save_plots, overwrite_plots, npoints_1d)
         else:
             raise ValueError(
                 f'Config initial condition {initial_condition} not recognised')

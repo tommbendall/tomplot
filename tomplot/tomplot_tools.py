@@ -246,14 +246,16 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     return new_cmap
 
 
-def automake_field_markersize(data):
+def automake_field_markersize(data, ax=None):
     """
     Generates a markersize to use when using the "scatter" method for plotting
     2D fields.
 
     Args:
         data (`numpy.array`): the data to be plotted.
-    
+        ax (`matplotlib.Axes`, optional): the axes on which the data will be
+            plotted. Defaults to None.
+
     Returns:
         float: the markersize.
     """
@@ -266,6 +268,10 @@ def automake_field_markersize(data):
 
     def exponential(x, a, b, c):
         return a*np.exp(-b*x)+c
+
+    if ax is not None:
+        fig = ax.figure
+        assert False, 'Need to find ax size from figure'
 
     # C Value sample points
     x = [12, 48, 108, 168, 192, 448]
