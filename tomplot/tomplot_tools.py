@@ -4,6 +4,7 @@ multiple types of figure.
 """
 
 import numpy as np
+import warnings
 import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 
@@ -147,6 +148,10 @@ def automake_cmap(contours, color_scheme='Blues',
             removed contour.
     """
 
+    # TODO: this whole routine should be rewritten to return a ListedColormap,
+    # which will hopefully provide a route for the different field contour
+    # methods to use equivalent cmaps
+
     if cmap_rescale_type not in [None, 'both', 'top', 'bottom']:
         raise ValueError(f'cmap_rescale_type {cmap_rescale_type} not recognised')
 
@@ -181,6 +186,10 @@ def automake_cmap(contours, color_scheme='Blues',
 
     else:
         cmap = cm.get_cmap(color_scheme, len(contours))
+
+    warnings.warn('WARNING: automake_cmap creating cmap using deprecated '
+                  + '`get_cmap` method. This should be updated to create '
+                  + 'a ListedColorMap')
 
     # Remove a particular contour
     if remove_contour is not None:
@@ -246,13 +255,15 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     return new_cmap
 
 
-def automake_field_markersize(data, ax=None):
+def automake_field_markersize(data, marker_scaling=1.0, ax=None):
     """
     Generates a markersize to use when using the "scatter" method for plotting
     2D fields.
 
     Args:
         data (`numpy.array`): the data to be plotted.
+        marker_scaling (float, optional): scaling to be applied to marker size,
+            to allow manual adjustment. Defaults to 1.0.
         ax (`matplotlib.Axes`, optional): the axes on which the data will be
             plotted. Defaults to None.
 
@@ -262,16 +273,34 @@ def automake_field_markersize(data, ax=None):
 
     from scipy.optimize import curve_fit
 
-    n_points = np.max(np.shape(data))
+    if ax is not None:
+        # Scale points based on number of points and figure size
+        fig = ax.figure
+        figsize = fig.get_size_inches()
+        warnings.warn('WARNING: automake_field_markersize assuming no subplots')
+        subplot_shape = (1,1) # TODO: What should this line be?
 
-    c_value = int((n_points/6)**0.5)
+        if subplot_shape == (1,1):
+            subplot_size = figsize
+        else:
+            subplot_size = (figsize[0]/subplot_shape[0], figsize[1]/subplot_shape[1])
+
+        # Scaling dependent on tightest direction
+        if len(np.shape(data)) == 2:
+            # 2D data, assume points in X and Y direction
+            point_density = np.maximum(np.shape(data)[0] / subplot_size[0],
+                                       np.shape(data)[1] / subplot_size[1])
+        else:
+            # 1D data, so take square root
+            point_density = np.maximum(int(len(data)**0.5) / subplot_size[0],
+                                       int(len(data)**0.5) / subplot_size[1])
+    else:
+        # Just do scaling based on number of points
+        n_points = np.max(np.shape(data))
+        point_density = int((n_points/6)**0.5)
 
     def exponential(x, a, b, c):
         return a*np.exp(-b*x)+c
-
-    if ax is not None:
-        fig = ax.figure
-        assert False, 'Need to find ax size from figure'
 
     # C Value sample points
     x = [12, 48, 108, 168, 192, 448]
@@ -282,7 +311,7 @@ def automake_field_markersize(data, ax=None):
     pcoeffs, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1))
 
     # Now derive the value (don't return a value less than 1)
-    return max(round(exponential(c_value, *pcoeffs)), 1)
+    return max(round(exponential(point_density, *pcoeffs)), 1)*marker_scaling
 
 
 def roundup(number, digits=0):

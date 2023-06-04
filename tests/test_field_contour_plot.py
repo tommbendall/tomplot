@@ -20,7 +20,10 @@ def test_field_contour_plot(method, plot_setup):
     data_max = 40.0
     data_diff = data_max - data_background
     setup = plot_setup('dipole', data_background, data_max, npoints_1d=30)
-    contours = np.linspace(-data_diff, data_diff, 11)
+    if method == "scatter":
+        contours = np.linspace(-data_diff, data_diff, 10)
+    else:
+        contours = np.linspace(-data_diff, data_diff, 11)
     title = f'2D field contour plot with {method} method'
 
     coords_X, coords_Y = setup.coords_X, setup.coords_Y
@@ -45,6 +48,3 @@ def test_field_contour_plot(method, plot_setup):
 
     plot_name = f'field_contour_plot_{method}.png'
     setup.make_plots(plot_name)
-
-    if method == 'scatter':
-        assert False, 'Why does cmap look wrong for scatter method?'

@@ -12,5 +12,6 @@ from tomplot.global_output_converter import *
 from tomplot.plot_coordinates import *
 from tomplot.plot_lfric_coords import *
 from tomplot.plot_decorations import *
+from tomplot.quiver_plot import *
 from tomplot.tomplot_tools import *
 from tomplot.time_series_plot import *

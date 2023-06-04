@@ -6,6 +6,7 @@ Some auxiliary routines are also provided.
 """
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 from .tomplot_tools import automake_field_markersize
 
 __all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines"]
@@ -20,7 +21,7 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                          contour_linestyles=None, contour_linewidths=1,
                          contour_linecolors='black',
                          # Options related to scatter method
-                         markersize=None):
+                         markersize=None, marker_scaling=1.0):
     """
     Plots a 2D field using (filled) contours or coloured points.
 
@@ -80,7 +81,11 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
         contour_linecolors (str, optional): the colour to be used for the
             contour lines. Can be a string or an array of size matching the
             contours. Defaults to 'black'.
-        markersize (float, optional): the size of markers to use
+        markersize (float, optional): the size of markers to use for the
+            "scatter" method.
+        marker_scaling (float, optional): an optional scaling to apply to the
+            markersize when using the "scatter" method, and auto-generating the
+            markersizes. Defaults to 1.0.
 
     Raises:
         ValueError: if the `remove_lines` option and `plot_contour_lines` are
@@ -130,16 +135,19 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
     if method == 'tricontour':
         if len(np.shape(coords_X)) > 1:
             coords_X = np.array(coords_X).flatten()
-            print('WARNING: field_contour_plot with "tricontour" method '
-                  + 'requires flattened data. Flattening coords_X for you.')
+            warnings.warn('WARNING: field_contour_plot with "tricontour" '
+                          + 'method requires flattened data. Flattening '
+                          + 'coords_X for you.')
         if len(np.shape(coords_Y)) > 1:
             coords_Y = np.array(coords_Y).flatten()
-            print('WARNING: field_contour_plot with "tricontour" method '
-                  + 'requires flattened data. Flattening coords_Y for you.')
+            warnings.warn('WARNING: field_contour_plot with "tricontour" '
+                          + 'method requires flattened data. Flattening '
+                          + 'coords_Y for you.')
         if len(np.shape(field_data)) > 1:
             field_data = np.array(field_data).flatten()
-            print('WARNING: field_contour_plot with "tricontour" method '
-                  + 'requires flattened data. Flattening field_data for you.')
+            warnings.warn('WARNING: field_contour_plot with "tricontour" '
+                          + 'method requires flattened data. Flattening '
+                          + 'field_data for you.')
 
     # ------------------------------------------------------------------------ #
     # Things related to a Cartopy projection
@@ -172,7 +180,12 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
         elif method == 'scatter':
             if markersize is None:
-                markersize = automake_field_markersize(field_data, ax=ax)
+                markersize = automake_field_markersize( \
+                    field_data, marker_scaling=marker_scaling, ax=ax)
+            if cmap is not None:
+                warnings.warn('WARNING: field_contour_plot with "scatter" '
+                              + 'method requires a cmap initialised with '
+                              + 'one fewer contours than other methods')
             cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
                             vmin=contours[0], vmax=contours[-1], cmap=cmap,
                             alpha=transparency)
