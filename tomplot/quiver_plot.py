@@ -4,6 +4,8 @@ Routine for plotting a 2D vector-valued field using "quivers" (arrows).
 import matplotlib.pyplot as plt
 import numpy as np
 
+# TODO: could just have kwargs to pass to quiver?
+
 __all__ = ["plot_field_quivers"]
 
 def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
@@ -11,7 +13,8 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
                        x_offset=None, y_offset=None,
                        units='xy',
                        scale=None, angles='xy', scale_units='xy',
-                       restrict_quivers=False):
+                       restrict_quivers=False,
+                       minlength=None):
 
     #--------------------------------------------------------------------------#
     # Restrict extent of quivers if required
@@ -76,12 +79,12 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
         qv = ax.quiver(coords_X_to_plot, coords_Y_to_plot,
                        field_data_X_to_plot, field_data_Y_to_plot,
                        units=units, scale=scale, scale_units=scale_units,
-                       angles=angles, zorder=3)
+                       angles=angles, zorder=3, minlength=minlength)
     else:
         qv = ax.quiver(coords_X_to_plot, coords_Y_to_plot,
                        field_data_X_to_plot, field_data_Y_to_plot,
                        units=units, scale=scale, scale_units=scale_units,
-                       angles=angles, zorder=3, transform=projection)
+                       angles=angles, zorder=3, minlength=minlength, transform=projection)
 
     #--------------------------------------------------------------------------#
     # Finish

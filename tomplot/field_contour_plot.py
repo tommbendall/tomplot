@@ -9,7 +9,8 @@ import numpy as np
 import warnings
 from .tomplot_tools import automake_field_markersize
 
-__all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines"]
+__all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines",
+           "plot_cubed_sphere_panels"]
 
 
 def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
@@ -244,6 +245,7 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 # TODO: allow the position of the colorbar to be easily specified and adjusted
 # TODO: make a global version of this routine (in which the position can be
 #       easily determined)
+# TODO: this needs testing
 def add_colorbar(ax, cf, cbar_label, cbar_format=None, cbar_ticks=None,
                  cbar_labelpad=None):
     """
@@ -297,3 +299,38 @@ def label_contour_lines(ax, cl, clabel_levels=None, clabel_fontsize=None,
 
     ax.clabel(cl, levels=clabel_levels, fontsize=clabel_fontsize,
               manual=clabel_locations, fmt=clabel_format)
+
+
+def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None, projection=None):
+
+    import cartopy.crs as ccrs
+
+    if units not in ['deg', 'rad']:
+        raise ValueError('Units for plotting cubed sphere panel edges should '
+                         + f'be "deg" or "rad", not {units}')
+
+    transform = projection if projection is not None else ccrs.Geodetic()
+
+    if units == 'deg':
+        unit_factor = 1.0
+    elif units == 'rad':
+        unit_factor = np.pi/180.0
+
+    # TODO: can we make this morning general to take into account rotation
+    y_edge_coord = 35.264389682754654*unit_factor
+    edge_coords = [((-135*unit_factor, -45*unit_factor), (-y_edge_coord, -y_edge_coord)),
+                   ((-45*unit_factor, 45*unit_factor), (-y_edge_coord, -y_edge_coord)),
+                   ((45*unit_factor, 135*unit_factor), (-y_edge_coord, -y_edge_coord)),
+                   ((135*unit_factor, -135*unit_factor), (-y_edge_coord, -y_edge_coord)),
+                   ((-135*unit_factor, -45*unit_factor), (y_edge_coord, y_edge_coord)),
+                   ((-45*unit_factor, 45*unit_factor), (y_edge_coord, y_edge_coord)),
+                   ((45*unit_factor, 135*unit_factor), (y_edge_coord, y_edge_coord)),
+                   ((135*unit_factor, -135*unit_factor), (y_edge_coord, y_edge_coord)),
+                   ((135*unit_factor, 135*unit_factor), (-y_edge_coord, y_edge_coord)),
+                   ((45*unit_factor, 45*unit_factor), (-y_edge_coord, y_edge_coord)),
+                   ((-45*unit_factor, -45*unit_factor), (-y_edge_coord, y_edge_coord)),
+                   ((-135*unit_factor, -135*unit_factor), (-y_edge_coord, y_edge_coord))]
+
+    for edge in edge_coords:
+        x_coords, y_coords = edge
+        ax.plot(x_coords, y_coords, color=color, linewidth=linewidth, transform=transform)
