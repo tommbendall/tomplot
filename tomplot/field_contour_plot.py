@@ -183,6 +183,7 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
             if markersize is None:
                 markersize = automake_field_markersize( \
                     field_data, marker_scaling=marker_scaling, ax=ax)
+                import pdb; pdb.set_trace()
             if cmap is not None:
                 warnings.warn('WARNING: field_contour_plot with "scatter" '
                               + 'method requires a cmap initialised with '
