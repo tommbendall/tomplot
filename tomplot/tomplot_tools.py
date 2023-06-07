@@ -271,14 +271,16 @@ def automake_field_markersize(data, marker_scaling=1.0, ax=None):
         float: the markersize.
     """
 
-    from scipy.optimize import curve_fit
-
     if ax is not None:
         # Scale points based on number of points and figure size
         fig = ax.figure
         figsize = fig.get_size_inches()
-        warnings.warn('WARNING: automake_field_markersize assuming no subplots')
-        subplot_shape = (1,1) # TODO: What should this line be?
+        # Determine the number of subplots
+        if hasattr(ax, "get_subplotspec"):
+            subplot_shape = (ax.get_subplotspec().rowspan.stop,
+                             ax.get_subplotspec().colspan.stop)
+        else:
+            subplot_shape = (1,1) # Default, assume 1 axes
 
         if subplot_shape == (1,1):
             subplot_size = figsize
@@ -297,21 +299,21 @@ def automake_field_markersize(data, marker_scaling=1.0, ax=None):
     else:
         # Just do scaling based on number of points
         n_points = np.max(np.shape(data))
-        point_density = int((n_points/6)**0.5)
+        point_density = int(n_points**0.5)
 
-    def exponential(x, a, b, c):
-        return a*np.exp(-b*x)+c
+    # def exponential(x, a, b, c):
+    #     return a*np.exp(-b*x)+c
 
-    # C Value sample points
-    x = [12, 48, 108, 168, 192, 448]
-    # Markersize values
-    y = [40, 25, 12, 6, 1, 0.1]
+    # # C Value sample points
+    # x = [12, 48, 108, 168, 192, 448]
+    # # Markersize values
+    # y = [40, 25, 12, 6, 1, 0.1]
 
-    # Create the fit
-    pcoeffs, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1))
+    # # Create the fit
+    # pcoeffs, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1))
 
     # Now derive the value (don't return a value less than 1)
-    return max(round(exponential(point_density, *pcoeffs)), 1)*marker_scaling
+    return max((72 / point_density)**1.6, 1)*marker_scaling
 
 
 def roundup(number, digits=0):

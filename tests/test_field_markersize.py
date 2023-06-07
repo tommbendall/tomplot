@@ -21,6 +21,8 @@ def field_markersize_test_settings(npoints_1d, setup):
 @pytest.mark.parametrize("figsize", [(5, 10), (10, 5)])
 def test_field_markersize_subplots(figsize, plot_setup):
 
+    answers = {510: [16, 8], 1005: [16, 8]}
+
     plt.close()
 
     subplots_x = int(figsize[1] / 5)
@@ -51,7 +53,6 @@ def test_field_markersize_subplots(figsize, plot_setup):
         cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data,
                                     "scatter", contours, plot_contour_lines=False)
         markersizes.append(cf.get_sizes()[0])
-
         add_colorbar(ax, cf, '')
 
     fig.suptitle(title)
@@ -59,12 +60,19 @@ def test_field_markersize_subplots(figsize, plot_setup):
     plot_name = f'field_contour_subplots_{figsize[0]}_{figsize[1]}.png'
     setup.make_plots(plot_name)
 
-    assert False, 'Need to find a way of testing if point size is reasonable'
+    tol = 1
+    for i, markersize in enumerate(markersizes):
+        answer = answers[100*figsize[0]+figsize[1]][i]
+        assert abs(markersize - answer) / answer < tol, f'Markersize {i} for ' \
+            + f'{npoints_1d} points in 1D for figsize {figsize} is not correct'
 
 
 @pytest.mark.parametrize("npoints_1d", [20, 50, 100])
 @pytest.mark.parametrize("figsize", [(5, 5), (10, 10)])
 def test_field_markersize_one_plot(npoints_1d, figsize, plot_setup):
+
+    answers = {505: {20: 100, 50: 24, 100: 8},
+               1010: {20: 310, 50: 72, 100: 24}}
 
     # ------------------------------------------------------------------------ #
     # Settings for test
@@ -89,8 +97,7 @@ def test_field_markersize_one_plot(npoints_1d, figsize, plot_setup):
                                  "scatter", contours, plot_contour_lines=False)
 
     markersize = cf.get_sizes()[0]
-
-    import pdb; pdb.set_trace()
+    answer = answers[100*figsize[0]+figsize[1]][npoints_1d]
 
     add_colorbar(ax, cf, '')
     automake_field_title(ax, title)
@@ -98,4 +105,6 @@ def test_field_markersize_one_plot(npoints_1d, figsize, plot_setup):
     plot_name = f'field_contour_one_plot_{npoints_1d}_{figsize[0]}_{figsize[1]}.png'
     setup.make_plots(plot_name)
 
-    assert False, 'Need to find a way of testing if point size is reasonable'
+    tol = 0.1
+    assert abs(markersize - answer) / answer < tol, f'Markersize for ' \
+        + f'{npoints_1d} points in 1D for figsize {figsize} is not correct'
