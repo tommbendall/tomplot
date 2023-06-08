@@ -2,14 +2,29 @@
 Tools provided by tomplot for making nice figures, that may be common for
 multiple types of figure.
 """
-
+import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 
-__all__ = ['automake_field_axis_labels', 'automake_field_title', 'automake_cmap',
+__all__ = ['set_tomplot_style', 'automake_field_axis_labels',
+           'automake_field_title', 'automake_cmap',
            'automake_field_markersize', 'rounded_limits']
+
+def set_tomplot_style(fontsize=48):
+    """
+    Set some initial matplotlib variables to use a nice tomplot style. By
+    default this will use latex formatting.
+
+    Args:
+        fontsize (int, optional): default fontsize to use. Defaults to 48.
+    """
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+    font = {'size':fontsize}
+    plt.rc('font',**font)
 
 
 def automake_field_axis_labels(ax, data_metadata):
