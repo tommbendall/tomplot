@@ -11,7 +11,7 @@ from matplotlib.colors import ListedColormap
 __all__ = ['set_tomplot_style', 'automake_field_axis_labels',
            'automake_field_title', 'automake_cmap',
            'automake_field_markersize', 'rounded_limits',
-           'lonlat_to_alphabeta']
+           'lonlat_to_alphabeta', 'alphabeta_to_lonlat']
 
 def set_tomplot_style(fontsize=48):
     """
@@ -460,3 +460,43 @@ def lonlat_to_alphabeta(lon, lat):
     beta = np.arctan2(rot_Z, rot_X)
 
     return alpha, beta, panel
+
+def alphabeta_to_lonlat(alpha, beta, panel):
+    """
+    Converts equiangular cubed sphere coordinates (alpha, beta and panel ID)
+    into longitude, latitude values.
+
+    Args:
+        alpha (float, `np.ndarray`): alpha coord value or array of alpha values.
+        beta (float, `np.ndarray`): beta coord value or array of beta values.
+        panel (int, `np.ndarray`): ID of cubed sphere panel.
+
+    Returns:
+        lon, lat: the longitude, latitude coordinates corresponding to the input
+            coordinates. 
+    """
+
+    # Compute Cartesian coordinates as if we are on Panel 1
+    varrho = np.sqrt(1 + np.tan(alpha)**2 + np.tan(beta)**2)
+    X = 1 / varrho
+    Y = np.tan(alpha) / varrho
+    Z = np.tan(beta) / varrho
+
+    if type(panel) is int:
+        panel = np.ones(np.shape(alpha), dtype=int)*panel
+
+    # Rotate -- these have to match the order of the panel_ids
+    panel_ids = [1, 2, 3, 4, 5, 6]
+    panel_rotation_conditions = [(panel == panel_id) for panel_id in panel_ids]
+    panel_rotations = [(X, Y, Z), (-Y, X, Z), (-X, Z, Y),
+                       (-Z, -X, Y), (-Z, Y, X), (-Y, Z, -X)]
+    rot_X, rot_Y, rot_Z = np.select(panel_rotation_conditions, panel_rotations)
+
+    # Compute longitude-latitude from global Cartesian coordinates
+    lon = np.arctan2(rot_Y, rot_X)
+    lat = np.arctan2(rot_Z, np.sqrt(rot_X**2 + rot_Y**2))
+
+    deg_lon = 180.*lon/np.pi
+    deg_lat = 180.*lat/np.pi
+
+    return deg_lon, deg_lat
