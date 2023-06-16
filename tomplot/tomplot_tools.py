@@ -10,7 +10,8 @@ from matplotlib.colors import ListedColormap
 
 __all__ = ['set_tomplot_style', 'automake_field_axis_labels',
            'automake_field_title', 'automake_cmap',
-           'automake_field_markersize', 'rounded_limits']
+           'automake_field_markersize', 'rounded_limits',
+           'lonlat_to_alphabeta']
 
 def set_tomplot_style(fontsize=48):
     """
@@ -108,6 +109,9 @@ def automake_field_title(ax, title, titlepad=None, fontsize=None,
                              + 'field data must be provided')
         field_min = np.min(field_data)
         field_max = np.max(field_data)
+
+        if minmax_format == '.2f' and (-abs(field_min) > 0.01 or abs(field_max) < 0.01):
+            minmax_format = '.2e'
 
         format_str = '{:'+minmax_format+'}'
 
@@ -316,17 +320,6 @@ def automake_field_markersize(data, marker_scaling=1.0, ax=None):
         n_points = np.max(np.shape(data))
         point_density = int(n_points**0.5)
 
-    # def exponential(x, a, b, c):
-    #     return a*np.exp(-b*x)+c
-
-    # # C Value sample points
-    # x = [12, 48, 108, 168, 192, 448]
-    # # Markersize values
-    # y = [40, 25, 12, 6, 1, 0.1]
-
-    # # Create the fit
-    # pcoeffs, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1))
-
     # Now derive the value (don't return a value less than 1)
     return max((72 / point_density)**1.6, 1)*marker_scaling
 
@@ -420,3 +413,50 @@ def rounded_limits(data, divergent_flag=False):
                 data_max = bin_edge
 
     return data_min, data_max
+
+def lonlat_to_alphabeta(lon, lat):
+    """
+    Converts longitude, latitude values into alpha, beta values.
+
+    Args:
+        lon (float, `np.ndarray`): longitude value or array of longitude values.
+        lat (float, `np.ndarray`): latitude value or array of latitude values.
+
+    Returns:
+        alpha, beta, panel: the equiangular cubed sphere coordinates (including
+            panel_id) corresponding to the input coordinates. 
+    """
+
+    rad_lon = np.pi*lon/180.
+    rad_lat = np.pi*lat/180.
+
+    # Compute Cartesian coordinates
+    X = np.cos(rad_lon)*np.cos(rad_lat)
+    Y = np.sin(rad_lon)*np.cos(rad_lat)
+    Z = np.sin(rad_lat)
+
+    # Work out which panel we are on
+    panel_conditions = [np.logical_and(np.cos(rad_lon) >= 1.0 / np.sqrt(2),
+                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon)*np.cos(rad_lat)),
+                        np.logical_and(np.sin(rad_lon) >= 1.0 / np.sqrt(2),
+                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon-np.pi/2)*np.cos(rad_lat)),
+                        np.logical_and(np.cos(rad_lon) <= -1.0 / np.sqrt(2),
+                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon-np.pi)*np.cos(rad_lat)),
+                        np.logical_and(np.sin(rad_lon) <= -1.0 / np.sqrt(2),
+                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon+np.pi/2)*np.cos(rad_lat)),
+                        (np.sin(rad_lat) > 0.0),
+                        (np.sin(rad_lat) < 0.0)]
+
+    panel_ids = [1, 2, 3, 4, 5, 6]
+    panel = np.select(panel_conditions, panel_ids)
+
+    # Rotate -- these have to match the order of the panel_ids
+    panel_rotation_conditions = [(panel == panel_id) for panel_id in panel_ids]
+    panel_rotations = [(X, Y, Z), (Y, -X, Z), (-X, Z, Y),
+                       (-Y, Z, -X), (Z, Y, -X), (-Z, -X, Y)]
+    rot_X, rot_Y, rot_Z = np.select(panel_rotation_conditions, panel_rotations)
+
+    alpha = np.arctan2(rot_Y, rot_X)
+    beta = np.arctan2(rot_Z, rot_X)
+
+    return alpha, beta, panel

@@ -100,6 +100,10 @@ def two_gaussian(tracer_background, tracer_max,
                      tracer_background, tracer_max, show_plots,
                      save_plots, overwrite_plots)
 
+def none_setup(show_plots, save_plots, overwrite_plots):
+
+    return PlotSetup(None, None, None, None, None, None,
+                     show_plots, save_plots, overwrite_plots)
 
 # ---------------------------------------------------------------------------- #
 # Routines for allowing plots to be shown from tests
@@ -132,6 +136,8 @@ def plot_setup(pytestconfig):
         elif initial_condition == "two_gaussian":
             return two_gaussian(tracer_background, tracer_max, show_plots,
                                 save_plots, overwrite_plots, npoints_1d)
+        elif initial_condition == "none":
+            return none_setup(show_plots, save_plots, overwrite_plots)
         else:
             raise ValueError(
                 f'Config initial condition {initial_condition} not recognised')
