@@ -7,10 +7,10 @@ Some auxiliary routines are also provided.
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
-from .tomplot_tools import tomplot_field_markersize
+from .tomplot_tools import tomplot_field_markersize, alphabeta_to_lonlat
 
 __all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines",
-           "plot_cubed_sphere_panels"]
+           "plot_cubed_sphere_panels", "plot_cubed_sphere_slice"]
 
 
 def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
@@ -331,3 +331,23 @@ def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None, pro
     for edge in edge_coords:
         x_coords, y_coords = edge
         ax.plot(x_coords, y_coords, color=color, linewidth=linewidth, transform=transform)
+
+def plot_cubed_sphere_slice(ax, alpha_coords, beta_coords, panel, units='deg',
+                            color='black', linewidth=None, projection=None):
+
+    import cartopy.crs as ccrs
+
+    if units not in ['deg', 'rad']:
+        raise ValueError('Units for plotting cubed sphere panel edges should '
+                         + f'be "deg" or "rad", not {units}')
+
+    transform = projection if projection is not None else ccrs.Geodetic()
+
+    if units == 'deg':
+        unit_factor = 1.0
+    elif units == 'rad':
+        unit_factor = np.pi/180.0
+
+    lon_coords, lat_coords = alphabeta_to_lonlat(alpha_coords, beta_coords, panel)
+
+    ax.plot(lon_coords, lat_coords, color=color, linewidth=linewidth, transform=transform)

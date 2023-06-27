@@ -30,7 +30,7 @@ vector_magnitude_cutoff = 0.2
 # ---------------------------------------------------------------------------- #
 
 plotdir = '/data/users/tbendall/results/'+results_dirname+'/figures'
-filename = '/data/users/tbendall/results/'+results_dirname+'/rewrite_lfric_diag.nc'
+filename = '/data/users/tbendall/results/'+results_dirname+'/christoffel_lfric_diag.nc'
 data_file = Dataset(filename, 'r')
 time_idxs = range(len(data_file['time_instant'][:]))
 data_file.close()
@@ -126,7 +126,7 @@ for time_idx in time_idxs:
     # Save figure
     # ------------------------------------------------------------------------ #
 
-    plotname = f'{plotdir}/rewrite_four_part_sbr_time_{time_idx:02d}.png'
+    plotname = f'{plotdir}/new_four_part_sbr_time_{time_idx:02d}.png'
     print(f'Saving figure to {plotname}')
     fig.savefig(plotname, bbox_inches='tight')
     plt.close()
