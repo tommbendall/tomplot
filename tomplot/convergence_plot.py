@@ -86,9 +86,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     # Each field will represent a single line on the plot
     # Each run ID will be at a different resolution -- each is a point on the plot
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Checks
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     # Make results dirnames into an array if only a single string is provided
     if isinstance(dirnames, str):
@@ -128,7 +128,7 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             raise ValueError('The list of linestyles should have the same '+
                              'length as the list of fields. Found %d but expected %d' %
                              (len(linestyles), len(fields)*len(dirnames)))
-    
+
     if type(best_fit) == list:
         if len(best_fit) != len(best_fit)*len(dirnames):
             raise ValueError('The list of best fits should have the same '+
@@ -139,9 +139,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
 
     ax_provided = (ax is not None)
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Make figure
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if ax is None:
         # This is declared BEFORE figure and ax are initialised
@@ -153,9 +153,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
         fig = plt.figure(1, figsize=figsize)
         ax = fig.add_subplot(111)
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Loop through fields adding lines to plot
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     for j, dirname in enumerate(dirnames):
 
@@ -170,9 +170,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
 
             k = i + j*len(fields)
 
-            #------------------------------------------------------------------#
+            # ---------------------------------------------------------------- #
             # Extract data
-            #------------------------------------------------------------------#
+            # ---------------------------------------------------------------- #
 
             # Should be an array indexed by run_id
             variable_data = np.log(data_file.variables[variable][run_id_list])
@@ -180,9 +180,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             # Use only the errors from the final time step
             error_data = np.log(data_file.groups[field]['errors'].variables[error][run_id_list,-1])
 
-            #------------------------------------------------------------------#
+            # ---------------------------------------------------------------- #
             # Determine marker colours, shapes and labels
-            #------------------------------------------------------------------#
+            # ---------------------------------------------------------------- #
 
             colour = colours[k] if colours is not None else get_colour(testname, field, k)
             marker = markers[k] if markers is not None else get_marker(testname, field, k)
@@ -195,9 +195,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                 label = get_label(field)
 
 
-            #------------------------------------------------------------------#
+            # ---------------------------------------------------------------- #
             # Plot errors
-            #------------------------------------------------------------------#
+            # ---------------------------------------------------------------- #
 
             if best_fit[k]:
                 # Get line of best fit first to amend the label
@@ -224,9 +224,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
 
         data_file.close()
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Decorations
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if xlabel == 'default':
         xlabel = get_xlabel(variable, 'convergence')
@@ -257,9 +257,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
     if grid:
         ax.grid('on')
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Comparison lines
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     # This is done after plot decorations to ensure
     # the lines pass through the centre of the figure
@@ -291,9 +291,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
             ax.plot(x, y, color='black', linestyle=comparison_linestyles[j % 3],
                     label=label, linewidth=linewidth, marker='')
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Legend
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     handles, labels = ax.get_legend_handles_labels()
     lgd = ax.legend(handles, labels, loc='upper center', ncol=legend_ncol,
@@ -301,9 +301,9 @@ def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
                     fontsize=leg_fontsize, handletextpad=0.0,
                     columnspacing=leg_col_spacing)
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Save and finish plot
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if ax_provided:
         return ax

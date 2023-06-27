@@ -4,13 +4,13 @@ multiple types of figure.
 """
 import matplotlib.pyplot as plt
 import numpy as np
-import warnings
-import matplotlib.cm as cm
+import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
-__all__ = ['set_tomplot_style', 'automake_field_axis_labels',
-           'automake_field_title', 'automake_cmap',
-           'automake_field_markersize', 'rounded_limits']
+__all__ = ['set_tomplot_style', 'tomplot_field_axis_labels',
+           'tomplot_field_title', 'tomplot_cmap',
+           'tomplot_field_markersize', 'rounded_limits']
+
 
 def set_tomplot_style(fontsize=48):
     """
@@ -23,11 +23,11 @@ def set_tomplot_style(fontsize=48):
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
-    font = {'size':fontsize}
-    plt.rc('font',**font)
+    font = {'size': fontsize}
+    plt.rc('font', **font)
 
 
-def automake_field_axis_labels(ax, data_metadata):
+def tomplot_field_axis_labels(ax, data_metadata):
     """
     Sets labels, ticks, ticklabels and limits for the axes for a field plot,
     based on the metadata that tomplot uses to describe the plotted field data.
@@ -75,8 +75,8 @@ def automake_field_axis_labels(ax, data_metadata):
     return ax
 
 
-def automake_field_title(ax, title, titlepad=None, fontsize=None,
-                         minmax=False, minmax_format='.2f', field_data=None):
+def tomplot_field_title(ax, title, titlepad=None, fontsize=None,
+                        minmax=False, minmax_format='.2f', field_data=None):
     """
     Adds a title to a subplot.
 
@@ -124,9 +124,9 @@ def automake_field_title(ax, title, titlepad=None, fontsize=None,
     return ax
 
 
-def automake_cmap(contours, color_scheme='Blues',
-                  cmap_rescale_type=None, cmap_rescaling=0.8,
-                  remove_contour=None, extend_cmap=False):
+def tomplot_cmap(contours, color_scheme='Blues',
+                 cmap_rescale_type=None, cmap_rescaling=0.8,
+                 remove_contour=None, extend_cmap=False):
     """
     Generates a color map based on contours and a named color scheme. This
     provides options to linearly rescale the colors in the color map, and to
@@ -163,10 +163,6 @@ def automake_cmap(contours, color_scheme='Blues',
             removed contour.
     """
 
-    # TODO: this whole routine should be rewritten to return a ListedColormap,
-    # which will hopefully provide a route for the different field contour
-    # methods to use equivalent cmaps
-
     if cmap_rescale_type not in [None, 'both', 'top', 'bottom']:
         raise ValueError(f'cmap_rescale_type {cmap_rescale_type} not recognised')
 
@@ -194,17 +190,13 @@ def automake_cmap(contours, color_scheme='Blues',
         actual_num_colour_levels = len(contours)
         pure_num_colour_levels = np.ceil(actual_num_colour_levels/avg_colour_scaling)
 
-        pure_cmap = cm.get_cmap(color_scheme, pure_num_colour_levels)
+        pure_cmap = mpl.colormaps[color_scheme].resampled(pure_num_colour_levels)
         new_colours = pure_cmap(np.linspace(lower_colour, upper_colour),
                                 actual_num_colour_levels)
         cmap = ListedColormap(new_colours)
 
     else:
-        cmap = cm.get_cmap(color_scheme, len(contours))
-
-    warnings.warn('WARNING: automake_cmap creating cmap using deprecated '
-                  + '`get_cmap` method. This should be updated to create '
-                  + 'a ListedColorMap')
+        cmap = mpl.colormaps[color_scheme].resampled(len(contours)-1)
 
     # Remove a particular contour
     if remove_contour is not None:
@@ -270,7 +262,7 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     return new_cmap
 
 
-def automake_field_markersize(data, marker_scaling=1.0, ax=None):
+def tomplot_field_markersize(data, marker_scaling=1.0, ax=None):
     """
     Generates a markersize to use when using the "scatter" method for plotting
     2D fields.
@@ -295,9 +287,9 @@ def automake_field_markersize(data, marker_scaling=1.0, ax=None):
             subplot_shape = (ax.get_subplotspec().rowspan.stop,
                              ax.get_subplotspec().colspan.stop)
         else:
-            subplot_shape = (1,1) # Default, assume 1 axes
+            subplot_shape = (1, 1)  # Default, assume 1 axes
 
-        if subplot_shape == (1,1):
+        if subplot_shape == (1, 1):
             subplot_size = figsize
         else:
             subplot_size = (figsize[0]/subplot_shape[0], figsize[1]/subplot_shape[1])
@@ -315,17 +307,6 @@ def automake_field_markersize(data, marker_scaling=1.0, ax=None):
         # Just do scaling based on number of points
         n_points = np.max(np.shape(data))
         point_density = int(n_points**0.5)
-
-    # def exponential(x, a, b, c):
-    #     return a*np.exp(-b*x)+c
-
-    # # C Value sample points
-    # x = [12, 48, 108, 168, 192, 448]
-    # # Markersize values
-    # y = [40, 25, 12, 6, 1, 0.1]
-
-    # # Create the fit
-    # pcoeffs, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1))
 
     # Now derive the value (don't return a value less than 1)
     return max((72 / point_density)**1.6, 1)*marker_scaling

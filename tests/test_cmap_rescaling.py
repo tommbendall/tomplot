@@ -3,8 +3,8 @@ This tests the rescaling of a colour map
 """
 
 import matplotlib.pyplot as plt
-from tomplot import (automake_cmap, plot_contoured_field,
-                     add_colorbar, automake_field_title)
+from tomplot import (tomplot_cmap, plot_contoured_field,
+                     add_colorbar, tomplot_field_title)
 import numpy as np
 import pytest
 
@@ -16,11 +16,11 @@ def rescaling_settings(cmap_arrangement, cmap_rescale_type, setup_func):
 
     if cmap_arrangement in ['divergent', 'divergent_removed']:
         if cmap_arrangement == 'divergent':
-            num_bins = 7
+            num_bins = 20
             remove_contour = None
             title = 'Rescaled divergent cmap'
-            lower_true_cmap = 4
-            upper_true_cmap = 11
+            lower_true_cmap = -10
+            upper_true_cmap = 30
         else:
             num_bins = 10
             remove_contour = 'middle'
@@ -93,8 +93,8 @@ def rescaling_settings(cmap_arrangement, cmap_rescale_type, setup_func):
 
     setup = setup_func(ic_name, tracer_background, tracer_max)
 
-    true_cmap, _ = automake_cmap(equiv_contours, setup.colour_scheme,
-                                 remove_contour=remove_contour)
+    true_cmap, _ = tomplot_cmap(equiv_contours, setup.colour_scheme,
+                                remove_contour=remove_contour)
     true_cmap_values = [true_cmap(i) for i in range(lower_true_cmap,
                                                     upper_true_cmap+1)]
 
@@ -133,10 +133,10 @@ def test_cmap_rescaling(cmap_arrangement, cmap_rescale_type, plot_setup):
     # Generate rescaled cmap
     # ------------------------------------------------------------------------ #
 
-    cmap, line_contours = automake_cmap(contours, colour_scheme,
-                                        cmap_rescale_type=cmap_rescale_type,
-                                        cmap_rescaling=cmap_rescaling,
-                                        remove_contour=remove_contour)
+    cmap, line_contours = tomplot_cmap(contours, colour_scheme,
+                                       cmap_rescale_type=cmap_rescale_type,
+                                       cmap_rescaling=cmap_rescaling,
+                                       remove_contour=remove_contour)
 
     # ------------------------------------------------------------------------ #
     # Compare with true cmap
@@ -163,7 +163,7 @@ def test_cmap_rescaling(cmap_arrangement, cmap_rescale_type, plot_setup):
                                  line_contours=line_contours)
 
     add_colorbar(ax, cf, '')
-    automake_field_title(ax, title)
+    tomplot_field_title(ax, title)
 
     plot_name = f'cmap_rescaling_{cmap_arrangement}_{cmap_rescale_type}.png'
     setup.make_plots(plot_name)

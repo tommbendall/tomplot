@@ -7,7 +7,7 @@ Some auxiliary routines are also provided.
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
-from .tomplot_tools import automake_field_markersize
+from .tomplot_tools import tomplot_field_markersize
 
 __all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines",
            "plot_cubed_sphere_panels"]
@@ -130,8 +130,8 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
     if markersize is not None and method != 'scatter':
         raise ValueError('field_contour_plot invalid option: '
-                         +'markersize is set but can only be used with the '
-                         +'"scatter" method')
+                         + 'markersize is set but can only be used with the '
+                         + '"scatter" method')
 
     if method == 'tricontour':
         if len(np.shape(coords_X)) > 1:
@@ -181,12 +181,9 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
         elif method == 'scatter':
             if markersize is None:
-                markersize = automake_field_markersize( \
+                markersize = tomplot_field_markersize(
                     field_data, marker_scaling=marker_scaling, ax=ax)
-            if cmap is not None:
-                warnings.warn('WARNING: field_contour_plot with "scatter" '
-                              + 'method requires a cmap initialised with '
-                              + 'one fewer contours than other methods')
+
             cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
                             vmin=contours[0], vmax=contours[-1], cmap=cmap,
                             alpha=transparency)

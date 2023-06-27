@@ -6,6 +6,7 @@ import pandas as pd
 
 __all__ = ["plot_field_quivers"]
 
+
 def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
                        projection=None, magnitude_filter=None,
                        spatial_filter_step=None, spatial_filter_offset=None,
@@ -58,9 +59,9 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
         `matplotlib.pyplot.Quiver`: the resulting `Quiver` object.
     """
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Checks
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     # All arrays must have the same shape. Check this here to make assumptions
     # easier in what follows
@@ -73,9 +74,9 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
 
     data_is_1D = (len(np.shape(coords_X)) == 1)
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Handle keyword arguments
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     # Make copy of keyword dictionary
     local_kwargs = dict(quiver_kwargs)
@@ -105,9 +106,9 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
     else:
         zorder = 3
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Apply spatial filter, if specified
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if spatial_filter_step is not None:
         # Filtering 1D data
@@ -151,9 +152,9 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
             field_data_X = field_data_X[data_slice_x, data_slice_y]
             field_data_Y = field_data_Y[data_slice_x, data_slice_y]
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Apply filter based on magnitude, if specified
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if magnitude_filter is not None:
         # Make a Dataframe object to quickly filter data
@@ -173,9 +174,9 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
         field_data_X = filtered_df['field_data_X'].values
         field_data_Y = filtered_df['field_data_Y'].values
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Plot quivers
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     if projection is None:
         # separately handle this case as None transform results in no arrows
@@ -187,8 +188,8 @@ def plot_field_quivers(ax, coords_X, coords_Y, field_data_X, field_data_Y,
                        units=units, scale_units=scale_units, angles=angles,
                        zorder=zorder, transform=projection, **local_kwargs)
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Finish
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
     return qv

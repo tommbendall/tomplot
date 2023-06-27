@@ -3,8 +3,8 @@ This tests the function for making a 2D field plot with a removed contour
 """
 
 import matplotlib.pyplot as plt
-from tomplot import (automake_cmap, plot_contoured_field,
-                     add_colorbar, automake_field_title)
+from tomplot import (tomplot_cmap, plot_contoured_field,
+                     add_colorbar, tomplot_field_title)
 import numpy as np
 import pytest
 
@@ -106,8 +106,8 @@ def test_remove_contour(situation, plot_setup):
     # Remove contour
     # ------------------------------------------------------------------------ #
 
-    cmap, line_contours = automake_cmap(contours, colour_scheme,
-                                        remove_contour=remove_contour)
+    cmap, line_contours = tomplot_cmap(contours, colour_scheme,
+                                       remove_contour=remove_contour)
 
     assert (len(line_contours) == len(answer_contours)), 'Length of line ' + \
         f'contours is not correct for situation {situation}'
@@ -128,7 +128,7 @@ def test_remove_contour(situation, plot_setup):
                                  line_contours=line_contours)
 
     add_colorbar(ax, cf, '')
-    automake_field_title(ax, title)
+    tomplot_field_title(ax, title)
 
     plot_name = f'remove_contour_{situation}.png'
     setup.make_plots(plot_name)

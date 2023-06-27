@@ -6,9 +6,9 @@ This tests the plotting of 2D vector-valued fields using quivers.
 # TODO: test slicing / offset options!
 
 import matplotlib.pyplot as plt
-from tomplot import automake_field_title, plot_field_quivers
-import numpy as np
+from tomplot import tomplot_field_title, plot_field_quivers
 import pytest
+
 
 @pytest.mark.parametrize("data_layout", ["structured", "unstructured"])
 @pytest.mark.parametrize("spatial_filter", ["with", "without"])
@@ -75,7 +75,7 @@ def test_quiver_plot(data_layout, spatial_filter, magnitude_filter, plot_setup):
     ax.set_xlim([-0.5, 10.5])
     ax.set_ylim([-0.5, 10.5])
 
-    automake_field_title(ax, title)
+    tomplot_field_title(ax, title)
 
     spat_fil_txt = 'with_spat_fil' if spatial_filter == 'with' else 'no_spat_fil'
     mag_fil_txt = 'with_mag_fil' if magnitude_filter is not None else 'no_mag_fil'

@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import cartopy.crs as ccrs
 from tomplot import plot_contoured_field, plot_field_quivers, \
-                    automake_field_title, automake_cmap, add_colorbar, \
-                    automake_field_axis_labels, plot_cubed_sphere_panels
+                    tomplot_field_title, tomplot_cmap, \
+                    tomplot_field_axis_labels, plot_cubed_sphere_panels
 
 # ---------------------------------------------------------------------------- #
 # Things that can be altered and parameters for the test case
@@ -92,7 +92,7 @@ for time_idx in time_idxs:
     # Contours based on magnitude of vectors
     coords_X, coords_Y = df['coords_X'].values, df['coords_Y'].values
     field_data_mag = df['field_data_mag'].values
-    cmap, _ = automake_cmap(contours, colour_scheme)
+    cmap, _ = tomplot_cmap(contours, colour_scheme)
     cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data_mag,
                                  'tricontour', contours, cmap=cmap,
                                  plot_contour_lines=False)
@@ -108,7 +108,7 @@ for time_idx in time_idxs:
                       label=cbar_label, ticks=cbar_ticks)
 
     title = f'Time {time:06.0f} s'
-    automake_field_title(ax, title, titlepad=20, minmax=True, field_data=field_data_mag)
+    tomplot_field_title(ax, title, titlepad=20, minmax=True, field_data=field_data_mag)
 
     data_metadata = {'xlims':[-180,180],
                      'xlabel':r'$\lambda \ /$ deg',
@@ -120,7 +120,7 @@ for time_idx in time_idxs:
                      'yticklabels':[-70,70],
                      'xlabelpad': -20,
                      'ylabelpad':-20}
-    automake_field_axis_labels(ax, data_metadata)
+    tomplot_field_axis_labels(ax, data_metadata)
 
     # ------------------------------------------------------------------------ #
     # Save figure

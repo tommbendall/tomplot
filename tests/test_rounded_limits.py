@@ -10,6 +10,7 @@ situations = ["single_digits", "negative_symmetric", "negative_asymmetric",
               "theta_type", "single_digits_to_teens", "below_and_above_one",
               "single_digits_to_twenties"]
 
+
 @pytest.mark.parametrize("situation", situations)
 def test_rounded_limits(situation):
 
@@ -24,19 +25,19 @@ def test_rounded_limits(situation):
         raw_min, raw_max = 1.1, 8.6
         answer_min, answer_max = 1.0, 9.0
     elif situation == "negative_symmetric":
-        raw_min, raw_max =  -4.3, 3.5
+        raw_min, raw_max = -4.3, 3.5
         answer_min, answer_max = -5.0, 5.0
     elif situation == "negative_asymmetric":
         raw_min, raw_max = -0.7, 6.5
         answer_min, answer_max = -1.0, 7.0
     elif situation == "theta_type":
-        raw_min, raw_max =  316.4, 389.3
+        raw_min, raw_max = 316.4, 389.3
         answer_min, answer_max = 310, 390
     elif situation == "single_digits_to_teens":
-        raw_min, raw_max =  1.1, 18.6
+        raw_min, raw_max = 1.1, 18.6
         answer_min, answer_max = 0.0, 20.0
     elif situation == "single_digits_to_twenties":
-        raw_min, raw_max =  1.1, 27.4
+        raw_min, raw_max = 1.1, 27.4
         answer_min, answer_max = 0.0, 30.0
     elif situation == "below_and_above_one":
         raw_min, raw_max = 0.42, 1.15

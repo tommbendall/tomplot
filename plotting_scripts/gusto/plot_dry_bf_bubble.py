@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 import numpy as np
 from tomplot import plot_contoured_field, extract_2D_data, add_colorbar, \
-                    automake_field_axis_labels, automake_cmap, \
-                    automake_field_title, label_contour_lines
+                    tomplot_field_axis_labels, tomplot_cmap, \
+                    tomplot_field_title, label_contour_lines
 
 # ---------------------------------------------------------------------------- #
 # Variables to alter based on the desired plot and test case
@@ -59,7 +59,7 @@ for ax, field_name, contours, cbar_label in \
     coords_Y *= 0.001
 
     remove_contour = 0.0 if field_name == 'theta_perturbation' else None
-    cmap, line_contours = automake_cmap(contours, remove_contour=remove_contour)
+    cmap, line_contours = tomplot_cmap(contours, remove_contour=remove_contour)
 
     cf, cl = plot_contoured_field(ax, coords_X, coords_Y, field_data,
                                   'contour', contours, line_contours, cmap=cmap)
@@ -67,8 +67,8 @@ for ax, field_name, contours, cbar_label in \
     add_colorbar(ax, cf, cbar_label)
     if field_name == 'rho':
         label_contour_lines(ax, cl)
-    automake_field_axis_labels(ax, data_metadata)
-    automake_field_title(ax, field_name.replace('_', ' '), minmax=True,
+    tomplot_field_axis_labels(ax, data_metadata)
+    tomplot_field_title(ax, field_name.replace('_', ' '), minmax=True,
                          field_data=field_data)
 
 
