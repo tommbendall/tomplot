@@ -22,7 +22,9 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                          contour_linestyles=None, contour_linewidths=1,
                          contour_linecolors='black',
                          # Options related to scatter method
-                         markersize=None, marker_scaling=1.0):
+                         markersize=None, marker_scaling=1.0,
+                         # Keyword arguments to be passed to underlying matplotlib routines
+                         **kwargs):
     """
     Plots a 2D field using (filled) contours or coloured points.
 
@@ -156,9 +158,10 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
     # By default, these variables are None and do nothing
     if projection is not None:
+        import cartopy.crs as ccrs
         ax.set_global()
         transform_extent = (0, 360, -90, 90)
-        transform_crs = projection.PlateCarree()
+        transform_crs = ccrs.Geodetic()
     else:
         transform_extent = None
         transform_crs = None
@@ -172,12 +175,14 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
         if method == 'contour':
             cf = ax.contourf(coords_X, coords_Y, field_data, contours,
                              cmap=cmap, alpha=transparency, origin='lower',
-                             extent=transform_extent, transform=transform_crs)
+                             extent=transform_extent, transform=transform_crs,
+                             **kwargs)
 
         elif method == 'tricontour':
             cf = ax.tricontourf(coords_X, coords_Y, field_data, contours,
                                 cmap=cmap, alpha=transparency, origin='lower',
-                                extent=transform_extent, transform=transform_crs)
+                                extent=transform_extent, transform=transform_crs,
+                                **kwargs)
 
         elif method == 'scatter':
             if markersize is None:
@@ -186,7 +191,8 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
             cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
                             vmin=contours[0], vmax=contours[-1], cmap=cmap,
-                            alpha=transparency)
+                            alpha=transparency, transform=transform_crs,
+                            **kwargs)
 
         # Contour lines may appear as gaps in plot. These can be filled here
         if remove_lines:
@@ -210,14 +216,16 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                             linewidths=contour_linewidths,
                             colors=contour_linecolors,
                             linestyles=contour_linestyles, origin='lower',
-                            extent=transform_extent, transform=transform_crs)
+                            extent=transform_extent, transform=transform_crs,
+                            **kwargs)
 
         elif method == 'tricontour':
             cl = ax.tricontour(coords_X, coords_Y, field_data, line_contours,
                                linewidths=contour_linewidths,
                                colors=contour_linecolors,
                                linestyles=contour_linestyles, origin='lower',
-                               extent=transform_extent, transform=transform_crs)
+                               extent=transform_extent, transform=transform_crs,
+                               **kwargs)
 
         elif method == 'scatter':
             raise ValueError(
@@ -298,7 +306,7 @@ def label_contour_lines(ax, cl, clabel_levels=None, clabel_fontsize=None,
               manual=clabel_locations, fmt=clabel_format)
 
 
-def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None, projection=None):
+def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None):
 
     import cartopy.crs as ccrs
 
@@ -306,31 +314,38 @@ def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None, pro
         raise ValueError('Units for plotting cubed sphere panel edges should '
                          + f'be "deg" or "rad", not {units}')
 
-    transform = projection if projection is not None else ccrs.Geodetic()
+    transform = ccrs.Geodetic()
 
     if units == 'deg':
         unit_factor = 1.0
     elif units == 'rad':
         unit_factor = np.pi/180.0
+    
+    vertices_alphabetapanel = [[(np.pi/4, np.pi/4, 1), (-np.pi/4, np.pi/4, 1)],
+                               [(-np.pi/4, np.pi/4, 1), (-np.pi/4, -np.pi/4, 1)],
+                               [(-np.pi/4, -np.pi/4, 1), (np.pi/4, -np.pi/4, 1)],
+                               [(np.pi/4, -np.pi/4, 1), (np.pi/4, np.pi/4, 1)],
+                               [(np.pi/4, np.pi/4, 2), (-np.pi/4, np.pi/4, 2)],
+                               [(np.pi/4, -np.pi/4, 2), (np.pi/4, np.pi/4, 2)],
+                               [(-np.pi/4, -np.pi/4, 2), (np.pi/4, -np.pi/4, 2)],
+                               [(-np.pi/4, np.pi/4, 3), (-np.pi/4, -np.pi/4, 3)],
+                               [(-np.pi/4, -np.pi/4, 3), (np.pi/4, -np.pi/4, 3)],
+                               [(np.pi/4, -np.pi/4, 3), (np.pi/4, np.pi/4, 3)],
+                               [(-np.pi/4, np.pi/4, 4), (-np.pi/4, -np.pi/4, 4)],
+                               [(np.pi/4, -np.pi/4, 4), (np.pi/4, np.pi/4, 4)]]
+    
+    edges_alphabetapanel = [[np.linspace(edge[0][0], edge[1][0], 101),  # alpha values
+                             np.linspace(edge[0][1], edge[1][1], 101),  # beta values
+                             np.ones(101, dtype=int)*edge[0][2]]        # panels
+                             for edge in vertices_alphabetapanel]
+    
+    edges_lonlat = [alphabeta_to_lonlat(edge[0], edge[1], edge[2]) for edge in edges_alphabetapanel]
 
-    # TODO: can we make this morning general to take into account rotation
-    y_edge_coord = 35.264389682754654*unit_factor
-    edge_coords = [((-135*unit_factor, -45*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((-45*unit_factor, 45*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((45*unit_factor, 135*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((135*unit_factor, -135*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((-135*unit_factor, -45*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((-45*unit_factor, 45*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((45*unit_factor, 135*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((135*unit_factor, -135*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((135*unit_factor, 135*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((45*unit_factor, 45*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((-45*unit_factor, -45*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((-135*unit_factor, -135*unit_factor), (-y_edge_coord, y_edge_coord))]
-
-    for edge in edge_coords:
+    for edge in edges_lonlat:
         x_coords, y_coords = edge
-        ax.plot(x_coords, y_coords, color=color, linewidth=linewidth, transform=transform)
+        ax.plot(x_coords*unit_factor, y_coords*unit_factor, color=color,
+                linewidth=linewidth, transform=transform)
+
 
 def plot_cubed_sphere_slice(ax, alpha_coords, beta_coords, panel, units='deg',
                             color='black', linewidth=None, projection=None):
