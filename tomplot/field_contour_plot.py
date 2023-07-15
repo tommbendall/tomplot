@@ -7,10 +7,9 @@ Some auxiliary routines are also provided.
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
-from .tomplot_tools import tomplot_field_markersize, alphabeta_to_lonlat
+from .tomplot_tools import tomplot_field_markersize, work_out_cmap_extension
 
-__all__ = ["plot_contoured_field", "add_colorbar", "label_contour_lines",
-           "plot_cubed_sphere_panels", "plot_cubed_sphere_slice"]
+__all__ = ["plot_contoured_field", "label_contour_lines"]
 
 
 def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
@@ -169,15 +168,21 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
     if plot_filled_contours:
         # Plot field using cmap, depending on the method
+
+        # Work out from cmap how to handle values beyond contour bins
+        cmap_extension = work_out_cmap_extension(cmap, contours)
+
         if method == 'contour':
             cf = ax.contourf(coords_X, coords_Y, field_data, contours,
                              cmap=cmap, alpha=transparency, origin='lower',
-                             extent=transform_extent, transform=transform_crs)
+                             extent=transform_extent, transform=transform_crs,
+                             extend=cmap_extension)
 
         elif method == 'tricontour':
             cf = ax.tricontourf(coords_X, coords_Y, field_data, contours,
                                 cmap=cmap, alpha=transparency, origin='lower',
-                                extent=transform_extent, transform=transform_crs)
+                                extent=transform_extent, transform=transform_crs,
+                                extend=cmap_extension)
 
         elif method == 'scatter':
             if markersize is None:
@@ -187,6 +192,10 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
             cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
                             vmin=contours[0], vmax=contours[-1], cmap=cmap,
                             alpha=transparency)
+
+            if cmap_extension is not None:
+                warnings.warn('cmap is extended, but this is not compatible '
+                              + 'with scatter method, so ignoring this')
 
         # Contour lines may appear as gaps in plot. These can be filled here
         if remove_lines:
@@ -235,40 +244,6 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
     return cf, cl
 
 
-# This is a separate routine to "plot_contoured_field" so that:
-# (a) colorbars can be easily applied to some (but not all) subplot axes
-# (b) the number of arguments to "plot_contoured_field" can be minimised
-# This routine motivates "plot_contoured_field" returning the `cf` object.
-# TODO: allow the position of the colorbar to be easily specified and adjusted
-# TODO: make a global version of this routine (in which the position can be
-#       easily determined)
-# TODO: this needs testing
-def add_colorbar(ax, cf, cbar_label, cbar_format=None, cbar_ticks=None,
-                 cbar_labelpad=None):
-    """
-    Adds a colour bar to a filled contour plot.
-
-    Args:
-        ax (:class:`AxesSubplot`): the pyplot axes object to plot the field on.
-            Note that this is currently unused.
-        cf (`matplotlib.contour`): the filled contour object for the plot. This
-            is used to obtain the colours to be displayed in the colorbar.
-        cbar_label (str): the label to be applied to the colorbar.
-        cbar_format (float, optional): the formatting to used for the ticklabels
-            attached to the colorbar. Defaults to None.
-        cbar_ticks (iter, optional): which ticks to be attached to the colorbar.
-            Defaults to None.
-        cbar_labelpad (float, optional): the padding to apply to the colorbar
-            label. Defaults to None.
-    """
-
-    cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks)
-    if cbar_label is not None:
-        cb.set_label(cbar_label, labelpad=cbar_labelpad)
-
-    # TODO: can we add this to the ax instead?
-
-
 # This is a separate routine to "plot_contoured_field" so that the number of
 # arguments to "plot_contoured_field" can be minimised, because I find that I
 # don't usually want to label contours, and doing so requires specifying a lot
@@ -296,58 +271,3 @@ def label_contour_lines(ax, cl, clabel_levels=None, clabel_fontsize=None,
 
     ax.clabel(cl, levels=clabel_levels, fontsize=clabel_fontsize,
               manual=clabel_locations, fmt=clabel_format)
-
-
-def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None, projection=None):
-
-    import cartopy.crs as ccrs
-
-    if units not in ['deg', 'rad']:
-        raise ValueError('Units for plotting cubed sphere panel edges should '
-                         + f'be "deg" or "rad", not {units}')
-
-    transform = projection if projection is not None else ccrs.Geodetic()
-
-    if units == 'deg':
-        unit_factor = 1.0
-    elif units == 'rad':
-        unit_factor = np.pi/180.0
-
-    # TODO: can we make this morning general to take into account rotation
-    y_edge_coord = 35.264389682754654*unit_factor
-    edge_coords = [((-135*unit_factor, -45*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((-45*unit_factor, 45*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((45*unit_factor, 135*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((135*unit_factor, -135*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((-135*unit_factor, -45*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((-45*unit_factor, 45*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((45*unit_factor, 135*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((135*unit_factor, -135*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((135*unit_factor, 135*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((45*unit_factor, 45*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((-45*unit_factor, -45*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((-135*unit_factor, -135*unit_factor), (-y_edge_coord, y_edge_coord))]
-
-    for edge in edge_coords:
-        x_coords, y_coords = edge
-        ax.plot(x_coords, y_coords, color=color, linewidth=linewidth, transform=transform)
-
-def plot_cubed_sphere_slice(ax, alpha_coords, beta_coords, panel, units='deg',
-                            color='black', linewidth=None, projection=None):
-
-    import cartopy.crs as ccrs
-
-    if units not in ['deg', 'rad']:
-        raise ValueError('Units for plotting cubed sphere panel edges should '
-                         + f'be "deg" or "rad", not {units}')
-
-    transform = projection if projection is not None else ccrs.Geodetic()
-
-    if units == 'deg':
-        unit_factor = 1.0
-    elif units == 'rad':
-        unit_factor = np.pi/180.0
-
-    lon_coords, lat_coords = alphabeta_to_lonlat(alpha_coords, beta_coords, panel)
-
-    ax.plot(lon_coords, lat_coords, color=color, linewidth=linewidth, transform=transform)

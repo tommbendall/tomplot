@@ -8,9 +8,8 @@ import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
 __all__ = ['set_tomplot_style', 'tomplot_field_axis_labels',
-           'tomplot_field_title', 'tomplot_cmap',
-           'tomplot_field_markersize', 'rounded_limits',
-           'lonlat_to_alphabeta', 'alphabeta_to_lonlat']
+           'tomplot_field_title', 'tomplot_cmap', 'tomplot_field_markersize',
+           'tomplot_contours', 'rounded_limits', 'work_out_cmap_extension']
 
 
 def set_tomplot_style(fontsize=48):
@@ -155,11 +154,15 @@ def tomplot_cmap(contours, color_scheme='Blues',
             removes the central contour. Defaults to None.
         extend_cmap (bool, optional): whether to allow the color map to be
             extended beyond the values specified in `contours`. Defaults to
-            False.
+            False. If True, sets "over" to yellow and "under" to magenta.
 
     Raises:
         ValueError: if `remove_contour` is 'middle' but the number of contours
             is not an odd integer.
+        NotImplementedError: if `cmap_rescale_type` is not None and extend_cmap
+            is True. These options are not currently compatible, as rescaling
+            the cmap makes it difficult to work out if the cmap has been
+            extended.
 
     Returns:
         `matplotlib.Colormap`: the color map to be generated.
@@ -169,6 +172,10 @@ def tomplot_cmap(contours, color_scheme='Blues',
 
     if cmap_rescale_type not in [None, 'both', 'top', 'bottom']:
         raise ValueError(f'cmap_rescale_type {cmap_rescale_type} not recognised')
+
+    if cmap_rescale_type is not None and extend_cmap:
+        raise NotImplementedError('tomplot_cmap: cmap_rescale_type cannot be '
+                                  + 'used with extend_cmap')
 
     # First reproduce the contours for the lines from the existing set of contours
     line_contours = contours.copy()
@@ -199,8 +206,12 @@ def tomplot_cmap(contours, color_scheme='Blues',
                                 actual_num_colour_levels)
         cmap = ListedColormap(new_colours)
 
+        # Allow us to work out if this has been rescaled
+        setattr(cmap, '_tomplot_rescaling', True)
+
     else:
         cmap = mpl.colormaps[color_scheme].resampled(len(contours)-1)
+        setattr(cmap, '_tomplot_rescaling', False)
 
     # Remove a particular contour
     if remove_contour is not None:
@@ -240,6 +251,10 @@ def tomplot_cmap(contours, color_scheme='Blues',
         # Remove colour from colour map
         cmap = remove_colour(cmap, level_to_remove, len(contours))
 
+    if extend_cmap:
+        cmap.set_under('magenta')
+        cmap.set_over('yellow')
+
     return cmap, line_contours
 
 
@@ -264,6 +279,51 @@ def remove_colour(old_cmap, level_to_remove, num_levels):
     new_cmap = ListedColormap(newcolours)
 
     return new_cmap
+
+
+def work_out_cmap_extension(cmap, contours):
+    """
+    Determines, from a colormap and set of contours, whether the colormap has
+    been extended.
+
+    Args:
+        cmap (`matplotlib.Colormap`): the color map to be inspected.
+        contours (iter): a list or numpy array of the contour levels that
+            correspond to the colormap.
+
+    Returns:
+        str: description of how the cmap has been extended. If it has not been
+            extended, this returns 'neither'.
+    """
+
+    if cmap is None or type(cmap) is str:
+        # This will not be an extended cmap
+        return 'neither'
+
+    num_colour_bins = len(contours) - 1
+    extended_under = False
+    extended_over = False
+    # If the "below" color is very different from the bottom colour, it has
+    # been extended
+    tol = 0.01
+    if np.any(np.array(cmap(-1)) - np.array(cmap(0))) > tol:
+        extended_under = True
+    if np.any(np.array(cmap(100*num_colour_bins)) - np.array(cmap(num_colour_bins-1))) > tol:
+        extended_over = True
+
+    if hasattr(cmap, '_tomplot_rescaling'):
+        # Using extend_cmap is not currently implemented with rescaling the cmap
+        if cmap._tomplot_rescaling:
+            return 'neither'
+
+    if extended_under and extended_over:
+        return 'both'
+    elif extended_under:
+        return 'min'
+    elif extended_over:
+        return 'max'
+    else:
+        return 'neither'
 
 
 def tomplot_field_markersize(data, marker_scaling=1.0, ax=None):
@@ -350,17 +410,28 @@ def rounddown(number, digits=0):
     return round(math.floor(number / n) * n, digits)
 
 
-def rounded_limits(data, divergent_flag=False):
+def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
     """
-    Finds rounded min and max values to give nice limits. Can be used to create
-    nice contours for previously uninspected data.
+    Generates some nice rounded contour values from a dataset. This can be used
+    to make a quick plot from uninspected data. Contours are always picked to
+    be nice values: e.g. multiples of 1, 2, 2.5 or 5.
 
     Args:
-        data (`numpy.array`): the data to find rounded mins and maxes of.
+        data (`numpy.array`): the data to find nice contours of.
+        min_num_bins (int, optional): the minimum number of bins to have (two
+            contours corresponds to one bin). Defaults to 10.
         divergent_flag (boolean, optional): whether to enforce that a divergent
             profile is expected, to give results that are symmetric around 0.
             Defaults to False.
+
+    Returns:
+        `numpy.array`: a 1D array of points to use as contours.
     """
+
+    # ------------------------------------------------------------------------ #
+    # Round mins and maxes to nice numbers
+    # ------------------------------------------------------------------------ #
+
     import math
 
     raw_max = np.amax(data)
@@ -384,15 +455,20 @@ def rounded_limits(data, divergent_flag=False):
         data_min = rounddown(raw_min, digits=digits)
         data_max = roundup(raw_max, digits=digits)
 
-    # We may need to adjust this if we've made a colour bar that is too wide
+    # ------------------------------------------------------------------------ #
+    # Trim range if it is too wide
+    # ------------------------------------------------------------------------ #
+    # The rounded mins and maxes may result in a very wide range compared with
+    # the actual data. Adjust this here by finding another nice number to
+    # round the min/max to
     raw_diff = raw_max - raw_min
-    col_diff = data_max - data_min
-    if raw_diff < 0.5*col_diff:
+    discrete_diff = data_max - data_min
+    if raw_diff < 0.5*discrete_diff:
         stored_data_min = data_min
         if (raw_min < 0 and raw_max > 0):
-            bins = 8 if raw_diff < 0.25*col_diff else 4
+            bins = 8 if raw_diff < 0.25*discrete_diff else 4
         else:
-            bins = 5 if raw_diff < 0.2*col_diff else 4
+            bins = 5 if raw_diff < 0.2*discrete_diff else 4
         for bin_edge in np.linspace(data_min, data_max, bins+1):
             if raw_min < bin_edge:
                 break
@@ -404,93 +480,59 @@ def rounded_limits(data, divergent_flag=False):
             else:
                 data_max = bin_edge
 
+    # ------------------------------------------------------------------------ #
+    # Find a nice step for contours
+    # ------------------------------------------------------------------------ #
+    # data_min and data_max are now decided, so find contours between them
+    max_step = (data_max - data_min) / min_num_bins
+
+    # To be safe, only make contours when we have non-zero data
+    if max_step > 1e-32:
+        step_digits = math.floor(-np.log10(max_step))
+        # Find an even bigger maximum step by rounding max_step up
+        max_max_step = roundup(max_step, digits=step_digits)
+
+        # Our step should be a nice fraction of this
+        # Loop through nice fractions to find first number with enough bins
+        step_found = False
+        for nice_fraction in [1.0, 0.5, 0.25, 0.2, 0.1]:
+            step = nice_fraction*max_max_step
+            # Num bins should be a nice integer number, but "round" to nearest
+            # integer just to make sure
+            num_bins = round((data_max - data_min) / step)
+            if num_bins >= min_num_bins:
+                step_found = True
+                break
+
+        if not step_found:
+            raise RuntimeError('Unable to find nice contours')
+
+        contours = np.linspace(data_min, data_max, num_bins+1)
+
+    # Data is entirely zero, so return only two contours
+    else:
+        contours = np.array([data_min, data_max])
+
+    return contours
+
+
+def rounded_limits(data, divergent_flag=False):
+    """
+    Finds rounded min and max values to give nice limits. Can be used to create
+    nice contours for previously uninspected data.
+
+    Args:
+        data (`numpy.array`): the data to find rounded mins and maxes of.
+        divergent_flag (boolean, optional): whether to enforce that a divergent
+            profile is expected, to give results that are symmetric around 0.
+            Defaults to False.
+
+    Returns:
+        tuple: rounded (min and max) values of the data
+    """
+
+    nice_contours = tomplot_contours(data, divergent_flag=divergent_flag)
+    data_min = nice_contours[0]
+    data_max = nice_contours[-1]
+
     return data_min, data_max
-
-
-def lonlat_to_alphabeta(lon, lat):
-    """
-    Converts longitude, latitude values into alpha, beta values.
-
-    Args:
-        lon (float, `np.ndarray`): longitude value or array of longitude values.
-        lat (float, `np.ndarray`): latitude value or array of latitude values.
-
-    Returns:
-        alpha, beta, panel: the equiangular cubed sphere coordinates (including
-            panel_id) corresponding to the input coordinates.
-    """
-
-    rad_lon = np.pi*lon/180.
-    rad_lat = np.pi*lat/180.
-
-    # Compute Cartesian coordinates
-    X = np.cos(rad_lon)*np.cos(rad_lat)
-    Y = np.sin(rad_lon)*np.cos(rad_lat)
-    Z = np.sin(rad_lat)
-
-    # Work out which panel we are on
-    panel_conditions = [np.logical_and(np.cos(rad_lon) >= 1.0 / np.sqrt(2),
-                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon)*np.cos(rad_lat)),
-                        np.logical_and(np.sin(rad_lon) >= 1.0 / np.sqrt(2),
-                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon-np.pi/2)*np.cos(rad_lat)),
-                        np.logical_and(np.cos(rad_lon) <= -1.0 / np.sqrt(2),
-                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon-np.pi)*np.cos(rad_lat)),
-                        np.logical_and(np.sin(rad_lon) <= -1.0 / np.sqrt(2),
-                                       np.abs(np.sin(rad_lat)) <= np.cos(rad_lon+np.pi/2)*np.cos(rad_lat)),
-                        (np.sin(rad_lat) > 0.0),
-                        (np.sin(rad_lat) < 0.0)]
-
-    panel_ids = [1, 2, 3, 4, 5, 6]
-    panel = np.select(panel_conditions, panel_ids)
-
-    # Rotate -- these have to match the order of the panel_ids
-    panel_rotation_conditions = [(panel == panel_id) for panel_id in panel_ids]
-    panel_rotations = [(X, Y, Z), (Y, -X, Z), (-X, Z, Y),
-                       (-Y, Z, -X), (Z, Y, -X), (-Z, -X, Y)]
-    rot_X, rot_Y, rot_Z = np.select(panel_rotation_conditions, panel_rotations)
-
-    alpha = np.arctan2(rot_Y, rot_X)
-    beta = np.arctan2(rot_Z, rot_X)
-
-    return alpha, beta, panel
-
-
-def alphabeta_to_lonlat(alpha, beta, panel):
-    """
-    Converts equiangular cubed sphere coordinates (alpha, beta and panel ID)
-    into longitude, latitude values.
-
-    Args:
-        alpha (float, `np.ndarray`): alpha coord value or array of alpha values.
-        beta (float, `np.ndarray`): beta coord value or array of beta values.
-        panel (int, `np.ndarray`): ID of cubed sphere panel.
-
-    Returns:
-        lon, lat: the longitude, latitude coordinates corresponding to the input
-            coordinates.
-    """
-
-    # Compute Cartesian coordinates as if we are on Panel 1
-    varrho = np.sqrt(1 + np.tan(alpha)**2 + np.tan(beta)**2)
-    X = 1 / varrho
-    Y = np.tan(alpha) / varrho
-    Z = np.tan(beta) / varrho
-
-    if type(panel) is int:
-        panel = np.ones(np.shape(alpha), dtype=int)*panel
-
-    # Rotate -- these have to match the order of the panel_ids
-    panel_ids = [1, 2, 3, 4, 5, 6]
-    panel_rotation_conditions = [(panel == panel_id) for panel_id in panel_ids]
-    panel_rotations = [(X, Y, Z), (-Y, X, Z), (-X, Z, Y),
-                       (-Z, -X, Y), (-Z, Y, X), (-Y, Z, -X)]
-    rot_X, rot_Y, rot_Z = np.select(panel_rotation_conditions, panel_rotations)
-
-    # Compute longitude-latitude from global Cartesian coordinates
-    lon = np.arctan2(rot_Y, rot_X)
-    lat = np.arctan2(rot_Z, np.sqrt(rot_X**2 + rot_Y**2))
-
-    deg_lon = 180.*lon/np.pi
-    deg_lat = 180.*lat/np.pi
-
-    return deg_lon, deg_lat

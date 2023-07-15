@@ -3,7 +3,7 @@ This tests the plotting of 2D fields through coloured contours.
 """
 
 import matplotlib.pyplot as plt
-from tomplot import add_colorbar, tomplot_field_title, plot_contoured_field
+from tomplot import add_colorbar_ax, tomplot_field_title, plot_contoured_field
 import numpy as np
 import pytest
 
@@ -54,7 +54,7 @@ def test_field_markersize_subplots(figsize, plot_setup):
         cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data,
                                      "scatter", contours, plot_contour_lines=False)
         markersizes.append(cf.get_sizes()[0])
-        add_colorbar(ax, cf, '')
+        add_colorbar_ax(ax, cf, '')
 
     fig.suptitle(title)
 
@@ -100,7 +100,7 @@ def test_field_markersize_one_plot(npoints_1d, figsize, plot_setup):
     markersize = cf.get_sizes()[0]
     answer = answers[100*figsize[0]+figsize[1]][npoints_1d]
 
-    add_colorbar(ax, cf, '')
+    add_colorbar_ax(ax, cf, '')
     tomplot_field_title(ax, title)
 
     plot_name = f'field_contour_one_plot_{npoints_1d}_{figsize[0]}_{figsize[1]}.png'

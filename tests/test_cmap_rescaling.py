@@ -4,7 +4,7 @@ This tests the rescaling of a colour map
 
 import matplotlib.pyplot as plt
 from tomplot import (tomplot_cmap, plot_contoured_field,
-                     add_colorbar, tomplot_field_title)
+                     add_colorbar_ax, tomplot_field_title)
 import numpy as np
 import pytest
 
@@ -162,7 +162,7 @@ def test_cmap_rescaling(cmap_arrangement, cmap_rescale_type, plot_setup):
                                  'contour', contours, cmap=cmap,
                                  line_contours=line_contours)
 
-    add_colorbar(ax, cf, '')
+    add_colorbar_ax(ax, cf, '')
     tomplot_field_title(ax, title)
 
     plot_name = f'cmap_rescaling_{cmap_arrangement}_{cmap_rescale_type}.png'

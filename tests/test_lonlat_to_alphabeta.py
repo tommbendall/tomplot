@@ -4,7 +4,7 @@ This tests the conversion to cubed sphere coordinates.
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mat_col
-from tomplot import (add_colorbar, tomplot_field_title, plot_contoured_field,
+from tomplot import (add_colorbar_ax, tomplot_field_title, plot_contoured_field,
                      lonlat_to_alphabeta)
 import numpy as np
 import pytest
@@ -51,7 +51,7 @@ def test_field_markersize_subplots(aspect, plot_setup):
                                  "scatter", contours, cmap=cmap,
                                  plot_contour_lines=False)
 
-    add_colorbar(ax, cf, '')
+    add_colorbar_ax(ax, cf, '')
     title = f'lonlat_to_alphabeta: {aspect}'
     tomplot_field_title(ax, title)
 
