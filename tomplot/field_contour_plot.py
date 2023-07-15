@@ -206,10 +206,6 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                             alpha=transparency, transform=transform_crs,
                             **kwargs)
 
-            if cmap_extension is not None:
-                warnings.warn('cmap is extended, but this is not compatible '
-                              + 'with scatter method, so ignoring this')
-
         # Contour lines may appear as gaps in plot. These can be filled here
         if remove_lines:
             for c in cf.collections:
