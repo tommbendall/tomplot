@@ -21,7 +21,9 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                          contour_linestyles=None, contour_linewidths=1,
                          contour_linecolors='black',
                          # Options related to scatter method
-                         markersize=None, marker_scaling=1.0):
+                         markersize=None, marker_scaling=1.0,
+                         # Keyword arguments to be passed to underlying matplotlib routines
+                         **kwargs):
     """
     Plots a 2D field using (filled) contours or coloured points.
 
@@ -86,6 +88,8 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
         marker_scaling (float, optional): an optional scaling to apply to the
             markersize when using the "scatter" method, and auto-generating the
             markersizes. Defaults to 1.0.
+        **kwargs: keyword arguments to be passed to the underlying plotting
+            routines (contourf, tricontourf, contour, tricontour, scatter)
 
     Raises:
         ValueError: if the `remove_lines` option and `plot_contour_lines` are
@@ -155,12 +159,24 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
     # By default, these variables are None and do nothing
     if projection is not None:
+        import cartopy.crs as ccrs
         ax.set_global()
         transform_extent = (0, 360, -90, 90)
-        transform_crs = projection.PlateCarree()
+        transform_crs = ccrs.Geodetic()
     else:
         transform_extent = None
         transform_crs = None
+
+    # ------------------------------------------------------------------------ #
+    # Determine how to handle values beyond the contour range
+    # ------------------------------------------------------------------------ #
+
+    if method in ['contour', 'tricontour']:
+        if 'extend' in kwargs.keys():
+            cmap_extension = kwargs['extend']
+            del kwargs['extend']
+        else:
+            cmap_extension = work_out_cmap_extension(cmap, contours)
 
     # ------------------------------------------------------------------------ #
     # Plot coloured fillings between contours
@@ -168,21 +184,17 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
     if plot_filled_contours:
         # Plot field using cmap, depending on the method
-
-        # Work out from cmap how to handle values beyond contour bins
-        cmap_extension = work_out_cmap_extension(cmap, contours)
-
         if method == 'contour':
             cf = ax.contourf(coords_X, coords_Y, field_data, contours,
                              cmap=cmap, alpha=transparency, origin='lower',
                              extent=transform_extent, transform=transform_crs,
-                             extend=cmap_extension)
+                             extend=cmap_extension, **kwargs)
 
         elif method == 'tricontour':
             cf = ax.tricontourf(coords_X, coords_Y, field_data, contours,
                                 cmap=cmap, alpha=transparency, origin='lower',
                                 extent=transform_extent, transform=transform_crs,
-                                extend=cmap_extension)
+                                extend=cmap_extension, **kwargs)
 
         elif method == 'scatter':
             if markersize is None:
@@ -191,7 +203,8 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
 
             cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
                             vmin=contours[0], vmax=contours[-1], cmap=cmap,
-                            alpha=transparency)
+                            alpha=transparency, transform=transform_crs,
+                            **kwargs)
 
             if cmap_extension is not None:
                 warnings.warn('cmap is extended, but this is not compatible '
@@ -219,14 +232,16 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                             linewidths=contour_linewidths,
                             colors=contour_linecolors,
                             linestyles=contour_linestyles, origin='lower',
-                            extent=transform_extent, transform=transform_crs)
+                            extent=transform_extent, transform=transform_crs,
+                            **kwargs)
 
         elif method == 'tricontour':
             cl = ax.tricontour(coords_X, coords_Y, field_data, line_contours,
                                linewidths=contour_linewidths,
                                colors=contour_linecolors,
                                linestyles=contour_linestyles, origin='lower',
-                               extent=transform_extent, transform=transform_crs)
+                               extent=transform_extent, transform=transform_crs,
+                               **kwargs)
 
         elif method == 'scatter':
             raise ValueError(

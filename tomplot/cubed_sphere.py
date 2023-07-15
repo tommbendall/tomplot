@@ -116,31 +116,37 @@ def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None,
         raise ValueError('Units for plotting cubed sphere panel edges should '
                          + f'be "deg" or "rad", not {units}')
 
-    transform = projection if projection is not None else ccrs.Geodetic()
+    transform = ccrs.Geodetic()
 
     if units == 'deg':
         unit_factor = 1.0
     elif units == 'rad':
         unit_factor = np.pi/180.0
 
-    # TODO: can we make this morning general to take into account rotation
-    y_edge_coord = 35.264389682754654*unit_factor
-    edge_coords = [((-135*unit_factor, -45*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((-45*unit_factor, 45*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((45*unit_factor, 135*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((135*unit_factor, -135*unit_factor), (-y_edge_coord, -y_edge_coord)),
-                   ((-135*unit_factor, -45*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((-45*unit_factor, 45*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((45*unit_factor, 135*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((135*unit_factor, -135*unit_factor), (y_edge_coord, y_edge_coord)),
-                   ((135*unit_factor, 135*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((45*unit_factor, 45*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((-45*unit_factor, -45*unit_factor), (-y_edge_coord, y_edge_coord)),
-                   ((-135*unit_factor, -135*unit_factor), (-y_edge_coord, y_edge_coord))]
+    vertices_alphabetapanel = [[(np.pi/4, np.pi/4, 1), (-np.pi/4, np.pi/4, 1)],
+                               [(-np.pi/4, np.pi/4, 1), (-np.pi/4, -np.pi/4, 1)],
+                               [(-np.pi/4, -np.pi/4, 1), (np.pi/4, -np.pi/4, 1)],
+                               [(np.pi/4, -np.pi/4, 1), (np.pi/4, np.pi/4, 1)],
+                               [(np.pi/4, np.pi/4, 2), (-np.pi/4, np.pi/4, 2)],
+                               [(np.pi/4, -np.pi/4, 2), (np.pi/4, np.pi/4, 2)],
+                               [(-np.pi/4, -np.pi/4, 2), (np.pi/4, -np.pi/4, 2)],
+                               [(-np.pi/4, np.pi/4, 3), (-np.pi/4, -np.pi/4, 3)],
+                               [(-np.pi/4, -np.pi/4, 3), (np.pi/4, -np.pi/4, 3)],
+                               [(np.pi/4, -np.pi/4, 3), (np.pi/4, np.pi/4, 3)],
+                               [(-np.pi/4, np.pi/4, 4), (-np.pi/4, -np.pi/4, 4)],
+                               [(np.pi/4, -np.pi/4, 4), (np.pi/4, np.pi/4, 4)]]
 
-    for edge in edge_coords:
+    edges_alphabetapanel = [[np.linspace(edge[0][0], edge[1][0], 101),  # alpha values
+                             np.linspace(edge[0][1], edge[1][1], 101),  # beta values
+                             np.ones(101, dtype=int)*edge[0][2]]        # panels
+                             for edge in vertices_alphabetapanel]
+
+    edges_lonlat = [alphabeta_to_lonlat(edge[0], edge[1], edge[2]) for edge in edges_alphabetapanel]
+
+    for edge in edges_lonlat:
         x_coords, y_coords = edge
-        ax.plot(x_coords, y_coords, color=color, linewidth=linewidth, transform=transform)
+        ax.plot(x_coords*unit_factor, y_coords*unit_factor, color=color,
+                linewidth=linewidth, transform=transform)
 
 
 def plot_cubed_sphere_slice(ax, alpha_coords, beta_coords, panel, units='deg',
