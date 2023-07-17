@@ -2,7 +2,8 @@
 
 import numpy as np
 
-__all__ = ["lonlat_to_alphabeta", "alphabeta_to_lonlat"]
+__all__ = ["lonlat_to_alphabeta", "alphabeta_to_lonlat",
+           "plot_cubed_sphere_panels", "plot_cubed_sphere_slice"]
 
 def lonlat_to_alphabeta(lon, lat):
     """

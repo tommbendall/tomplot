@@ -30,7 +30,7 @@ vector_magnitude_cutoff = 0.2
 # ---------------------------------------------------------------------------- #
 
 plotdir = '/data/users/tbendall/results/'+results_dirname+'/figures'
-filename = '/data/users/tbendall/results/'+results_dirname+'/christoffel_lfric_diag.nc'
+filename = '/data/users/tbendall/results/'+results_dirname+'/best_lfric_diag.nc'
 data_file = Dataset(filename, 'r')
 time_idxs = range(len(data_file['time_instant'][:]))
 data_file.close()
