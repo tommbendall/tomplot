@@ -12,5 +12,7 @@ def regrid_horizontal_slice(new_coords_X, new_coords_Y,
 
 def regrid_vertical_slice(new_coords_X, new_coords_Y,
                           old_coords_X, old_coords_Y, field_data,
+                          slice_along, slice_value=None,
                           interpolation_method='bicubic'):
-    pass
+
+    num_levels = 0

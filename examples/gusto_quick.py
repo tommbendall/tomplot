@@ -7,7 +7,8 @@ from netCDF4 import Dataset
 from os.path import abspath, dirname
 from tomplot import (set_tomplot_style, tomplot_contours, tomplot_cmap,
                      plot_contoured_field, add_colorbar_ax,
-                     tomplot_field_title, extract_gusto_coords)
+                     tomplot_field_title, extract_gusto_coords,
+                     extract_gusto_field)
 
 # ---------------------------------------------------------------------------- #
 # Directory for results and plots
@@ -15,7 +16,7 @@ from tomplot import (set_tomplot_style, tomplot_contours, tomplot_cmap,
 # When copying this example these should not be relative to this file
 results_dir = f'{abspath(dirname(__file__))}/../tests/data'
 plot_dir = f'{abspath(dirname(__file__))}/../tests/tmp_figures'
-results_file = f'{results_dir}/gusto_sphere_2d_field_output.nc'
+results_file_name = f'{results_dir}/gusto_sphere_2d_field_output.nc'
 plot_name = f'{plot_dir}/example_gusto_quick.png'
 # ---------------------------------------------------------------------------- #
 # Things that should be altered based on the plot
@@ -29,11 +30,11 @@ contour_method = 'tricontour'
 # Things that are likely the same for all plots
 # ---------------------------------------------------------------------------- #
 set_tomplot_style()
-data_file = Dataset(results_file, 'r')
+data_file = Dataset(results_file_name, 'r')
 # ---------------------------------------------------------------------------- #
 # Data extraction
 # ---------------------------------------------------------------------------- #
-field_data = data_file[field_name]['field_values'][:,time_idx]
+field_data = extract_gusto_field(data_file, field_name, time_idx=time_idx)
 coords_X, coords_Y = extract_gusto_coords(data_file, field_name)
 time = data_file['time'][time_idx]
 # ---------------------------------------------------------------------------- #
