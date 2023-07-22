@@ -19,7 +19,7 @@ def test_extend_cmap(plot_setup):
     data_diff = data_max - data_background
     setup = plot_setup('dipole', data_background, data_max, npoints_1d=30)
     contours = np.linspace(-data_diff + 4.0, data_diff - 4.0, 11)
-    title = f'cmap extension'
+    title = 'cmap extension'
 
     coords_X, coords_Y = setup.coords_X, setup.coords_Y
     field_data = setup.field_data
@@ -36,10 +36,10 @@ def test_extend_cmap(plot_setup):
 
     cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data,
                                  'contour', contours, cmap=cmap,
-                                  plot_contour_lines=False)
+                                 plot_contour_lines=False)
 
     add_colorbar_fig(fig, cf)
     tomplot_field_title(ax, title)
 
-    plot_name = f'extend_cmap.png'
+    plot_name = 'extend_cmap.png'
     setup.make_plots(plot_name)

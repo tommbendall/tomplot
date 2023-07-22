@@ -1,6 +1,6 @@
-from tomplot.colorbar import *
-from tomplot.cubed_sphere import *
-from tomplot.convergence_plot import *
-from tomplot.field_contour_plot import *
-from tomplot.quiver_plot import *
-from tomplot.tomplot_tools import *
+from tomplot.colorbar import *                                            # noqa
+from tomplot.cubed_sphere import *                                        # noqa
+from tomplot.convergence_plot import *                                    # noqa
+from tomplot.field_contour_plot import *                                  # noqa
+from tomplot.quiver_plot import *                                         # noqa
+from tomplot.tomplot_tools import *                                       # noqa

@@ -7,11 +7,11 @@ import numpy as np
 
 __all__ = ["add_colorbar_ax", "add_colorbar_fig"]
 
+
 # This is a separate routine to "plot_contoured_field" so that:
 # (a) colorbars can be easily applied to some (but not all) subplot axes
 # (b) the number of arguments to "plot_contoured_field" can be minimised
 # This routine motivates "plot_contoured_field" returning the `cf` object.
-# TODO: this needs testing
 def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
                     cbar_labelpad=None, location=None, **colorbar_kwargs):
     """
@@ -42,7 +42,7 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
         extend = colorbar_kwargs['extend']
         del colorbar_kwargs['extend']
     elif type(cf) is matplotlib.contour.QuadContourSet \
-        or type(cf) is matplotlib.contour.ContourSet:
+            or type(cf) is matplotlib.contour.ContourSet:
         extend = work_out_cmap_extension(cf.cmap, cf.levels)
     else:
         extend = 'neither'
@@ -159,7 +159,7 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
         extend = colorbar_kwargs['extend']
         del colorbar_kwargs['extend']
     elif type(cf) is matplotlib.contour.QuadContourSet \
-        or type(cf) is matplotlib.contour.ContourSet:
+            or type(cf) is matplotlib.contour.ContourSet:
         extend = work_out_cmap_extension(cf.cmap, cf.levels)
     else:
         extend = 'neither'

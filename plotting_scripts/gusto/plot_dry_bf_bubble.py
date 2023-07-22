@@ -7,7 +7,7 @@ from netCDF4 import Dataset
 import numpy as np
 from tomplot import plot_contoured_field, extract_2D_data, add_colorbar, \
                     tomplot_field_axis_labels, tomplot_cmap, \
-                    tomplot_field_title, label_contour_lines
+                    tomplot_field_title, label_contour_lines, set_tomplot_style
 
 # ---------------------------------------------------------------------------- #
 # Variables to alter based on the desired plot and test case
@@ -32,10 +32,7 @@ cbar_labels = [r'$\rho \ / $ kg m$^3$', r"$\theta' \ / $ K"]
 # ---------------------------------------------------------------------------- #
 
 # This is declared BEFORE figure and ax are initialised
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
-font = {'size':16}
-plt.rc('font',**font)
+set_tomplot_style(16)
 
 # ---------------------------------------------------------------------------- #
 # Field plots
@@ -48,7 +45,7 @@ for ax, field_name, contours, cbar_label in \
 
     data_file = Dataset(results_filename, 'r')
 
-    coords_X, coords_Y, field_data, data_metadata = \
+    coords_X, coords_Y, field_data, _ = \
         extract_2D_data(data_file, field_name, time_idx, 'xz',
                         num_points=50)
 
@@ -67,7 +64,6 @@ for ax, field_name, contours, cbar_label in \
     add_colorbar(ax, cf, cbar_label)
     if field_name == 'rho':
         label_contour_lines(ax, cl)
-    tomplot_field_axis_labels(ax, data_metadata)
     tomplot_field_title(ax, field_name.replace('_', ' '), minmax=True,
                          field_data=field_data)
 

@@ -4,7 +4,6 @@ generally as (filled) contours or with coloured points as a scatter plot.
 
 Some auxiliary routines are also provided.
 """
-import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 from .tomplot_tools import tomplot_field_markersize, work_out_cmap_extension

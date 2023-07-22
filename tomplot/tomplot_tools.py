@@ -12,19 +12,19 @@ __all__ = ['set_tomplot_style', 'tomplot_field_axis_labels',
            'tomplot_contours', 'rounded_limits', 'work_out_cmap_extension']
 
 
-def set_tomplot_style(fontsize=48):
+def set_tomplot_style(fontsize=48, family='serif'):
     """
     Set some initial matplotlib variables to use a nice tomplot style. By
     default this will use latex formatting.
 
     Args:
         fontsize (int, optional): default fontsize to use. Defaults to 48.
+        family (str, optional): family of font to use. Defaults to "serif".
     """
 
     plt.rc('text', usetex=True)
-    plt.rc('font', family='serif')
-    font = {'size': fontsize}
-    plt.rc('font', **font)
+    font_opts = {'size': fontsize, 'family': family}
+    plt.rc('font', **font_opts)
 
 
 def tomplot_field_axis_labels(ax, data_metadata):

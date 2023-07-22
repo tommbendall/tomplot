@@ -7,10 +7,12 @@ from tomplot import add_colorbar_fig, plot_contoured_field
 import numpy as np
 import pytest
 
+
 # Generate all combos of different options
 def generate_combos(arrangements, locations):
     import itertools
     return list(itertools.product(arrangements, locations))
+
 
 @pytest.mark.parametrize("subplot_arrangement, cbar_location",
                          # All combinations of square arrangements with location

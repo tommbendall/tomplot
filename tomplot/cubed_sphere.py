@@ -5,6 +5,7 @@ import numpy as np
 __all__ = ["lonlat_to_alphabeta", "alphabeta_to_lonlat",
            "plot_cubed_sphere_panels", "plot_cubed_sphere_slice"]
 
+
 def lonlat_to_alphabeta(lon, lat):
     """
     Converts longitude, latitude values into alpha, beta values.
@@ -140,7 +141,7 @@ def plot_cubed_sphere_panels(ax, units='deg', color='black', linewidth=None,
     edges_alphabetapanel = [[np.linspace(edge[0][0], edge[1][0], 101),  # alpha values
                              np.linspace(edge[0][1], edge[1][1], 101),  # beta values
                              np.ones(101, dtype=int)*edge[0][2]]        # panels
-                             for edge in vertices_alphabetapanel]
+                            for edge in vertices_alphabetapanel]
 
     edges_lonlat = [alphabeta_to_lonlat(edge[0], edge[1], edge[2]) for edge in edges_alphabetapanel]
 

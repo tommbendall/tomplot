@@ -10,6 +10,7 @@ situations = ["single_digits", "negative_symmetric", "negative_asymmetric",
               "theta_type", "single_digits_to_teens", "below_and_above_one",
               "single_digits_to_twenties"]
 
+
 @pytest.mark.parametrize("situation", situations)
 def test_tomplot_contours(situation):
 
