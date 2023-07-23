@@ -7,9 +7,9 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
-__all__ = ['set_tomplot_style', 'tomplot_field_axis_labels',
-           'tomplot_field_title', 'tomplot_cmap', 'tomplot_field_markersize',
-           'tomplot_contours', 'rounded_limits', 'work_out_cmap_extension']
+__all__ = ['set_tomplot_style', 'tomplot_field_title', 'tomplot_cmap',
+           'tomplot_field_markersize', 'tomplot_contours', 'rounded_limits',
+           'work_out_cmap_extension']
 
 
 def set_tomplot_style(fontsize=16, family='serif'):
@@ -25,54 +25,6 @@ def set_tomplot_style(fontsize=16, family='serif'):
     plt.rc('text', usetex=True)
     font_opts = {'size': fontsize, 'family': family}
     plt.rc('font', **font_opts)
-
-
-def tomplot_field_axis_labels(ax, data_metadata):
-    """
-    Sets labels, ticks, ticklabels and limits for the axes for a field plot,
-    based on the metadata that tomplot uses to describe the plotted field data.
-
-    Args:
-        ax (:class:`AxesSubplot`): the pyplot axes object to plot the field on.
-        data_metadata (dict): a dictionary, whose keys are strings describing
-            aspects of the axes to be set, and whose values are the values to
-            set them to. Active keys are: "xlims", "ylims", "xlabel", "ylabel",
-            "xticks", "yticks", "xticklabels", "yticklabels", "xlabelpad" and
-            "ylabelpad".
-
-    Returns:
-        :class:`AxesSubplot`: the pyplot axes object which has been adjusted.
-    """
-
-    if 'xlims' in data_metadata.keys():
-        ax.set_xlim(data_metadata['xlims'])
-    if 'ylims' in data_metadata.keys():
-        ax.set_ylim(data_metadata['ylims'])
-
-    if 'xlabel' in data_metadata.keys():
-        if 'xlabelpad' in data_metadata.keys():
-            xlabelpad = data_metadata['xlabelpad']
-        else:
-            xlabelpad = None
-        ax.set_xlabel(data_metadata['xlabel'], labelpad=xlabelpad)
-    if 'ylabel' in data_metadata.keys():
-        if 'ylabelpad' in data_metadata.keys():
-            ylabelpad = data_metadata['ylabelpad']
-        else:
-            ylabelpad = None
-        ax.set_ylabel(data_metadata['ylabel'], labelpad=ylabelpad)
-
-    if 'xticks' in data_metadata.keys():
-        ax.set_xticks(data_metadata['xticks'])
-    if 'yticks' in data_metadata.keys():
-        ax.set_yticks(data_metadata['yticks'])
-
-    if 'xticklabels' in data_metadata.keys():
-        ax.set_xticklabels(data_metadata['xticklabels'])
-    if 'yticklabels' in data_metadata.keys():
-        ax.set_yticklabels(data_metadata['yticklabels'])
-
-    return ax
 
 
 def tomplot_field_title(ax, title, titlepad=None, return_title=False,

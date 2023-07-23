@@ -2,7 +2,8 @@
 Routines for regridding data.
 """
 
-__all__ = ['regrid_horizontal_slice', 'regrid_regular_horizontal_slice']
+__all__ = ['regrid_horizontal_slice', 'regrid_regular_horizontal_slice',
+           'regrid_vertical_slice']
 
 import numpy as np
 import pandas as pd
@@ -29,7 +30,10 @@ def regrid_horizontal_slice(new_coords_X, new_coords_Y,
             get good interpolation at periodic boundaries. For non-periodic
             meshes this may give strange results so should be avoided. Allowed
             values are currently "sphere" and None. Default is None.
-    """
+
+        Returns:
+        `numpy.ndarray`: the regridded field data.
+        """
 
     methods = ['combined_linear', 'combined_cubic',  'linear', 'cubic', 'nearest']
     assert method in methods, f'regrid_horizontal_slice: method {method} not valid'
@@ -117,6 +121,9 @@ def regrid_regular_horizontal_slice(new_coords_X, new_coords_Y,
         spline_degree (int, optional): the spline degree to pass to the
             interpolation object. Defaults to 3. The same degree is used for
             both directions.
+
+    Returns:
+        `numpy.ndarray`: the regridded field data.
     """
 
     interp_func = RectBivariateSpline(old_coords_X_1d, old_coords_Y_1d,
@@ -125,3 +132,72 @@ def regrid_regular_horizontal_slice(new_coords_X, new_coords_Y,
     new_field_data = interp_func(new_coords_X, new_coords_Y)
 
     return new_field_data
+
+
+def regrid_vertical_slice(new_coords_1d, slice_along, slice_at,
+                          old_coords_X, old_coords_Y, old_coords_Z,
+                          field_data, method='combined_linear'):
+    """
+    Regrids field data onto a single vertical slice. This is done taking a
+    series of 1D horizontal slices at each vertical level.
+
+    Args:
+        new_coords_1d (`numpy.ndarray`): 1D array of horizontal coordinates to
+            use for the new grid.
+        slice_along (str): which coordinate axis to take the slice along. Valid
+            values are 'x', 'y', 'lon' or 'lat'.
+        slice_at (float): the coordinate value at which to slice the data.
+        old_coords_X (`numpy.ndarray`): array of X coordinates of the old grid.
+        old_coords_Y (`numpy.ndarray`): array of Y coordinates of the old grid.
+        old_coords_Z (`numpy.ndarray`): array of Y coordinates of the old grid.
+        field_data (`numpy.ndarray`): the field data array on the old grid.
+        method (str, optional): method to use for interpolating. Default is
+            "combined_linear", which also performs a "nearest" interpolation to
+            try to prevent NaN values. Valid options are "linear", "cubic",
+            "nearest", "combined_linear" and "combined_cubic".
+
+    Returns:
+        tuple of `numpy.ndarray`: (new_field, new_coords_hori, new_coords_Z).
+            The regridded data and its coordinates.
+    """
+
+    methods = ['combined_linear', 'combined_cubic',  'linear', 'cubic', 'nearest']
+    assert method in methods, f'regrid_vertical_slice: method {method} not valid'
+
+    assert slice_along in ['x', 'y', 'lon', 'lat'], \
+        f'slice_along variable must correspond to a coordinate. {slice_along}' \
+        + ' is not a valid value'
+
+    # ------------------------------------------------------------------------ #
+    # Make empty data arrays to be filled
+    # ------------------------------------------------------------------------ #
+    # Second dimension of data array is number of levels
+    num_levels = np.shape(field_data)[1]
+    coords_z_1d = old_coords_Z[0,:]
+    new_coords_hori, new_coords_Z = np.meshgrid(new_coords_1d, coords_z_1d, indexing='ij')
+    new_field_data = np.zeros_like(new_coords_hori)
+
+    # ------------------------------------------------------------------------ #
+    # Loop through levels, doing 1D interpolation
+    # ------------------------------------------------------------------------ #
+    for lev_idx in range(num_levels):
+        # Make 1D mesh to interpolate to
+
+        if slice_along in ['x', 'lon']:
+            hori_coords_x, hori_coords_y = \
+                np.meshgrid(np.array([slice_at]), new_coords_1d, indexing='ij')
+        elif slice_along in ['y', 'lat']:
+            hori_coords_x, hori_coords_y = \
+                np.meshgrid(new_coords_1d, np.array([slice_at]), indexing='ij')
+
+        # Perform horizontal interpolation
+        new_field_data_level = regrid_horizontal_slice(hori_coords_x,
+                                                       hori_coords_y,
+                                                       old_coords_X[:,0],
+                                                       old_coords_Y[:,0],
+                                                       field_data[:,lev_idx],
+                                                       method=method)
+
+        new_field_data[:,lev_idx] = new_field_data_level[:,0]
+
+    return new_field_data, new_coords_hori, new_coords_Z

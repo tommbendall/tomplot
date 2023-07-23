@@ -8,7 +8,7 @@ from os.path import abspath, dirname
 from tomplot import (set_tomplot_style, tomplot_contours, tomplot_cmap,
                      plot_contoured_field, add_colorbar_ax,
                      tomplot_field_title, extract_gusto_coords,
-                     extract_gusto_field)
+                     extract_gusto_field, apply_gusto_domain)
 
 # ---------------------------------------------------------------------------- #
 # Directory for results and plots
@@ -36,8 +36,8 @@ data_file = Dataset(results_file_name, 'r')
 fig, axarray = plt.subplots(1, 2, figsize=(10, 5), sharey='row')
 
 # Loop through subplots
-for ax, field_name, field_label, colour_scheme in \
-    zip(axarray, field_names, field_labels, colour_schemes):
+for i, (ax, field_name, field_label, colour_scheme) in \
+    enumerate(zip(axarray, field_names, field_labels, colour_schemes)):
     # ------------------------------------------------------------------------ #
     # Data extraction
     # ------------------------------------------------------------------------ #
@@ -50,8 +50,11 @@ for ax, field_name, field_label, colour_scheme in \
     contours = tomplot_contours(field_data)
     cmap, lines = tomplot_cmap(contours, colour_scheme)
     cf, _ = plot_contoured_field(ax, coords_X, coords_Z, field_data, contour_method,
-                                contours, cmap=cmap, line_contours=lines)
-    add_colorbar_ax(ax, cf, field_label)
+                                 contours, cmap=cmap, line_contours=lines)
+    add_colorbar_ax(ax, cf, field_label, cbar_labelpad=-15)
+    # Stop ylabel being generated for second plot
+    ylabel = True if i == 0 else None
+    apply_gusto_domain(ax, data_file, ylabel=ylabel, xlabelpad=-10, ylabelpad=-20)
     tomplot_field_title(ax, f't = {time:.1f}', minmax=True, field_data=field_data)
 # ---------------------------------------------------------------------------- #
 # Save figure

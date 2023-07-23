@@ -8,7 +8,7 @@ from os.path import abspath, dirname
 from tomplot import (set_tomplot_style, tomplot_contours, tomplot_cmap,
                      plot_contoured_field, add_colorbar_ax,
                      tomplot_field_title, extract_gusto_coords,
-                     extract_gusto_field)
+                     extract_gusto_field, apply_gusto_domain)
 
 # ---------------------------------------------------------------------------- #
 # Directory for results and plots
@@ -45,7 +45,8 @@ contours = tomplot_contours(field_data)
 cmap, lines = tomplot_cmap(contours, colour_scheme, remove_contour=0.0)
 cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data, contour_method,
                              contours, cmap=cmap, line_contours=lines)
-add_colorbar_ax(ax, cf, field_label)
+add_colorbar_ax(ax, cf, field_label, cbar_labelpad=-50)
+apply_gusto_domain(ax, data_file)
 tomplot_field_title(ax, f't = {time:.1f}', minmax=True, field_data=field_data)
 # ---------------------------------------------------------------------------- #
 # Save figure
