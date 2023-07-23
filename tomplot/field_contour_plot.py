@@ -160,8 +160,11 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
     if projection is not None:
         import cartopy.crs as ccrs
         ax.set_global()
-        transform_extent = (0, 360, -90, 90)
-        transform_crs = ccrs.Geodetic()
+        transform_extent = (-180, 180, -90, 90)
+        if method == "scatter":
+            transform_crs = ccrs.Geodetic()
+        else:
+            transform_crs = ccrs.PlateCarree()
     else:
         transform_extent = None
         transform_crs = None

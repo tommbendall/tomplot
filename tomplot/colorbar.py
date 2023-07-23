@@ -1,12 +1,10 @@
 """Routines relating to nicely placing colorbars."""
 
-import matplotlib
 import matplotlib.pyplot as plt
 from .tomplot_tools import work_out_cmap_extension
 import numpy as np
 
 __all__ = ["add_colorbar_ax", "add_colorbar_fig"]
-
 
 # This is a separate routine to "plot_contoured_field" so that:
 # (a) colorbars can be easily applied to some (but not all) subplot axes
@@ -41,8 +39,7 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
     if 'extend' in colorbar_kwargs.keys():
         extend = colorbar_kwargs['extend']
         del colorbar_kwargs['extend']
-    elif type(cf) is matplotlib.contour.QuadContourSet \
-            or type(cf) is matplotlib.contour.ContourSet:
+    elif hasattr(cf, "levels"):
         extend = work_out_cmap_extension(cf.cmap, cf.levels)
     else:
         extend = 'neither'
@@ -50,6 +47,7 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
     # ------------------------------------------------------------------------ #
     # Make colorbar
     # ------------------------------------------------------------------------ #
+    cbar_ticks, cbar_format = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
     cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks,
                       location=location, extend=extend, **colorbar_kwargs)
     if cbar_label is not None:
@@ -158,8 +156,7 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
     if 'extend' in colorbar_kwargs.keys():
         extend = colorbar_kwargs['extend']
         del colorbar_kwargs['extend']
-    elif type(cf) is matplotlib.contour.QuadContourSet \
-            or type(cf) is matplotlib.contour.ContourSet:
+    elif hasattr(cf, "levels"):
         extend = work_out_cmap_extension(cf.cmap, cf.levels)
     else:
         extend = 'neither'
@@ -167,9 +164,57 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
     # ------------------------------------------------------------------------ #
     # Make colorbar
     # ------------------------------------------------------------------------ #
+    cbar_ticks, cbar_format = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
     cb = fig.colorbar(cf, cax=cbar_ax, format=cbar_format, ticks=cbar_ticks,
                       orientation=orientation, ticklocation=location,
                       extend=extend, **colorbar_kwargs)
 
     if cbar_label is not None:
         cb.set_label(cbar_label, loc=location, labelpad=cbar_labelpad)
+
+
+def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
+    """
+    Determines the ticks and format to use for the colorbar. If these aren't
+    specified by the user, the cbar_ticks will correspond to the highest and
+    lowest contour values. The default formatting is to 3 significant figures.
+
+    This currently does nothing when used with a scatter plot, as it is unclear
+    how to determine the minimum and maximum data values.
+
+    Args:
+        cf (`matplotlib.contour`): the filled contour object for the plot. This
+            is used to obtain the colours to be displayed in the colorbar.
+        cbar_ticks (iter, optional): which ticks to be attached to the colorbar.
+            Defaults to None.
+        cbar_format (float, optional): the formatting to used for the ticklabels
+            attached to the colorbar. Defaults to None.
+
+    Returns:
+        (list, str): the new cbar_ticks and the new cbar_format.
+    """
+
+    if cbar_ticks is None:
+        if hasattr(cf, "levels"):
+            # Take the minimum and maximum contours
+            cbar_ticks = [cf.levels[0], cf.levels[-1]]
+
+        # Unclear how to find min and max values when using scatter plot,
+        # so do nothing here
+
+    if cbar_format is None and cbar_ticks is not None:
+        min_val, max_val = np.min(cbar_ticks), np.max(cbar_ticks)
+        # Use scientific notation if the minimum is less than -999 or
+        # between -0.01 and 0.01
+        min_sci = (min_val < -999 or (min_val < 0.01 and min_val > -0.01))
+
+        # Use scientific notation if the maximum is less than -999 or
+        # between -0.01 and 0.01
+        max_sci = (max_val > 999 or (max_val < 0.01 and max_val > -0.01))
+
+        if min_sci or max_sci:
+            cbar_format = "{x:.2e}"
+        else:
+            cbar_format = "{x:.3g}"
+
+    return cbar_ticks, cbar_format

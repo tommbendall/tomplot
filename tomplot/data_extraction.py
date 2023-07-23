@@ -36,15 +36,16 @@ def extract_gusto_field(dataset, field_name, time_idx=None, level=None):
     # Work out the data structure based on the domain metadata
     domain = dataset.variables['domain_type'][:]
 
-    if domain == 'spherical_shell':
+    if domain in ['spherical_shell', 'vertical_slice']:
         field_data = dataset[field_name]['field_values'][:,time_idx]
     else:
+        import pdb; pdb.set_trace()
         raise NotImplementedError(f'extract_gusto_field: domain {domain} '
                                   +' either not implemented or recognised')
     return field_data
 
 
-def extract_gusto_coords(dataset, field_name, slice_along=None):
+def extract_gusto_coords(dataset, field_name, units=None):
     """
     Extracts the arrays of coordinate data for a specified field from a Gusto
     field data file.
@@ -52,24 +53,65 @@ def extract_gusto_coords(dataset, field_name, slice_along=None):
     Args:
         dataset (:class:`Dataset`): the netCDF dataset containing the data.
         field_name (str): the name of the field to be extracted.
-        slice_along (str, optional): a string specifying which direction to
-            slice 3D data, and hence which coordinates are to be returned.
-            Defaults to None.
+        units (str, optional): a string specifying which units to return the
+            coordinates in. Must match the specified domain. Defaults to None,
+            in which case longitude/latitude coordinates are returned in degrees
+            while Cartesian or radial coordinates are returned in metres. Valid
+            options are 'deg', 'rad', 'm' or 'km'.
 
     Returns:
         tuple of `numpy.ndarray`s: the coordinate data.
     """
+    # ------------------------------------------------------------------------ #
+    # Checks on units argument and set default for this domain
+    # ------------------------------------------------------------------------ #
+    # Work out which units to return the coords in, based on domain metadata
+    domain = dataset.variables['domain_type'][:]
+    if domain == 'spherical_shell':
+        assert units in [None, 'deg', 'rad'], 'extract_gusto_coords: for a ' \
+            + f'spherical shell domain units must be "deg" or "rad" not {units}'
+        if units is None:
+            units = 'deg'
+    elif domain == 'vertical_slice':
+        assert units in [None, 'm', 'km'], 'extract_gusto_coords: for a ' \
+            + f'vertical slice domain units must be "m" or "km" not {units}'
+        if units is None:
+            units = 'km'
+    else:
+        raise NotImplementedError(f'extract_gusto_coords: domain {domain} '
+                                  +' either not implemented or recognised')
 
+    # ------------------------------------------------------------------------ #
+    # Set unit factors
+    # ------------------------------------------------------------------------ #
+    if units in ['m', 'rad']:
+        unit_factor = 1
+    elif units == 'km':
+        unit_factor = 0.001
+    elif units == 'deg':
+        unit_factor = 180.0 / np.pi
+    else:
+        raise NotImplementedError(
+            f'extract_gusto_coords: invalid units {units} arg')
+
+    # ------------------------------------------------------------------------ #
+    # Determine which coordinates to extract
+    # ------------------------------------------------------------------------ #
     coord_variable = dataset[field_name]['field_values'].dimensions[0]
     # Variable name is "coords_*". We want to find the suffix
     coord_space = coord_variable[7:]
 
+    # ------------------------------------------------------------------------ #
     # Work out which coordinates to expect based on the domain metadata
-    domain = dataset.variables['domain_type'][:]
+    # ------------------------------------------------------------------------ #
     if domain == 'spherical_shell':
-        coords_X = dataset.variables[f'lon_{coord_space}'][:]
-        coords_Y = dataset.variables[f'lat_{coord_space}'][:]
+        coords_X = dataset.variables[f'lon_{coord_space}'][:]*unit_factor
+        coords_Y = dataset.variables[f'lat_{coord_space}'][:]*unit_factor
         return coords_X, coords_Y
+    elif domain == 'vertical_slice':
+        coords_X = dataset.variables[f'x_{coord_space}'][:]*unit_factor
+        coords_Z = dataset.variables[f'z_{coord_space}'][:]*unit_factor
+        return coords_X, coords_Z
     else:
         raise NotImplementedError(f'extract_gusto_coords: domain {domain} '
                                   +' either not implemented or recognised')
@@ -121,7 +163,7 @@ def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
     return field_data
 
 
-def extract_lfric_coords(dataset, field_name):
+def extract_lfric_coords(dataset, field_name, units=None):
     """
     Extracts the arrays of coordinate data for a specified field from an LFRic
     field data file.
@@ -129,10 +171,25 @@ def extract_lfric_coords(dataset, field_name):
     Args:
         dataset (:class:`Dataset`): the netCDF dataset containing the data.
         field_name (str): the name of the field to be plotted.
+        units (str, optional): a string specifying which units to return the
+            coordinates in. Must match the specified domain. Defaults to None,
+            which will not alter the coordinates from the data file. Valid
+            options are 'deg', 'rad', 'm' or 'km'.
 
     Returns:
         tuple of `numpy.ndarray`s: the coordinate data.
     """
+
+    # Determine unit factor -- we don't know what the domain is so assume that
+    # a valid option has been passed
+    if units in [None, 'm', 'deg']:
+        unit_factor = 1
+    elif units == 'km':
+        unit_factor = 0.001
+    elif units == 'rad':
+        unit_factor = np.pi / 180.0
+    else:
+        raise ValueError(f'extract_lfric_coords: invalid units {units} arg')
 
     # Get name of coordinate data, e.g. "nMesh2d_edge"
     root_coords_name = dataset[field_name].dimensions[-1]
@@ -140,8 +197,8 @@ def extract_lfric_coords(dataset, field_name):
     coords_X_name = root_coords_name[1:]+'_x'
     coords_Y_name = root_coords_name[1:]+'_y'
 
-    coords_X = dataset[coords_X_name][:]
-    coords_Y = dataset[coords_Y_name][:]
+    coords_X = dataset[coords_X_name][:]*unit_factor
+    coords_Y = dataset[coords_Y_name][:]*unit_factor
 
     return coords_X, coords_Y
 

@@ -75,10 +75,12 @@ def tomplot_field_axis_labels(ax, data_metadata):
     return ax
 
 
-def tomplot_field_title(ax, title, titlepad=None, fontsize=None,
-                        minmax=False, minmax_format='.2f', field_data=None):
+def tomplot_field_title(ax, title, titlepad=None, return_title=False,
+                        fontsize=None, minmax=False, minmax_format='.2f',
+                        field_data=None):
     """
-    Adds a title to a subplot.
+    Adds a title to a subplot, or generates a title to be returned depending on
+    the `return_title` argument.
 
     If the `minmax` argument is set to True, the field's minimum and maximum
     values are included in the title.
@@ -88,6 +90,9 @@ def tomplot_field_title(ax, title, titlepad=None, fontsize=None,
         title (str): the title to add to the subplot, or the base of the title
             to add if other elements (such as mins/maxes) are being added.
         titlepad (float, optional): amount of padd. Defaults to None.
+        return_title (bool, optional): whether to return the generated title, or
+            the axes object. If True, does not add the title to the axes.
+            Defaults to False.
         fontsize(float, optional): size of the text to use. Defaults to None.
         minmax(bool, optional): whether to append the field's min and max values
             to the title. Defaults to False.
@@ -99,7 +104,8 @@ def tomplot_field_title(ax, title, titlepad=None, fontsize=None,
             `minmax` argument is set to True.
 
     Returns:
-        :class:`AxesSubplot`: the pyplot axes object which has been adjusted.
+        str or :class:`AxesSubplot`: either the generated field title, or the
+            pyplot axes object which has been adjusted.
     """
 
     if minmax:
@@ -122,9 +128,12 @@ def tomplot_field_title(ax, title, titlepad=None, fontsize=None,
         full_title = f'{title}, min: {format_str.format(field_min)}, ' \
             + f'max: {format_str.format(field_max)}'
 
-    ax.set_title(full_title, pad=titlepad, fontsize=fontsize)
+    if return_title:
+        return full_title
+    else:
+        ax.set_title(full_title, pad=titlepad, fontsize=fontsize)
 
-    return ax
+        return ax
 
 
 def tomplot_cmap(contours, color_scheme='Blues',
@@ -436,49 +445,42 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
 
     raw_max = np.amax(data)
     raw_min = np.amin(data)
-    if (raw_max - raw_min > 0):
-        digits = math.floor(-np.log10(raw_max - raw_min)) + 1
-    else:
-        digits = 1
 
-    if (raw_min < 0 and raw_max > 0):
-        # How symmetric are these around zero?
-        max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
-        min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
-        if divergent_flag or min_abs > 0.5*max_abs:
-            data_max = roundup(max_abs, digits=digits)
-            data_min = - data_max
+    data_min = raw_min
+    data_max = raw_max
+
+    # Make initial discrete range definitely bigger than the real range
+    discrete_diff = 3.0 * (raw_max - raw_min) + 1.0
+    digit_inc = 1
+
+    # ------------------------------------------------------------------------ #
+    # Loop through rounding digits until we have nice rounded mins/maxes
+    # ------------------------------------------------------------------------ #
+    # If the real range if less than half of the discrete range,
+    # round to the next digit
+    while discrete_diff > 2.0*(raw_max - raw_min):
+
+        if (raw_max - raw_min > 0):
+            digits = math.floor(-np.log10(raw_max - raw_min)) + digit_inc
         else:
-            data_max = roundup(raw_max, digits=digits)
-            data_min = rounddown(raw_min, digits=digits)
-    else:
-        data_min = rounddown(raw_min, digits=digits)
-        data_max = roundup(raw_max, digits=digits)
+            digits = 1
 
-    # ------------------------------------------------------------------------ #
-    # Trim range if it is too wide
-    # ------------------------------------------------------------------------ #
-    # The rounded mins and maxes may result in a very wide range compared with
-    # the actual data. Adjust this here by finding another nice number to
-    # round the min/max to
-    raw_diff = raw_max - raw_min
-    discrete_diff = data_max - data_min
-    if raw_diff < 0.5*discrete_diff:
-        stored_data_min = data_min
         if (raw_min < 0 and raw_max > 0):
-            bins = 8 if raw_diff < 0.25*discrete_diff else 4
+            # How symmetric are these around zero?
+            max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
+            min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
+            if divergent_flag or min_abs > 0.5*max_abs:
+                data_max = roundup(max_abs, digits=digits)
+                data_min = - data_max
+            else:
+                data_max = roundup(raw_max, digits=digits)
+                data_min = rounddown(raw_min, digits=digits)
         else:
-            bins = 5 if raw_diff < 0.2*discrete_diff else 4
-        for bin_edge in np.linspace(data_min, data_max, bins+1):
-            if raw_min < bin_edge:
-                break
-            else:
-                data_min = bin_edge
-        for bin_edge in np.linspace(data_max, stored_data_min, bins+1):
-            if raw_max > bin_edge:
-                break
-            else:
-                data_max = bin_edge
+            data_min = rounddown(raw_min, digits=digits)
+            data_max = roundup(raw_max, digits=digits)
+
+        discrete_diff = data_max - data_min
+        digit_inc += 1  # Loop again to next digit if necessary
 
     # ------------------------------------------------------------------------ #
     # Find a nice step for contours
