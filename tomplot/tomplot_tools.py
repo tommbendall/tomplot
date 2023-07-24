@@ -73,8 +73,9 @@ def tomplot_field_title(ax, title, titlepad=None, return_title=False,
         format_str = '{:'+minmax_format+'}'
 
     if title in [None, '']:
-        full_title = ''
-    elif not minmax:
+        title = ''
+
+    if not minmax:
         full_title = title
     else:
         full_title = f'{title}, min: {format_str.format(field_min)}, ' \
