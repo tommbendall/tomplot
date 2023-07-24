@@ -4,8 +4,7 @@ The Only Matplotlib PDE Library Of Tom
 tomplot is an interface to matplotlib for quickly making neat plots for
 numerical models of PDEs.
 
-It is intended for use with LFRic and some Firedrake packages, such as
-transportdrake.
+It is intended for use with LFRic and some Firedrake packages, such as gusto.
 
 ### Why?
 
@@ -21,16 +20,14 @@ tomplot provides:
 - default formats for various types of plot, to quickly make neat plots
 - several specialised routines used in making publication-worthy plots
 
+The design philosophy is that everything that is possible with matplotlib should still be possible whilst using tomplot -- it creates no new objects which need to be passed around. Instead, it is aimed at avoiding code duplication by providing routines to perform some tedious tasks involved in making neat plots.
+
 ### INSTALLATION
 
 The main dependencies are netCDF4, numpy and matplotlib. To take advantage of
 full features, it requires pandas, scipy and cartopy.
 
-Once downloaded, can be installed in a virtual environment with
-```
-python3 setup.py install
-```
-or made available through
+Once downloaded, can be made available through
 ```
 export PYTHONPATH=<path_to_tomplot>/tomplot
 ```
