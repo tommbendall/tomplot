@@ -183,12 +183,8 @@ def regrid_vertical_slice(new_coords_1d, slice_along, slice_at,
     for lev_idx in range(num_levels):
         # Make 1D mesh to interpolate to
 
-        if slice_along in ['x', 'lon']:
-            hori_coords_x, hori_coords_y = \
-                np.meshgrid(np.array([slice_at]), new_coords_1d, indexing='ij')
-        elif slice_along in ['y', 'lat']:
-            hori_coords_x, hori_coords_y = \
-                np.meshgrid(new_coords_1d, np.array([slice_at]), indexing='ij')
+        hori_coords_x, hori_coords_y = \
+            np.meshgrid(new_coords_1d, np.array([slice_at]), indexing='ij')
 
         # Perform horizontal interpolation
         new_field_data_level = regrid_horizontal_slice(hori_coords_x,
@@ -197,7 +193,6 @@ def regrid_vertical_slice(new_coords_1d, slice_along, slice_at,
                                                        old_coords_Y[:,0],
                                                        field_data[:,lev_idx],
                                                        method=method)
-
         new_field_data[:,lev_idx] = new_field_data_level[:,0]
 
     return new_field_data, new_coords_hori, new_coords_Z

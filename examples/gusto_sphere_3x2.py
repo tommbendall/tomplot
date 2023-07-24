@@ -58,17 +58,18 @@ for i, (ax, field_name, field_label, colour_scheme, slice_along) in \
     orig_field_data, orig_coords_X, orig_coords_Y, orig_coords_Z = \
         extract_gusto_vertical_slice(data_file, field_name, time_idx,
                                      slice_along=slice_along, slice_at=slice_at)
+
     # Slices need regridding as points don't cleanly live along lon or lat = 0.0
-    field_data, coords_X, coords_Z = regrid_vertical_slice(plotting_grids[slice_along],
-                                                           slice_along, slice_at,
-                                                           orig_coords_X, orig_coords_Y,
-                                                           orig_coords_Z, orig_field_data)
+    field_data, coords_hori, coords_Z = regrid_vertical_slice(plotting_grids[slice_along],
+                                                              slice_along, slice_at,
+                                                              orig_coords_X, orig_coords_Y,
+                                                              orig_coords_Z, orig_field_data)
     # ------------------------------------------------------------------------ #
     # Plot data
     # ------------------------------------------------------------------------ #
     contours = tomplot_contours(field_data)
     cmap, lines = tomplot_cmap(contours, colour_scheme)
-    cf, _ = plot_contoured_field(ax, coords_X, coords_Z, field_data,
+    cf, _ = plot_contoured_field(ax, coords_hori, coords_Z, field_data,
                                  contour_method, contours, cmap=cmap,
                                  line_contours=lines)
     add_colorbar_ax(ax, cf, field_label, location='bottom', cbar_labelpad=-10)

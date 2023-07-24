@@ -563,7 +563,7 @@ def reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z, other_arrays=No
     data = pd.DataFrame(data_dict)
 
     # Sort array by X and Y coordinates
-    data = data.sort_values(['Z', 'X', 'Y'])
+    data = data.sort_values(by=['X', 'Y', 'Z'])
 
     # Number of levels should correspond to the number of points with the first
     # X and Y coordinate values
@@ -572,7 +572,6 @@ def reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z, other_arrays=No
                        (np.isclose(data['Y'], first_Y))]
     num_levels = len(first_point)
     assert len(data) % num_levels == 0, 'Unable to nicely divide data into levels'
-
 
     # Create new arrays to store structured data
     num_hori_points = int(len(data) / num_levels)
@@ -584,7 +583,7 @@ def reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z, other_arrays=No
 
     # Fill arrays, on the basis of the dataframe already being sorted
     for lev_idx in range(num_levels):
-        data_slice = slice(lev_idx*num_hori_points, (lev_idx+1)*num_hori_points)
+        data_slice = slice(lev_idx, num_hori_points*num_levels+lev_idx, num_levels)
         field_data[:, lev_idx] = data['field'].values[data_slice]
         coords_X[:, lev_idx] = data['X'].values[data_slice]
         coords_Y[:, lev_idx] = data['Y'].values[data_slice]
