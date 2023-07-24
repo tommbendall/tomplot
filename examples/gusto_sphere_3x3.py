@@ -9,7 +9,9 @@ from os.path import abspath, dirname
 from tomplot import (set_tomplot_style, tomplot_contours, tomplot_cmap,
                      plot_contoured_field, add_colorbar_ax,
                      regrid_vertical_slice, tomplot_field_title,
-                     extract_gusto_vertical_slice, apply_gusto_domain)
+                     extract_gusto_vertical_slice, apply_gusto_domain,
+                     reshape_gusto_data, extract_gusto_field,
+                     extract_gusto_coords)
 
 # ---------------------------------------------------------------------------- #
 # Directory for results and plots
@@ -18,19 +20,23 @@ from tomplot import (set_tomplot_style, tomplot_contours, tomplot_cmap,
 results_dir = f'{abspath(dirname(__file__))}/../tests/data'
 plot_dir = f'{abspath(dirname(__file__))}/../tests/tmp_figures'
 results_file_name = f'{results_dir}/gusto_sphere_3d_field_output.nc'
-plot_name = f'{plot_dir}/example_gusto_sphere_3x2.png'
+plot_name = f'{plot_dir}/example_gusto_sphere_3x3.png'
 
 # ---------------------------------------------------------------------------- #
 # Things that should be altered based on the plot
 # ---------------------------------------------------------------------------- #
 # Specify lists for variables that are different between subplots
 field_names = ['u_zonal', 'u_meridional', 'u_radial',
+               'u_zonal', 'u_meridional', 'u_radial',
                'u_zonal', 'u_meridional', 'u_radial']
-slice_along_values = ['lat', 'lat', 'lat',
+slice_along_values = ['z', 'z', 'z',
+                      'lat', 'lat', 'lat',
                       'lon', 'lon', 'lon']
 field_labels = [r'$u \ / $ m s$^{-1}$', r'$v \ / $ m s$^{-1}$', r'$w \ / $ m s$^{-1}$',
+                r'$u \ / $ m s$^{-1}$', r'$v \ / $ m s$^{-1}$', r'$w \ / $ m s$^{-1}$',
                 r'$u \ / $ m s$^{-1}$', r'$v \ / $ m s$^{-1}$', r'$w \ / $ m s$^{-1}$']
 colour_schemes = ['OrRd', 'RdBu_r', 'RdBu_r',
+                  'OrRd', 'RdBu_r', 'RdBu_r',
                   'OrRd', 'RdBu_r', 'RdBu_r']
 # Things that are the same for all subplots
 time_idx = -1
@@ -41,12 +47,14 @@ coords_lon_1d = np.linspace(-180, 180, 50)
 coords_lat_1d = np.linspace(-90, 90, 50)
 # Dictionary to hold plotting grids -- keys are "slice_along" values
 plotting_grids = {'lat': coords_lon_1d, 'lon': coords_lat_1d}
+# Level for horizontal slices
+level = 0
 # ---------------------------------------------------------------------------- #
 # Things that are likely the same for all plots
 # ---------------------------------------------------------------------------- #
 set_tomplot_style(fontsize=12)
 data_file = Dataset(results_file_name, 'r')
-fig, axarray = plt.subplots(2, 3, figsize=(12, 8), sharey='row')
+fig, axarray = plt.subplots(3, 3, figsize=(16, 8), sharey='row')
 
 # Loop through subplots
 for i, (ax, field_name, field_label, colour_scheme, slice_along) in \
@@ -55,15 +63,32 @@ for i, (ax, field_name, field_label, colour_scheme, slice_along) in \
     # ------------------------------------------------------------------------ #
     # Data extraction
     # ------------------------------------------------------------------------ #
-    orig_field_data, orig_coords_X, orig_coords_Y, orig_coords_Z = \
-        extract_gusto_vertical_slice(data_file, field_name, time_idx,
-                                     slice_along=slice_along, slice_at=slice_at)
+    if slice_along == 'z':
+        field_full = extract_gusto_field(data_file, field_name, time_idx)
+        coords_X_full, coords_Y_full, coords_Z_full = \
+            extract_gusto_coords(data_file, field_name)
 
-    # Slices need regridding as points don't cleanly live along lon or lat = 0.0
-    field_data, coords_hori, coords_Z = regrid_vertical_slice(plotting_grids[slice_along],
-                                                              slice_along, slice_at,
-                                                              orig_coords_X, orig_coords_Y,
-                                                              orig_coords_Z, orig_field_data)
+        # Reshape
+        field_full, coords_X_full, coords_Y_full, _ = \
+            reshape_gusto_data(field_full, coords_X_full,
+                                coords_Y_full, coords_Z_full)
+
+        # Take level for a horizontal slice
+        field_data = field_full[:,level]
+        # Abuse of names for coord variables but simplifies code below
+        coords_hori = coords_X_full[:,level]
+        coords_Z = coords_Y_full[:,level]
+
+    else:
+        orig_field_data, orig_coords_X, orig_coords_Y, orig_coords_Z = \
+            extract_gusto_vertical_slice(data_file, field_name, time_idx,
+                                        slice_along=slice_along, slice_at=slice_at)
+
+        # Slices need regridding as points don't cleanly live along lon or lat = 0.0
+        field_data, coords_hori, coords_Z = regrid_vertical_slice(plotting_grids[slice_along],
+                                                                slice_along, slice_at,
+                                                                orig_coords_X, orig_coords_Y,
+                                                                orig_coords_Z, orig_field_data)
     # ------------------------------------------------------------------------ #
     # Plot data
     # ------------------------------------------------------------------------ #
@@ -75,11 +100,13 @@ for i, (ax, field_name, field_label, colour_scheme, slice_along) in \
     add_colorbar_ax(ax, cf, field_label, location='bottom', cbar_labelpad=-10)
     # Don't add ylabels unless left-most subplots
     ylabel = True if i % 3 == 0 else None
-    apply_gusto_domain(ax, data_file, slice_along=slice_along, ylabel=ylabel, ylabelpad=-30)
+    ylabelpad = -30 if i > 2 else -10
+    apply_gusto_domain(ax, data_file, slice_along=slice_along, ylabel=ylabel,
+                       xlabelpad=-15, ylabelpad=ylabelpad)
     tomplot_field_title(ax, None, minmax=True, field_data=field_data)
 
 # These subplots tend to be quite clustered together, so move them apart a bit
-fig.subplots_adjust(wspace=0.3, hspace=0.15)
+fig.subplots_adjust(wspace=0.3, hspace=0.3)
 
 # ---------------------------------------------------------------------------- #
 # Save figure

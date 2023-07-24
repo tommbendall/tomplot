@@ -79,7 +79,7 @@ for ax, field_name, field_label, colour_scheme, slice_along, needs_regridding in
     tomplot_field_title(ax, None, minmax=True, field_data=field_data)
 
 # These subplots tend to be quite clustered together, so move them apart a bit
-fig.subplots_adjust(wspace=0.2, hspace=0.2)
+fig.subplots_adjust(wspace=0.2, hspace=0.23)
 
 # ---------------------------------------------------------------------------- #
 # Save figure
