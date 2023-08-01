@@ -19,7 +19,7 @@ from tomplot import (set_tomplot_style, tomplot_contours, tomplot_cmap,
 results_dir = f'{abspath(dirname(__file__))}/../tests/data'
 plot_dir = f'{abspath(dirname(__file__))}/../tests/tmp_figures'
 results_file_name = f'{results_dir}/DanW3field_output.nc'
-plot_name = f'{plot_dir}/Williams3_orthogrpahic.png'
+plot_name = f'{plot_dir}/Williams3_orthogrpahic_u.png'
 
 # ---------------------------------------------------------------------------- #
 # Things that should be altered based on the plot
@@ -31,7 +31,7 @@ subtitles = [f'Centered on {spherical_centre}' for spherical_centre in spherical
 # Things that are the same for both subplots
 field_name = 'u_zonal'  # Plot depth on front and back of sphere
 colour_scheme = 'RdYlBu_r'
-field_label = r'$D \ / $ m'
+field_label = r'$u \ / $ m s${-1}$'
 time_idx = -1
 contour_method = 'contour'  # Best method for orthographic projection
 remove_contour = None
