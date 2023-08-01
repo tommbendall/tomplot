@@ -26,6 +26,7 @@ colour_scheme = 'RdBu_r'
 time_idx = -1
 field_label = r'$\zeta \ / $ s$^{-1}$'
 contour_method = 'tricontour'
+contour_to_remove = 0.0
 # ---------------------------------------------------------------------------- #
 # Things that are likely the same for all plots
 # ---------------------------------------------------------------------------- #
@@ -42,7 +43,7 @@ time = data_file['time'][time_idx]
 # ---------------------------------------------------------------------------- #
 fig, ax = plt.subplots(1, 1, figsize=(5, 5))
 contours = tomplot_contours(field_data)
-cmap, lines = tomplot_cmap(contours, colour_scheme, remove_contour=0.0)
+cmap, lines = tomplot_cmap(contours, colour_scheme, remove_contour=contour_to_remove)
 cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data, contour_method,
                              contours, cmap=cmap, line_contours=lines)
 add_colorbar_ax(ax, cf, field_label, cbar_labelpad=-50)

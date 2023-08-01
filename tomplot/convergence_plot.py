@@ -144,7 +144,7 @@ def plot_convergence(ax, input_data, error_data,
 
             # Otherwise, we need to append the gradient to the label
             else:
-                label = label + f', {format_str.format(gradient)}'
+                label = label + f' {format_str.format(gradient)}'
 
     # ------------------------------------------------------------------------ #
     # Plot data points, depending on log method

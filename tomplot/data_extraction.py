@@ -455,7 +455,7 @@ def extract_gusto_vertical_slice(field_dataset, field_name, time_idx,
     if panel_ids is not None:
         field_data, coords_X, coords_Y, coords_Z, panel_ids = \
             reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z,
-                               other_arrays=panel_ids)
+                               other_arrays=[panel_ids])
     else:
         field_data, coords_X, coords_Y, coords_Z = \
             reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z)

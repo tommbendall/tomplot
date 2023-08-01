@@ -6,13 +6,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
+import warnings
 
 __all__ = ['set_tomplot_style', 'tomplot_field_title', 'tomplot_cmap',
            'tomplot_field_markersize', 'tomplot_contours', 'rounded_limits',
-           'work_out_cmap_extension']
+           'work_out_cmap_extension', 'only_minmax_ticklabels',
+           'tomplot_legend_ax', 'tomplot_legend_fig']
 
 
-def set_tomplot_style(fontsize=16, family='serif'):
+def set_tomplot_style(fontsize=16, family='serif', usetex=True):
     """
     Set some initial matplotlib variables to use a nice tomplot style. By
     default this will use latex formatting.
@@ -20,9 +22,16 @@ def set_tomplot_style(fontsize=16, family='serif'):
     Args:
         fontsize (int, optional): default fontsize to use. Defaults to 48.
         family (str, optional): family of font to use. Defaults to "serif".
+        usetex (bool, optional): whether to use Latex fonts.
     """
 
-    plt.rc('text', usetex=True)
+    try:
+        # This will fail if latex is not installed
+        plt.rc('text', usetex=usetex)
+    except RuntimeError:
+        warnings.warn('Unable to use Latex, falling back to default fonts')
+
+    # Set options relating to font
     font_opts = {'size': fontsize, 'family': family}
     plt.rc('font', **font_opts)
 
@@ -197,6 +206,16 @@ def tomplot_cmap(contours, color_scheme='Blues',
             if not contour_found:
                 # If we get here then we have not found this contour
                 raise ValueError('contour %.3f was not found' % remove_contour)
+
+            elif level_to_remove == 0:
+                raise ValueError(
+                    f'Requested removal of contour at {remove_contour}. Cannot '
+                    + 'remove this as it is the first contour.')
+
+            elif level_to_remove == len(contours):
+                raise ValueError(
+                    f'Requested removal of contour at {remove_contour}. Cannot '
+                    + 'remove this as it is the last contour.')
 
         else:
             raise ValueError('remove_contour %s not recognised' % remove_contour)
@@ -490,3 +509,251 @@ def rounded_limits(data, divergent_flag=False):
     data_max = nice_contours[-1]
 
     return data_min, data_max
+
+
+def only_minmax_ticklabels(ax):
+    """
+    Changes the tick labels on a plot so that only the minimum and maximum
+    values are included.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot the field on.
+    """
+
+    xlims = ax.get_xlim()
+    ylims = ax.get_ylim()
+    xticks = ax.get_xticks()
+    yticks = ax.get_yticks()
+
+    # Work out where lowest visible xtick is
+    lowest_visible_xtick = 0
+    for tick_idx, xtick in enumerate(xticks):
+        if xtick >= xlims[0]:
+            lowest_visible_xtick = tick_idx
+            break
+
+    # Work out where highest visible xtick is
+    highest_visible_xtick = len(xticks) - 1
+    for tick_idx, xtick in enumerate(np.flip(xticks)):
+        if xtick <= xlims[-1]:
+            highest_visible_xtick = len(xticks) - 1 - tick_idx
+            break
+
+    # Work out where lowest visible ytick is
+    lowest_visible_ytick = 0
+    for tick_idx, ytick in enumerate(yticks):
+        if ytick >= ylims[0]:
+            lowest_visible_ytick = tick_idx
+            break
+
+    # Work out where highest visible ytick is
+    highest_visible_ytick = len(yticks) - 1
+    for tick_idx, ytick in enumerate(np.flip(yticks)):
+        if ytick <= ylims[-1]:
+            highest_visible_ytick = len(yticks) - 1 - tick_idx
+            break
+
+    old_xticklabels = ax.get_xticklabels()
+    old_yticklabels = ax.get_yticklabels()
+
+    # Set most tick labels to be an empty string
+    new_xticklabels = ['' for _ in old_xticklabels]
+    new_yticklabels = ['' for _ in old_yticklabels]
+
+    # Still keep min and max values
+    new_xticklabels[lowest_visible_xtick] = old_xticklabels[lowest_visible_xtick]
+    new_xticklabels[highest_visible_xtick] = old_xticklabels[highest_visible_xtick]
+    new_yticklabels[lowest_visible_ytick] = old_yticklabels[lowest_visible_ytick]
+    new_yticklabels[highest_visible_ytick] = old_yticklabels[highest_visible_ytick]
+
+    ax.set_xticklabels(new_xticklabels)
+    ax.set_yticklabels(new_yticklabels)
+
+
+def tomplot_legend_fig(fig, location='top', padding=0.25, **leg_kwargs):
+    """
+    Adds a legend to the outside of a figure.
+
+    This is appropriate for quickly adding a legend to a plot. If you need to
+    precisely specify the position of a legend, or include the legend within the
+    figure it would be better to directly use plt.legend(). The strategy here is
+    to create the legend and then move it to a position outside of the plot.
+
+    Args:
+        fig (:class:`Figure`): the pyplot figure object to plot on.
+        location (str, optional): denotes where the legend will be. Implemented
+            options are "bottom", "top", "lower center" and "upper center".
+            Defaults to "top".
+        padding (float, optional): padding to be provided to the legend relative
+            to the axes and its associated artist.
+        **leg_kwargs: keyword arguments to be passed to the underlying pyplot
+            legend routine.
+    """
+
+    # ------------------------------------------------------------------------ #
+    # Checks and convert location to simplify code
+    # ------------------------------------------------------------------------ #
+    if location not in ['bottom', 'top', 'lower center', 'upper center']:
+        raise NotImplementedError(f'legend location {location} not implemented')
+
+    if location == 'bottom':
+        leg_location = 'lower center'
+    elif location == 'top':
+        leg_location = 'upper center'
+    else:
+        leg_location = location
+
+    # ------------------------------------------------------------------------ #
+    # Work out ax extent
+    # ------------------------------------------------------------------------ #
+    # ax.get_tightbox is the bbox containing all the axes labels
+    # this uses display coordinates
+    fig_tightbbox = fig.get_tightbbox()
+
+    # the extent is a larger bbox which we can use to work out the transform
+    extent_display_coords = fig.get_window_extent()
+    # To extract the bbox in ax coords, need to add ._bbox
+    extent_ax_coords = extent_display_coords._bbox
+
+    # Use relationship between extent display and ax coordinates to work out
+    # the transform for the tightbox to the ax coordinates
+    y_gradient = ((extent_ax_coords.ymax - extent_ax_coords.ymin)
+                  / (extent_display_coords.ymax - extent_display_coords.ymin))
+    y_intercept = extent_ax_coords.ymin - y_gradient * extent_display_coords.ymin
+    fig_ymin = fig_tightbbox.ymin * y_gradient + y_intercept
+    fig_ymax = fig_tightbbox.ymax * y_gradient + y_intercept
+
+    # ------------------------------------------------------------------------ #
+    # Make legend (first)
+    # ------------------------------------------------------------------------ #
+    # Make legend to find the extent of the legend
+    leg = plt.legend(loc=leg_location, **leg_kwargs)
+
+    # ------------------------------------------------------------------------ #
+    # Work out legend extent
+    # ------------------------------------------------------------------------ #
+    # leg.get_tightbox is the tight bbox containing the legend
+    # this uses display coordinates
+    leg_tightbbox = leg.get_tightbbox()
+
+    # the bbox to anchor is larger and is used to work out the transform
+    leg_display_bbox = leg.get_bbox_to_anchor()
+    # To extract the bbox in ax coords, need to add ._bbox
+    leg_ax_bbox = leg_display_bbox._bbox
+
+    # Use relationship between extent display and ax coordinates to work out
+    # the transform for the tightbox to the ax coordinates
+    y_gradient = ((leg_ax_bbox.ymax - leg_ax_bbox.ymin)
+                  / (leg_display_bbox.ymax - leg_display_bbox.ymin))
+    leg_height = (leg_tightbbox.ymax - leg_tightbbox.ymin) * y_gradient
+
+    # Other coordinates can be taken from the ax_bbox
+    leg_xmin = leg_ax_bbox.xmin
+    leg_width = leg_ax_bbox.xmax - leg_ax_bbox.xmin
+
+    # ------------------------------------------------------------------------ #
+    # Move legend
+    # ------------------------------------------------------------------------ #
+    # Work out new bbox
+    if location in ['bottom', 'lower center']:
+        new_bbox = (leg_xmin, fig_ymin - padding - leg_height, leg_width, leg_height)
+    elif location in ['top', 'upper center']:
+        new_bbox = (leg_xmin, fig_ymax + padding, leg_width, leg_height)
+
+    # Set new position
+    leg.set_bbox_to_anchor(new_bbox)
+
+
+def tomplot_legend_ax(ax, location='top', padding=0.25, **leg_kwargs):
+    """
+    Adds a legend to the outside of an Axes.
+
+    This is appropriate for quickly adding a legend to a plot. If you need to
+    precisely specify the position of a legend, or include the legend within the
+    axes it would be better to directly use plt.legend(). The strategy here is
+    to create the legend and then move it to a position outside of the plot.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot on.
+        location (str, optional): denotes where the legend will be. Implemented
+            options are "bottom", "top", "lower center" and "upper center".
+            Defaults to "top".
+        padding (float, optional): padding to be provided to the legend relative
+            to the axes and its associated artist.
+        **leg_kwargs: keyword arguments to be passed to the underlying pyplot
+            legend routine.
+    """
+
+    # ------------------------------------------------------------------------ #
+    # Checks and convert location to simplify code
+    # ------------------------------------------------------------------------ #
+    if location not in ['bottom', 'top', 'lower center', 'upper center']:
+        raise NotImplementedError(f'legend location {location} not implemented')
+
+    if location == 'bottom':
+        leg_location = 'lower center'
+    elif location == 'top':
+        leg_location = 'upper center'
+    else:
+        leg_location = location
+
+    # ------------------------------------------------------------------------ #
+    # Work out ax extent
+    # ------------------------------------------------------------------------ #
+    # ax.get_tightbox is the bbox containing all the axes labels
+    # this uses display coordinates
+    ax_tightbbox = ax.get_tightbbox()
+
+    # the extent is a larger bbox which we can use to work out the transform
+    extent_display_coords = ax.get_window_extent()
+    # To extract the bbox in ax coords, need to add ._bbox
+    extent_ax_coords = extent_display_coords._bbox
+
+    # Use relationship between extent display and ax coordinates to work out
+    # the transform for the tightbox to the ax coordinates
+    y_gradient = ((extent_ax_coords.ymax - extent_ax_coords.ymin)
+                  / (extent_display_coords.ymax - extent_display_coords.ymin))
+    y_intercept = extent_ax_coords.ymin - y_gradient * extent_display_coords.ymin
+    ax_ymin = ax_tightbbox.ymin * y_gradient + y_intercept
+    ax_ymax = ax_tightbbox.ymax * y_gradient + y_intercept
+
+    # ------------------------------------------------------------------------ #
+    # Make legend (first)
+    # ------------------------------------------------------------------------ #
+    # Make legend to find the extent of the legend
+    leg = plt.legend(loc=leg_location, **leg_kwargs)
+
+    # ------------------------------------------------------------------------ #
+    # Work out legend extent
+    # ------------------------------------------------------------------------ #
+    # leg.get_tightbox is the tight bbox containing the legend
+    # this uses display coordinates
+    leg_tightbbox = leg.get_tightbbox()
+
+    # the bbox to anchor is larger and is used to work out the transform
+    leg_display_bbox = leg.get_bbox_to_anchor()
+    # To extract the bbox in ax coords, need to add ._bbox
+    leg_ax_bbox = leg_display_bbox._bbox
+
+    # Use relationship between extent display and ax coordinates to work out
+    # the transform for the tightbox to the ax coordinates
+    y_gradient = ((leg_ax_bbox.ymax - leg_ax_bbox.ymin)
+                  / (leg_display_bbox.ymax - leg_display_bbox.ymin))
+    leg_height = (leg_tightbbox.ymax - leg_tightbbox.ymin) * y_gradient
+
+    # Other coordinates can be taken from the ax_bbox
+    leg_xmin = leg_ax_bbox.xmin
+    leg_width = leg_ax_bbox.xmax - leg_ax_bbox.xmin
+
+    # ------------------------------------------------------------------------ #
+    # Move legend
+    # ------------------------------------------------------------------------ #
+    # Work out new bbox
+    if location in ['bottom', 'lower center']:
+        new_bbox = (leg_xmin, ax_ymin - padding - leg_height, leg_width, leg_height)
+    elif location in ['top', 'upper center']:
+        new_bbox = (leg_xmin, ax_ymax + padding, leg_width, leg_height)
+
+    # Set new position
+    leg.set_bbox_to_anchor(new_bbox)
+
