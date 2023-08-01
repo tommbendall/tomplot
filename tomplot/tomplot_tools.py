@@ -368,10 +368,9 @@ def roundup(number, digits=0):
     Returns:
         float: the rounded number.
     """
-    import math
 
     n = 10**-digits
-    return round(math.ceil(number / n) * n, digits)
+    return round(np.ceil(number / n) * n, digits)
 
 
 def rounddown(number, digits=0):
@@ -385,10 +384,9 @@ def rounddown(number, digits=0):
     Returns:
         float: the rounded number.
     """
-    import math
 
     n = 10**-digits
-    return round(math.floor(number / n) * n, digits)
+    return round(np.floor(number / n) * n, digits)
 
 
 def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
@@ -418,8 +416,6 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
     # Round mins and maxes to nice numbers
     # ------------------------------------------------------------------------ #
 
-    import math
-
     raw_max = np.amax(data)
     raw_min = np.amin(data)
 
@@ -439,7 +435,7 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
         while discrete_diff > 2.0*(raw_max - raw_min):
 
             if (raw_max - raw_min > 0):
-                digits = math.floor(-np.log10(raw_max - raw_min)) + digit_inc
+                digits = np.floor(-np.log10(raw_max - raw_min)) + digit_inc
             else:
                 digits = 1
 
@@ -463,9 +459,9 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
     else:
         # Data is considered to be zero
         if raw_max > 0:
-            digits = math.floor(-np.log10(raw_max)) + 3
+            digits = np.floor(-np.log10(raw_max)) + 3
         elif raw_min < 0:
-            digits = math.floor(-np.log10(- raw_min)) + 3
+            digits = np.floor(-np.log10(- raw_min)) + 3
         else:
             digits = 3
 
@@ -490,7 +486,7 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
 
     # To be safe, only make contours when we have non-zero data
     if (raw_max - raw_min) > zero_tolerance:
-        step_digits = math.floor(-np.log10(max_step))
+        step_digits = np.floor(-np.log10(max_step))
         # Find an even bigger maximum step by rounding max_step up
         max_max_step = roundup(max_step, digits=step_digits)
 
