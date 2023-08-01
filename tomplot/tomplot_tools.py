@@ -390,7 +390,8 @@ def rounddown(number, digits=0):
     return round(math.floor(number / n) * n, digits)
 
 
-def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
+def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
+                     zero_tolerance=1e-32, zero_num_bins=3):
     """
     Generates some nice rounded contour values from a dataset. This can be used
     to make a quick plot from uninspected data. Contours are always picked to
@@ -403,6 +404,10 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
         divergent_flag (boolean, optional): whether to enforce that a divergent
             profile is expected, to give results that are symmetric around 0.
             Defaults to False.
+        zero_tolerance (float, optional): for ranges below this, the data is
+            considered to be constant. Defaults to 1e-15.
+        zero_num_bins (int, optional): the number of bins to use when data is
+            considered to have a range of zero. Defaults to 3.
 
     Returns:
         `numpy.array`: a 1D array of points to use as contours.
@@ -427,31 +432,54 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
     # ------------------------------------------------------------------------ #
     # Loop through rounding digits until we have nice rounded mins/maxes
     # ------------------------------------------------------------------------ #
-    # If the real range if less than half of the discrete range,
-    # round to the next digit
-    while discrete_diff > 2.0*(raw_max - raw_min):
+    if (raw_max - raw_min) > zero_tolerance:
+        # If the real range if less than half of the discrete range,
+        # round to the next digit
+        while discrete_diff > 2.0*(raw_max - raw_min):
 
-        if (raw_max - raw_min > 0):
-            digits = math.floor(-np.log10(raw_max - raw_min)) + digit_inc
-        else:
-            digits = 1
-
-        if (raw_min < 0 and raw_max > 0):
-            # How symmetric are these around zero?
-            max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
-            min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
-            if divergent_flag or min_abs > 0.5*max_abs:
-                data_max = roundup(max_abs, digits=digits)
-                data_min = - data_max
+            if (raw_max - raw_min > 0):
+                digits = math.floor(-np.log10(raw_max - raw_min)) + digit_inc
             else:
-                data_max = roundup(raw_max, digits=digits)
-                data_min = rounddown(raw_min, digits=digits)
-        else:
-            data_min = rounddown(raw_min, digits=digits)
-            data_max = roundup(raw_max, digits=digits)
+                digits = 1
 
-        discrete_diff = data_max - data_min
-        digit_inc += 1  # Loop again to next digit if necessary
+            if (raw_min < 0 and raw_max > 0):
+                # How symmetric are these around zero?
+                max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
+                min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
+                if divergent_flag or min_abs > 0.5*max_abs:
+                    data_max = roundup(max_abs, digits=digits)
+                    data_min = - data_max
+                else:
+                    data_max = roundup(raw_max, digits=digits)
+                    data_min = rounddown(raw_min, digits=digits)
+            else:
+                data_min = rounddown(raw_min, digits=digits)
+                data_max = roundup(raw_max, digits=digits)
+
+            discrete_diff = data_max - data_min
+            digit_inc += 1  # Loop again to next digit if necessary
+
+    else:
+        # Data is considered to be zero
+        if raw_max > 0:
+            digits = math.floor(-np.log10(raw_max)) + 3
+        elif raw_min < 0:
+            digits = math.floor(-np.log10(- raw_min)) + 3
+        else:
+            digits = 3
+
+        data_central = round(raw_max, digits)
+        data_min = rounddown(raw_min, digits=digits)
+        data_max = roundup(raw_max, digits=digits)
+        if data_central == data_min:
+            data_min -= (data_max - data_central)
+        elif data_central == data_max:
+            data_max += (data_central - data_min)
+
+        if data_min == data_max:
+            # We probably have zero here, just set some values
+            data_min -= -0.001
+            data_max += 0.001
 
     # ------------------------------------------------------------------------ #
     # Find a nice step for contours
@@ -460,7 +488,7 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
     max_step = (data_max - data_min) / min_num_bins
 
     # To be safe, only make contours when we have non-zero data
-    if max_step > 1e-32:
+    if (raw_max - raw_min) > zero_tolerance:
         step_digits = math.floor(-np.log10(max_step))
         # Find an even bigger maximum step by rounding max_step up
         max_max_step = roundup(max_step, digits=step_digits)
@@ -484,7 +512,7 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
 
     # Data is entirely zero, so return only two contours
     else:
-        contours = np.array([data_min, data_max])
+        contours = np.linspace(data_min, data_max, zero_num_bins+1)
 
     return contours
 
