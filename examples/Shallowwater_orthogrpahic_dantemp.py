@@ -29,7 +29,7 @@ num_subplots = 2
 spherical_centres = [(90, 60), (-90, -15)]  # Centres of spherical projections
 subtitles = [f'Centered on {spherical_centre}' for spherical_centre in spherical_centres]
 # Things that are the same for both subplots
-field_name = 'D'  # Plot depth on front and back of sphere
+field_name = 'u_zonal'  # Plot depth on front and back of sphere
 colour_scheme = 'RdYlBu_r'
 field_label = r'$D \ / $ m'
 time_idx = -1
