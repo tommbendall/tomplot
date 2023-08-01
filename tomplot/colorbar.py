@@ -6,6 +6,7 @@ import numpy as np
 
 __all__ = ["add_colorbar_ax", "add_colorbar_fig"]
 
+
 # This is a separate routine to "plot_contoured_field" so that:
 # (a) colorbars can be easily applied to some (but not all) subplot axes
 # (b) the number of arguments to "plot_contoured_field" can be minimised

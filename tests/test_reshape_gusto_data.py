@@ -8,6 +8,7 @@ import pytest
 from os.path import abspath, dirname
 from netCDF4 import Dataset
 
+
 @pytest.mark.parametrize("domain", ["2D", "3D"])
 def test_reshape_gusto_data(domain):
 
@@ -52,7 +53,7 @@ def test_reshape_gusto_data(domain):
     # Check that the data is now ordered
     # ------------------------------------------------------------------------ #
 
-    first_heights = coords_Z_full[0,:]
+    first_heights = coords_Z_full[0, :]
     sorted_heights = np.sort(first_heights)
 
     assert np.all(np.isclose(first_heights, sorted_heights)), \

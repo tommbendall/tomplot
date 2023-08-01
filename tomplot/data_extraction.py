@@ -29,7 +29,7 @@ def extract_gusto_field(dataset, field_name, time_idx=None):
     if time_idx is None:
         time_idx = slice(None, None)
 
-    field_data = dataset[field_name]['field_values'][:,time_idx]
+    field_data = dataset[field_name]['field_values'][:, time_idx]
 
     return field_data
 
@@ -73,7 +73,7 @@ def extract_gusto_coords(dataset, field_name, units=None):
             units = 'deg'
     else:
         raise NotImplementedError(f'extract_gusto_coords: domain {domain} '
-                                  +' either not implemented or recognised')
+                                  + ' either not implemented or recognised')
 
     # ------------------------------------------------------------------------ #
     # Set unit factors
@@ -114,7 +114,7 @@ def extract_gusto_coords(dataset, field_name, units=None):
         return coords_X, coords_Y, coords_Z
     else:
         raise NotImplementedError(f'extract_gusto_coords: domain {domain} '
-                                  +' either not implemented or recognised')
+                                  + ' either not implemented or recognised')
 
 
 def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
@@ -140,16 +140,16 @@ def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
 
     # 3D data
     if len(dataset[field_name].dimensions) == 3:
-        field_data = dataset[field_name][time_idx,level,:]
+        field_data = dataset[field_name][time_idx, level, :]
 
     # 2D time-varying field
     elif (len(dataset[field_name].dimensions) == 2
           and dataset[field_name].dimensions[0] == 'time'):
-        field_data = dataset[field_name][time_idx,:]
+        field_data = dataset[field_name][time_idx, :]
 
     # 3D non-time-varying field
     elif len(dataset[field_name].dimensions) == 2:
-        field_data = dataset[field_name][level,:]
+        field_data = dataset[field_name][level, :]
 
     # 2D non-time-varying field
     elif len(dataset[field_name].dimensions) == 1:
@@ -223,14 +223,14 @@ def extract_lfric_heights(height_dataset, field_dataset, field_name, level=None)
 
     # Work out which level this should be on
     if (field_dataset[field_name].dimensions[1] == 'half_levels'
-        and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
+            and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
         height_name = 'height_w3'
     elif (field_dataset[field_name].dimensions[1] == 'full_levels'
           and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
         height_name = 'height_wth'
     else:
         raise NotImplementedError(f'Dimensions for {field_name} are not '
-            + 'implemented so cannot work out height field')
+                                  + 'implemented so cannot work out height field')
 
     # If time_idx or level are None, we would index array as : and extract the
     # whole field - make equivalent slice objects to this to simplify code below
@@ -240,13 +240,13 @@ def extract_lfric_heights(height_dataset, field_dataset, field_name, level=None)
     # Data may be time-varying or not, so these cases need handling separately
     if len(height_dataset[height_name].dimensions) == 2:
         # Initial data with no time value
-        heights = height_dataset[height_name][level,:]
+        heights = height_dataset[height_name][level, :]
     elif len(height_dataset[height_name].dimensions) == 3:
         # 3D data -- take the first time value
-        heights = height_dataset[height_name][0,level,:]
+        heights = height_dataset[height_name][0, level, :]
     else:
         raise RuntimeError(f'Trying to extract {height_name} field, but '
-                            + 'the array is not 2D or 3D, so cannot proceed')
+                           + 'the array is not 2D or 3D, so cannot proceed')
 
     return heights
 
@@ -381,7 +381,7 @@ def extract_lfric_vertical_slice(field_dataset, field_name, time_idx,
             coords_Z_final = np.zeros((len_data, num_levels))
 
         # Populate data arrays
-        field_data[:,lev_idx] = slice_df['field_data'].values
+        field_data[:, lev_idx] = slice_df['field_data'].values
         coords_X_final[:, lev_idx] = slice_df[local_X_coord].values
         coords_Y_final[:, lev_idx] = slice_df[local_slice_along].values
         coords_Z_final[:, lev_idx] = level if height_dataset is None else slice_df['height'].values
@@ -499,7 +499,7 @@ def extract_gusto_vertical_slice(field_dataset, field_name, time_idx,
             # Try to get 5% of values
             max_coord = np.max(df[local_slice_along].values)
             min_coord = np.min(df[local_slice_along].values)
-            tolerance = 0.05* (max_coord - min_coord)
+            tolerance = 0.05 * (max_coord - min_coord)
             slice_df = df[np.abs(df[local_slice_along] - slice_at) < tolerance]
 
             # Additionally filter based on panel
@@ -518,7 +518,7 @@ def extract_gusto_vertical_slice(field_dataset, field_name, time_idx,
             coords_Z_final = np.zeros((len_data, num_levels))
 
         # Populate data arrays
-        field_data_final[:,lev_idx] = slice_df['field_data'].values
+        field_data_final[:, lev_idx] = slice_df['field_data'].values
         coords_X_final[:, lev_idx] = slice_df[local_X_coord].values
         coords_Y_final[:, lev_idx] = slice_df[local_slice_along].values
         coords_Z_final[:, lev_idx] = slice_df['Z'].values
@@ -602,8 +602,8 @@ def reshape_gusto_data(field_data, coords_X, coords_Y_or_Z, coords_Z_3d=None,
     if data_is_3d:
         data = data.sort_values(by=['X', 'Y', 'Z'])
         first_X, first_Y = data['X'].values[0], data['Y'].values[0]
-        first_point = data[(np.isclose(data['X'], first_X)) &
-                           (np.isclose(data['Y'], first_Y))]
+        first_point = data[(np.isclose(data['X'], first_X))
+                           & (np.isclose(data['Y'], first_Y))]
 
     else:
         data = data.sort_values(by=['X', 'Z'])

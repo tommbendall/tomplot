@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import RectBivariateSpline, griddata
 
+
 def regrid_horizontal_slice(new_coords_X, new_coords_Y,
                             old_coords_X, old_coords_Y, field_data,
                             method='combined_linear', periodic_fix=None):
@@ -35,7 +36,7 @@ def regrid_horizontal_slice(new_coords_X, new_coords_Y,
         `numpy.ndarray`: the regridded field data.
         """
 
-    methods = ['combined_linear', 'combined_cubic',  'linear', 'cubic', 'nearest']
+    methods = ['combined_linear', 'combined_cubic', 'linear', 'cubic', 'nearest']
     assert method in methods, f'regrid_horizontal_slice: method {method} not valid'
 
     # ------------------------------------------------------------------------ #
@@ -161,7 +162,7 @@ def regrid_vertical_slice(new_coords_1d, slice_along, slice_at,
             The regridded data and its coordinates.
     """
 
-    methods = ['combined_linear', 'combined_cubic',  'linear', 'cubic', 'nearest']
+    methods = ['combined_linear', 'combined_cubic', 'linear', 'cubic', 'nearest']
     assert method in methods, f'regrid_vertical_slice: method {method} not valid'
 
     assert slice_along in ['x', 'y', 'lon', 'lat'], \
@@ -173,7 +174,7 @@ def regrid_vertical_slice(new_coords_1d, slice_along, slice_at,
     # ------------------------------------------------------------------------ #
     # Second dimension of data array is number of levels
     num_levels = np.shape(field_data)[1]
-    coords_z_1d = old_coords_Z[0,:]
+    coords_z_1d = old_coords_Z[0, :]
     new_coords_hori, new_coords_Z = np.meshgrid(new_coords_1d, coords_z_1d, indexing='ij')
     new_field_data = np.zeros_like(new_coords_hori)
 
@@ -189,10 +190,10 @@ def regrid_vertical_slice(new_coords_1d, slice_along, slice_at,
         # Perform horizontal interpolation
         new_field_data_level = regrid_horizontal_slice(hori_coords_x,
                                                        hori_coords_y,
-                                                       old_coords_X[:,0],
-                                                       old_coords_Y[:,0],
-                                                       field_data[:,lev_idx],
+                                                       old_coords_X[:, 0],
+                                                       old_coords_Y[:, 0],
+                                                       field_data[:, lev_idx],
                                                        method=method)
-        new_field_data[:,lev_idx] = new_field_data_level[:,0]
+        new_field_data[:, lev_idx] = new_field_data_level[:, 0]
 
     return new_field_data, new_coords_hori, new_coords_Z
