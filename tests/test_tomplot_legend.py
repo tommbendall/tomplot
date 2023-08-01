@@ -36,9 +36,13 @@ def test_tomplot_legend(add_legend_to, legend_loc, plot_setup):
         axarray[0].plot(x_points, y_cos, color='red', marker='', label='cos')
         axarray[1].plot(x_points, y_exp, color='gold', marker='', label='exp')
         axarray[1].plot(x_points, y_sqrt, color='blue', marker='', label='sqrt')
+        axarray[1].plot(x_points, y_sin, color='purple', marker='', label='sin')
         # Add legend
         tomplot_legend_fig(fig, legend_loc, ncols=4, title='Functions')
-        fig.suptitle(title)
+        if legend_loc == 'top':
+            fig.suptitle(title, y=1.2)
+        else:
+            fig.suptitle(title)
 
     else:
         ax.plot(x_points, y_sin, color='purple', marker='', label='sin')

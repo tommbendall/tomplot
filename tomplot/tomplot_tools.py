@@ -570,7 +570,7 @@ def only_minmax_ticklabels(ax):
     ax.set_yticklabels(new_yticklabels)
 
 
-def tomplot_legend_fig(fig, location='top', padding=0.25, **leg_kwargs):
+def tomplot_legend_fig(fig, location='top', extra_padding=0.0, **leg_kwargs):
     """
     Adds a legend to the outside of a figure.
 
@@ -584,8 +584,8 @@ def tomplot_legend_fig(fig, location='top', padding=0.25, **leg_kwargs):
         location (str, optional): denotes where the legend will be. Implemented
             options are "bottom", "top", "lower center" and "upper center".
             Defaults to "top".
-        padding (float, optional): padding to be provided to the legend relative
-            to the axes and its associated artist.
+        extra_padding (float, optional): padding to be provided to the legend
+            relative to the figure and its associated artists. Defaults to 0.0.
         **leg_kwargs: keyword arguments to be passed to the underlying pyplot
             legend routine.
     """
@@ -602,6 +602,33 @@ def tomplot_legend_fig(fig, location='top', padding=0.25, **leg_kwargs):
         leg_location = 'upper center'
     else:
         leg_location = location
+
+    if leg_location == 'lower center':
+        padding = 0.08 + extra_padding
+    else:
+        padding = 0.06 + extra_padding
+
+    # ------------------------------------------------------------------------ #
+    # Work out all handles and labels
+    # ------------------------------------------------------------------------ #
+
+    # Gather all legend handles/labels from different axes
+    all_handles = []
+    all_labels = []
+    for ax in fig.get_axes():
+        handles, labels = ax.get_legend_handles_labels()
+        all_handles += handles
+        all_labels += labels
+
+    # Now extract only unique handles and labels
+    unique_handles_labels = []
+    handles = []
+    labels = []
+    for handle, label in zip(all_handles, all_labels):
+        if f'{handle}_{label}' not in unique_handles_labels:
+            unique_handles_labels.append(f'{handle}_{label}')
+            handles.append(handle)
+            labels.append(label)
 
     # ------------------------------------------------------------------------ #
     # Work out ax extent
@@ -627,44 +654,34 @@ def tomplot_legend_fig(fig, location='top', padding=0.25, **leg_kwargs):
     # Make legend (first)
     # ------------------------------------------------------------------------ #
     # Make legend to find the extent of the legend
-    leg = plt.legend(loc=leg_location, **leg_kwargs)
+    leg = fig.legend(handles, labels, loc=leg_location, **leg_kwargs)
 
     # ------------------------------------------------------------------------ #
     # Work out legend extent
     # ------------------------------------------------------------------------ #
-    # leg.get_tightbox is the tight bbox containing the legend
-    # this uses display coordinates
-    leg_tightbbox = leg.get_tightbbox()
 
     # the bbox to anchor is larger and is used to work out the transform
     leg_display_bbox = leg.get_bbox_to_anchor()
     # To extract the bbox in ax coords, need to add ._bbox
     leg_ax_bbox = leg_display_bbox._bbox
 
-    # Use relationship between extent display and ax coordinates to work out
-    # the transform for the tightbox to the ax coordinates
-    y_gradient = ((leg_ax_bbox.ymax - leg_ax_bbox.ymin)
-                  / (leg_display_bbox.ymax - leg_display_bbox.ymin))
-    leg_height = (leg_tightbbox.ymax - leg_tightbbox.ymin) * y_gradient
-
     # Other coordinates can be taken from the ax_bbox
     leg_xmin = leg_ax_bbox.xmin
-    leg_width = leg_ax_bbox.xmax - leg_ax_bbox.xmin
 
     # ------------------------------------------------------------------------ #
     # Move legend
     # ------------------------------------------------------------------------ #
     # Work out new bbox
     if location in ['bottom', 'lower center']:
-        new_bbox = (leg_xmin, fig_ymin - padding - leg_height, leg_width, leg_height)
+        new_bbox = (leg_xmin, fig_ymin - padding, 1.0, 1.0)
     elif location in ['top', 'upper center']:
-        new_bbox = (leg_xmin, fig_ymax + padding, leg_width, leg_height)
+        new_bbox = (leg_xmin, fig_ymax + padding, 1.0, 1.0)
 
     # Set new position
     leg.set_bbox_to_anchor(new_bbox)
 
 
-def tomplot_legend_ax(ax, location='top', padding=0.25, **leg_kwargs):
+def tomplot_legend_ax(ax, location='top', extra_padding=0.0, **leg_kwargs):
     """
     Adds a legend to the outside of an Axes.
 
@@ -678,8 +695,8 @@ def tomplot_legend_ax(ax, location='top', padding=0.25, **leg_kwargs):
         location (str, optional): denotes where the legend will be. Implemented
             options are "bottom", "top", "lower center" and "upper center".
             Defaults to "top".
-        padding (float, optional): padding to be provided to the legend relative
-            to the axes and its associated artist.
+        extra_padding (float, optional): padding to be provided to the legend
+            relative to the axes and its associated artist. Defaults to 0.0.
         **leg_kwargs: keyword arguments to be passed to the underlying pyplot
             legend routine.
     """
@@ -696,6 +713,11 @@ def tomplot_legend_ax(ax, location='top', padding=0.25, **leg_kwargs):
         leg_location = 'upper center'
     else:
         leg_location = location
+
+    if leg_location == 'lower center':
+        padding = 0.25 + extra_padding
+    else:
+        padding = 0.25 + extra_padding
 
     # ------------------------------------------------------------------------ #
     # Work out ax extent
