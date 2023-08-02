@@ -33,7 +33,7 @@ def set_tomplot_style(fontsize=16, family='serif', usetex=True):
         from matplotlib.texmanager import TexManager
         texmanager = TexManager()
         _ = texmanager.make_png('hello', 6, 300)
-    except RuntimeError:
+    except (FileNotFoundError, RuntimeError):
         warnings.warn('Unable to use Latex, falling back to default fonts')
 
     # Set options relating to font
