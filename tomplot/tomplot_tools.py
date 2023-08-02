@@ -26,10 +26,17 @@ def set_tomplot_style(fontsize=16, family='serif', usetex=True):
     """
 
     try:
-        # This will fail if latex is not installed
+        # This should fail if latex is not installed
+        mpl.style.use('default')
         plt.rc('text', usetex=usetex)
+        # Force trying to make a latex file here, to get the failure here
+        # rather than when the figure is saved
+        from matplotlib.texmanager import TexManager
+        texmanager = TexManager()
+        _ = texmanager.make_png('hello', 6, 300)
     except RuntimeError:
         warnings.warn('Unable to use Latex, falling back to default fonts')
+        mpl.style.use('default')
 
     # Set options relating to font
     font_opts = {'size': fontsize, 'family': family}
