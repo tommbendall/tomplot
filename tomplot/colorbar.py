@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 from .tomplot_tools import work_out_cmap_extension
 import numpy as np
+import warnings
 
 __all__ = ["add_colorbar_ax", "add_colorbar_fig"]
 
@@ -12,7 +13,8 @@ __all__ = ["add_colorbar_ax", "add_colorbar_fig"]
 # (b) the number of arguments to "plot_contoured_field" can be minimised
 # This routine motivates "plot_contoured_field" returning the `cf` object.
 def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
-                    cbar_labelpad=None, location=None, **colorbar_kwargs):
+                    cbar_labelpad=None, extra_labelpad=0.0, location=None,
+                    **colorbar_kwargs):
     """
     Adds a colour bar to a filled contour plot, for a particular axes.
 
@@ -29,6 +31,8 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
             Defaults to None.
         cbar_labelpad (float, optional): the padding to apply to the colorbar
             label. Defaults to None.
+        extra_labelpad (float, optional): any extra label padding to be applied.
+            If cbar_labelpad is not None, this is ignored. Defaults to 0.0.
         location (str, optional): the location, relative to the parent axes,
             where the colorbar axes is created. Defaults to None.
         **colorbar_kwargs: keyword arguments to be passed to plt.colorbar.
@@ -48,16 +52,20 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
     # ------------------------------------------------------------------------ #
     # Make colorbar
     # ------------------------------------------------------------------------ #
+    cbar_format_str = cbar_format
     cbar_ticks, cbar_format = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
     cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks,
                       location=location, extend=extend, **colorbar_kwargs)
     if cbar_label is not None:
+        cbar_labelpad = tomplot_cbar_labelpad(cbar_labelpad, extra_labelpad,
+                                              cbar_format_str, location, cb)
         cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
 
 def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
                      cbar_format=None, cbar_ticks=None, cbar_labelpad=None,
-                     cbar_padding=0.0, cbar_thickness=0.02, **colorbar_kwargs):
+                     extra_labelpad=0.0, cbar_padding=0.0, cbar_thickness=0.02,
+                     **colorbar_kwargs):
     """
     Adds a colour bar to a filled contour plot, to the whole figure.
 
@@ -76,6 +84,8 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
             Defaults to None.
         cbar_labelpad (float, optional): the padding to apply to the colorbar
             label. Defaults to None.
+        extra_labelpad (float, optional): any extra label padding to be applied.
+            If cbar_labelpad is not None, this is ignored. Defaults to 0.0.
         cbar_padding (float, optional): the padding to apply to the colorbar
             relative to the array of axes. Defaults to 0.0.
         cbar_thickness (float, optional): how thick to make the colorbar.
@@ -165,12 +175,15 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
     # ------------------------------------------------------------------------ #
     # Make colorbar
     # ------------------------------------------------------------------------ #
+    cbar_format_str = cbar_format
     cbar_ticks, cbar_format = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
     cb = fig.colorbar(cf, cax=cbar_ax, format=cbar_format, ticks=cbar_ticks,
                       orientation=orientation, ticklocation=location,
                       extend=extend, **colorbar_kwargs)
 
     if cbar_label is not None:
+        cbar_labelpad = tomplot_cbar_labelpad(cbar_labelpad, extra_labelpad,
+                                              cbar_format_str, location, cb)
         cb.set_label(cbar_label, loc=location, labelpad=cbar_labelpad)
 
 
@@ -218,4 +231,79 @@ def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
         else:
             cbar_format = "{x:.3g}"
 
+    elif cbar_format is not None:
+        cbar_format = "{x:"+cbar_format+"}"
+
     return cbar_ticks, cbar_format
+
+
+def tomplot_cbar_labelpad(cbar_labelpad, extra_labelpad, cbar_format_str,
+                          location, colorbar):
+    """
+    Determines a reasonable padding for the colorbar label. This assumes that
+    only the upper and lower limits of the colorbar have tick labels.
+
+    Args:
+        cbar_labelpad (float): manually specified labelpad to use.
+        extra_labelpad (float): any extra label padding that can be added to the
+            calculated padding.
+        cbar_format_str (str): the formatting string for the colorbar ticklabels
+        location (str): location of the colorbar.
+        colorbar (`matplotlib.colorbar.Colorbar`): the colorbar to be labelled.
+    """
+
+    assert location in ['top', 'bottom', 'right', 'left', None], \
+        f'location {location} not valid.'
+
+    if cbar_format_str is None:
+        cbar_format_str = '.2f'
+
+    if cbar_labelpad is not None:
+        return cbar_labelpad
+
+    # Do nothing for horizontal colorbars
+    if location in ['top', 'bottom']:
+        return None
+
+    # Do nothing if we have multiple ticks
+    if len(colorbar.get_ticks()) > 2:
+        return None
+
+    # Translate cbar_format into number of digits
+    digits = 0  # Initial value
+    cbar_format_str_split = cbar_format_str.split('.')
+    if len(cbar_format_str_split) != 2:
+        warnings.warn('Unable to work out digits for cbar labelpadding. '
+                      + 'Falling back to default.')
+        return None
+
+    # Don't take part before decimal point
+    cbar_format_str = cbar_format_str_split[1]
+
+    for character in ['b', 'c', 'd', 'f', 'F', 's', '%']:
+        if character in cbar_format_str:
+            cbar_format_str = cbar_format_str.replace(character, '')
+            # Probably a float, work out number of digits from cbar ticks
+            max_tick_value = np.max(np.abs(colorbar.get_ticks()))
+            if max_tick_value >= 10:
+                digits = int(np.floor(np.log10(max_tick_value))) + 1
+            else:
+                digits = 1
+
+    # Replace expontential identifiers with more digits
+    for character in ['e', 'E', 'g', 'G']:
+        if character in cbar_format_str:
+            cbar_format_str = cbar_format_str.replace(character, '4')
+            digits = 1
+
+    for character in cbar_format_str:
+        digits += int(character)
+
+    # Assume we are using the default font size for the cbar ticks
+    fontsize = plt.rcParams['font.size']
+
+    # Multiply num digits by fontsize
+    factor = 0.45  # empirically determined
+    cbar_labelpad = -factor*digits*fontsize + extra_labelpad
+
+    return cbar_labelpad

@@ -46,7 +46,7 @@ contours = tomplot_contours(field_data)
 cmap, lines = tomplot_cmap(contours, colour_scheme, remove_contour=contour_to_remove)
 cf, _ = plot_contoured_field(ax, coords_X, coords_Y, field_data, contour_method,
                              contours, cmap=cmap, line_contours=lines)
-add_colorbar_ax(ax, cf, field_label, cbar_labelpad=-50)
+add_colorbar_ax(ax, cf, field_label)
 apply_gusto_domain(ax, data_file)
 tomplot_field_title(ax, f't = {time:.1f}', minmax=True, field_data=field_data)
 # ---------------------------------------------------------------------------- #
