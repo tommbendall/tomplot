@@ -203,10 +203,16 @@ def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
                 markersize = tomplot_field_markersize(
                     field_data, marker_scaling=marker_scaling, ax=ax)
 
-            cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
-                            vmin=contours[0], vmax=contours[-1], cmap=cmap,
-                            alpha=transparency, transform=transform_crs,
-                            **kwargs)
+            if transform_crs is None:
+                # Need to do this separately to ensure that points are plotted
+                cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
+                                vmin=contours[0], vmax=contours[-1], cmap=cmap,
+                                alpha=transparency, **kwargs)
+            else:
+                cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
+                                vmin=contours[0], vmax=contours[-1], cmap=cmap,
+                                alpha=transparency, transform=transform_crs,
+                                **kwargs)
 
         # Contour lines may appear as gaps in plot. These can be filled here
         if remove_lines:

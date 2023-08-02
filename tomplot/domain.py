@@ -64,7 +64,7 @@ def apply_gusto_domain(ax, dataset, slice_along=None, units=None, xlabel=True,
             units = 'deg'
     else:
         raise NotImplementedError(f'apply_gusto_domain: domain {domain} '
-                                  +' either not implemented or recognised')
+                                  + ' either not implemented or recognised')
 
     # ------------------------------------------------------------------------ #
     # Work out domain extent based on the domain type
@@ -132,7 +132,7 @@ def apply_gusto_domain(ax, dataset, slice_along=None, units=None, xlabel=True,
 
     else:
         raise NotImplementedError(f'apply_gusto_domain: domain {domain} '
-                                  +' either not implemented or recognised')
+                                  + ' either not implemented or recognised')
 
     # ------------------------------------------------------------------------ #
     # Apply domain limits and labels
@@ -146,16 +146,16 @@ def apply_gusto_domain(ax, dataset, slice_along=None, units=None, xlabel=True,
     ax.set_yticklabels(ylims)
 
     # Apply labels. Possibly these have been specified by the user.
-    if stored_xlabel == True:
+    if stored_xlabel is True:
         ax.set_xlabel(xlabel, labelpad=xlabelpad)
-    elif stored_xlabel == False:
+    elif stored_xlabel is False:
         pass
     else:
         ax.set_xlabel(stored_xlabel, labelpad=xlabelpad)
 
-    if stored_ylabel == True:
+    if stored_ylabel is True:
         ax.set_ylabel(ylabel, labelpad=ylabelpad)
-    elif stored_ylabel == False:
+    elif stored_ylabel is False:
         pass
     else:
         ax.set_ylabel(stored_ylabel, labelpad=ylabelpad)

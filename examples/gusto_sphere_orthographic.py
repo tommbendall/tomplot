@@ -34,7 +34,7 @@ colour_scheme = 'RdYlBu_r'
 field_label = r'$D \ / $ m'
 time_idx = -1
 contour_method = 'contour'  # Best method for orthographic projection
-remove_contour = 10000.
+contour_to_remove = 10000.
 # We need to regrid onto lon-lat grid -- specify that here
 lon_1d = np.linspace(-180.0, 180.0, 80)
 lat_1d = np.linspace(-90, 90, 80)
@@ -63,7 +63,7 @@ field_data = regrid_horizontal_slice(coords_lon, coords_lat, orig_coords_lon,
                                      periodic_fix='sphere')
 
 contours = tomplot_contours(field_data)
-cmap, lines = tomplot_cmap(contours, colour_scheme, remove_contour=remove_contour)
+cmap, lines = tomplot_cmap(contours, colour_scheme, remove_contour=contour_to_remove)
 
 # Loop through subplots
 for i, (spherical_centre, subtitle) in \

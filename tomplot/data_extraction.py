@@ -29,7 +29,7 @@ def extract_gusto_field(dataset, field_name, time_idx=None):
     if time_idx is None:
         time_idx = slice(None, None)
 
-    field_data = dataset[field_name]['field_values'][:,time_idx]
+    field_data = dataset[field_name]['field_values'][:, time_idx]
 
     return field_data
 
@@ -73,7 +73,7 @@ def extract_gusto_coords(dataset, field_name, units=None):
             units = 'deg'
     else:
         raise NotImplementedError(f'extract_gusto_coords: domain {domain} '
-                                  +' either not implemented or recognised')
+                                  + ' either not implemented or recognised')
 
     # ------------------------------------------------------------------------ #
     # Set unit factors
@@ -114,7 +114,7 @@ def extract_gusto_coords(dataset, field_name, units=None):
         return coords_X, coords_Y, coords_Z
     else:
         raise NotImplementedError(f'extract_gusto_coords: domain {domain} '
-                                  +' either not implemented or recognised')
+                                  + ' either not implemented or recognised')
 
 
 def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
@@ -140,16 +140,16 @@ def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
 
     # 3D data
     if len(dataset[field_name].dimensions) == 3:
-        field_data = dataset[field_name][time_idx,level,:]
+        field_data = dataset[field_name][time_idx, level, :]
 
     # 2D time-varying field
     elif (len(dataset[field_name].dimensions) == 2
           and dataset[field_name].dimensions[0] == 'time'):
-        field_data = dataset[field_name][time_idx,:]
+        field_data = dataset[field_name][time_idx, :]
 
     # 3D non-time-varying field
     elif len(dataset[field_name].dimensions) == 2:
-        field_data = dataset[field_name][level,:]
+        field_data = dataset[field_name][level, :]
 
     # 2D non-time-varying field
     elif len(dataset[field_name].dimensions) == 1:
@@ -223,14 +223,14 @@ def extract_lfric_heights(height_dataset, field_dataset, field_name, level=None)
 
     # Work out which level this should be on
     if (field_dataset[field_name].dimensions[1] == 'half_levels'
-        and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
+            and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
         height_name = 'height_w3'
     elif (field_dataset[field_name].dimensions[1] == 'full_levels'
           and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
         height_name = 'height_wth'
     else:
         raise NotImplementedError(f'Dimensions for {field_name} are not '
-            + 'implemented so cannot work out height field')
+                                  + 'implemented so cannot work out height field')
 
     # If time_idx or level are None, we would index array as : and extract the
     # whole field - make equivalent slice objects to this to simplify code below
@@ -240,13 +240,13 @@ def extract_lfric_heights(height_dataset, field_dataset, field_name, level=None)
     # Data may be time-varying or not, so these cases need handling separately
     if len(height_dataset[height_name].dimensions) == 2:
         # Initial data with no time value
-        heights = height_dataset[height_name][level,:]
+        heights = height_dataset[height_name][level, :]
     elif len(height_dataset[height_name].dimensions) == 3:
         # 3D data -- take the first time value
-        heights = height_dataset[height_name][0,level,:]
+        heights = height_dataset[height_name][0, level, :]
     else:
         raise RuntimeError(f'Trying to extract {height_name} field, but '
-                            + 'the array is not 2D or 3D, so cannot proceed')
+                           + 'the array is not 2D or 3D, so cannot proceed')
 
     return heights
 
@@ -381,7 +381,7 @@ def extract_lfric_vertical_slice(field_dataset, field_name, time_idx,
             coords_Z_final = np.zeros((len_data, num_levels))
 
         # Populate data arrays
-        field_data[:,lev_idx] = slice_df['field_data'].values
+        field_data[:, lev_idx] = slice_df['field_data'].values
         coords_X_final[:, lev_idx] = slice_df[local_X_coord].values
         coords_Y_final[:, lev_idx] = slice_df[local_slice_along].values
         coords_Z_final[:, lev_idx] = level if height_dataset is None else slice_df['height'].values
@@ -455,7 +455,7 @@ def extract_gusto_vertical_slice(field_dataset, field_name, time_idx,
     if panel_ids is not None:
         field_data, coords_X, coords_Y, coords_Z, panel_ids = \
             reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z,
-                               other_arrays=panel_ids)
+                               other_arrays=[panel_ids])
     else:
         field_data, coords_X, coords_Y, coords_Z = \
             reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z)
@@ -499,7 +499,7 @@ def extract_gusto_vertical_slice(field_dataset, field_name, time_idx,
             # Try to get 5% of values
             max_coord = np.max(df[local_slice_along].values)
             min_coord = np.min(df[local_slice_along].values)
-            tolerance = 0.05* (max_coord - min_coord)
+            tolerance = 0.05 * (max_coord - min_coord)
             slice_df = df[np.abs(df[local_slice_along] - slice_at) < tolerance]
 
             # Additionally filter based on panel
@@ -518,7 +518,7 @@ def extract_gusto_vertical_slice(field_dataset, field_name, time_idx,
             coords_Z_final = np.zeros((len_data, num_levels))
 
         # Populate data arrays
-        field_data_final[:,lev_idx] = slice_df['field_data'].values
+        field_data_final[:, lev_idx] = slice_df['field_data'].values
         coords_X_final[:, lev_idx] = slice_df[local_X_coord].values
         coords_Y_final[:, lev_idx] = slice_df[local_slice_along].values
         coords_Z_final[:, lev_idx] = slice_df['Z'].values
@@ -526,7 +526,8 @@ def extract_gusto_vertical_slice(field_dataset, field_name, time_idx,
     return field_data_final, coords_X_final, coords_Y_final, coords_Z_final
 
 
-def reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z, other_arrays=None):
+def reshape_gusto_data(field_data, coords_X, coords_Y_or_Z, coords_Z_3d=None,
+                       other_arrays=None):
     """
     Reshapes an unstructured data array to introduce vertical structure.
 
@@ -537,8 +538,11 @@ def reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z, other_arrays=No
     Args:
         field_data (`numpy.ndarray`): unstructured field data array.
         coords_X (`numpy.ndarray`): unstructured array of X coordinates.
-        coords_Y (`numpy.ndarray`): unstructured array of Y coordinates.
-        coords_Z (`numpy.ndarray`): unstructured array of Y coordinates.
+        coords_Y_or_Z (`numpy.ndarray`): unstructured array of Y or Z coords.
+            When the data is 2D (e.g. a vertical slice) this should be Z coords.
+        coords_Z_3d (`numpy.ndarray`, optional): unstructured array of Z coords.
+            Defaults to None, as this should not be specified for 2D data. For
+            3D data, this should be specified.
         other_arrays (list, optional): iterable of other data arrays to be
             reshaped in the same way. Must be of the same shape as the field
             data. Defaults to None.
@@ -547,13 +551,45 @@ def reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z, other_arrays=No
         tuple of `numpy.ndarrays`: (field_data, coords_X, coords_Y, coords_Z)
             that are now structured to have horizontal data in a separate
             dimension from vertical data. If the `other_arrays` argument is
-            provided, this is also returned.
+            provided, this is also returned. If the data is 2D, this will be
+            (field_data, coords_X, coords_Z)
     """
+
+    if coords_Z_3d is None:
+        data_is_3d = False
+        coords_Y = None
+        coords_Z = coords_Y_or_Z
+    else:
+        data_is_3d = True
+        coords_Y = coords_Y_or_Z
+        coords_Z = coords_Z_3d
 
     if other_arrays is None:
         other_arrays = []
 
-    data_dict = {'field': field_data, 'X': coords_X, 'Y': coords_Y, 'Z': coords_Z}
+    # ------------------------------------------------------------------------ #
+    # Round data to ensure sorting in dataframe is OK
+    # ------------------------------------------------------------------------ #
+
+    # Work out digits to round to, based on number of points and range of coords
+    num_points = np.size(coords_X)
+    data_range = np.max(coords_X) - np.min(coords_X)
+    digits = int(np.floor(-np.log10(data_range / num_points)) + 3)
+    coords_X = coords_X.round(digits)
+
+    if data_is_3d:
+        data_range = np.max(coords_Y) - np.min(coords_Y)
+        digits = int(np.floor(-np.log10(data_range / num_points)) + 3)
+        coords_Y = coords_Y.round(digits)
+
+    # ------------------------------------------------------------------------ #
+    # Make data frame
+    # ------------------------------------------------------------------------ #
+
+    data_dict = {'field': field_data, 'X': coords_X, 'Z': coords_Z}
+    if coords_Y is not None:
+        data_dict['Y'] = coords_Y
+
     for idx, other_array in enumerate(other_arrays):
         assert np.shape(other_array) == np.shape(field_data), \
             'reshape_gusto_data: shape of other array must match the field'
@@ -563,35 +599,53 @@ def reshape_gusto_data(field_data, coords_X, coords_Y, coords_Z, other_arrays=No
     data = pd.DataFrame(data_dict)
 
     # Sort array by X and Y coordinates
-    data = data.sort_values(by=['X', 'Y', 'Z'])
+    if data_is_3d:
+        data = data.sort_values(by=['X', 'Y', 'Z'])
+        first_X, first_Y = data['X'].values[0], data['Y'].values[0]
+        first_point = data[(np.isclose(data['X'], first_X))
+                           & (np.isclose(data['Y'], first_Y))]
+
+    else:
+        data = data.sort_values(by=['X', 'Z'])
+        first_X = data['X'].values[0]
+        first_point = data[np.isclose(data['X'], first_X)]
 
     # Number of levels should correspond to the number of points with the first
-    # X and Y coordinate values
-    first_X, first_Y = data['X'].values[0], data['Y'].values[0]
-    first_point = data[(np.isclose(data['X'], first_X)) &
-                       (np.isclose(data['Y'], first_Y))]
+    # coordinate values
     num_levels = len(first_point)
     assert len(data) % num_levels == 0, 'Unable to nicely divide data into levels'
 
+    # ------------------------------------------------------------------------ #
     # Create new arrays to store structured data
+    # ------------------------------------------------------------------------ #
+
     num_hori_points = int(len(data) / num_levels)
     field_data = np.zeros((num_hori_points, num_levels))
     coords_X = np.zeros((num_hori_points, num_levels))
-    coords_Y = np.zeros((num_hori_points, num_levels))
+    if data_is_3d:
+        coords_Y = np.zeros((num_hori_points, num_levels))
     coords_Z = np.zeros((num_hori_points, num_levels))
-    new_other_arrays = [np.zeros((num_hori_points, num_levels)) for other in other_arrays]
+    new_other_arrays = [np.zeros((num_hori_points, num_levels)) for _ in other_arrays]
 
+    # ------------------------------------------------------------------------ #
     # Fill arrays, on the basis of the dataframe already being sorted
+    # ------------------------------------------------------------------------ #
+
     for lev_idx in range(num_levels):
         data_slice = slice(lev_idx, num_hori_points*num_levels+lev_idx, num_levels)
         field_data[:, lev_idx] = data['field'].values[data_slice]
         coords_X[:, lev_idx] = data['X'].values[data_slice]
-        coords_Y[:, lev_idx] = data['Y'].values[data_slice]
+        if data_is_3d:
+            coords_Y[:, lev_idx] = data['Y'].values[data_slice]
         coords_Z[:, lev_idx] = data['Z'].values[data_slice]
         for idx, _ in enumerate(other_arrays):
             new_other_arrays[idx][:, lev_idx] = data[f'other_{idx}'].values[data_slice]
 
-    if len(new_other_arrays) > 0:
+    if len(new_other_arrays) > 0 and data_is_3d:
         return field_data, coords_X, coords_Y, coords_Z, new_other_arrays
-    else:
+    elif data_is_3d:
         return field_data, coords_X, coords_Y, coords_Z
+    elif len(new_other_arrays) > 0:
+        return field_data, coords_X, coords_Z, new_other_arrays
+    else:
+        return field_data, coords_X, coords_Z

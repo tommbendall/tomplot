@@ -6,13 +6,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
+import warnings
 
 __all__ = ['set_tomplot_style', 'tomplot_field_title', 'tomplot_cmap',
            'tomplot_field_markersize', 'tomplot_contours', 'rounded_limits',
-           'work_out_cmap_extension']
+           'work_out_cmap_extension', 'only_minmax_ticklabels',
+           'tomplot_legend_ax', 'tomplot_legend_fig']
 
 
-def set_tomplot_style(fontsize=16, family='serif'):
+def set_tomplot_style(fontsize=16, family='serif', usetex=True):
     """
     Set some initial matplotlib variables to use a nice tomplot style. By
     default this will use latex formatting.
@@ -20,9 +22,16 @@ def set_tomplot_style(fontsize=16, family='serif'):
     Args:
         fontsize (int, optional): default fontsize to use. Defaults to 48.
         family (str, optional): family of font to use. Defaults to "serif".
+        usetex (bool, optional): whether to use Latex fonts.
     """
 
-    plt.rc('text', usetex=True)
+    try:
+        # This will fail if latex is not installed
+        plt.rc('text', usetex=usetex)
+    except RuntimeError:
+        warnings.warn('Unable to use Latex, falling back to default fonts')
+
+    # Set options relating to font
     font_opts = {'size': fontsize, 'family': family}
     plt.rc('font', **font_opts)
 
@@ -199,6 +208,16 @@ def tomplot_cmap(contours, color_scheme='Blues',
                 # If we get here then we have not found this contour
                 raise ValueError('contour %.3f was not found' % remove_contour)
 
+            elif level_to_remove == 0:
+                raise ValueError(
+                    f'Requested removal of contour at {remove_contour}. Cannot '
+                    + 'remove this as it is the first contour.')
+
+            elif level_to_remove == len(contours):
+                raise ValueError(
+                    f'Requested removal of contour at {remove_contour}. Cannot '
+                    + 'remove this as it is the last contour.')
+
         else:
             raise ValueError('remove_contour %s not recognised' % remove_contour)
 
@@ -349,10 +368,9 @@ def roundup(number, digits=0):
     Returns:
         float: the rounded number.
     """
-    import math
 
     n = 10**-digits
-    return round(math.ceil(number / n) * n, digits)
+    return round(np.ceil(number / n) * n, int(digits))
 
 
 def rounddown(number, digits=0):
@@ -366,13 +384,13 @@ def rounddown(number, digits=0):
     Returns:
         float: the rounded number.
     """
-    import math
 
     n = 10**-digits
-    return round(math.floor(number / n) * n, digits)
+    return round(np.floor(number / n) * n, int(digits))
 
 
-def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
+def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
+                     zero_tolerance=1e-32, zero_num_bins=3):
     """
     Generates some nice rounded contour values from a dataset. This can be used
     to make a quick plot from uninspected data. Contours are always picked to
@@ -385,6 +403,10 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
         divergent_flag (boolean, optional): whether to enforce that a divergent
             profile is expected, to give results that are symmetric around 0.
             Defaults to False.
+        zero_tolerance (float, optional): for ranges below this, the data is
+            considered to be constant. Defaults to 1e-15.
+        zero_num_bins (int, optional): the number of bins to use when data is
+            considered to have a range of zero. Defaults to 3.
 
     Returns:
         `numpy.array`: a 1D array of points to use as contours.
@@ -393,8 +415,6 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
     # ------------------------------------------------------------------------ #
     # Round mins and maxes to nice numbers
     # ------------------------------------------------------------------------ #
-
-    import math
 
     raw_max = np.amax(data)
     raw_min = np.amin(data)
@@ -409,31 +429,54 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
     # ------------------------------------------------------------------------ #
     # Loop through rounding digits until we have nice rounded mins/maxes
     # ------------------------------------------------------------------------ #
-    # If the real range if less than half of the discrete range,
-    # round to the next digit
-    while discrete_diff > 2.0*(raw_max - raw_min):
+    if (raw_max - raw_min) > zero_tolerance:
+        # If the real range if less than half of the discrete range,
+        # round to the next digit
+        while discrete_diff > 2.0*(raw_max - raw_min):
 
-        if (raw_max - raw_min > 0):
-            digits = math.floor(-np.log10(raw_max - raw_min)) + digit_inc
-        else:
-            digits = 1
-
-        if (raw_min < 0 and raw_max > 0):
-            # How symmetric are these around zero?
-            max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
-            min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
-            if divergent_flag or min_abs > 0.5*max_abs:
-                data_max = roundup(max_abs, digits=digits)
-                data_min = - data_max
+            if (raw_max - raw_min > 0):
+                digits = int(np.floor(-np.log10(raw_max - raw_min)) + digit_inc)
             else:
-                data_max = roundup(raw_max, digits=digits)
-                data_min = rounddown(raw_min, digits=digits)
-        else:
-            data_min = rounddown(raw_min, digits=digits)
-            data_max = roundup(raw_max, digits=digits)
+                digits = 1
 
-        discrete_diff = data_max - data_min
-        digit_inc += 1  # Loop again to next digit if necessary
+            if (raw_min < 0 and raw_max > 0):
+                # How symmetric are these around zero?
+                max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
+                min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
+                if divergent_flag or min_abs > 0.5*max_abs:
+                    data_max = roundup(max_abs, digits=digits)
+                    data_min = - data_max
+                else:
+                    data_max = roundup(raw_max, digits=digits)
+                    data_min = rounddown(raw_min, digits=digits)
+            else:
+                data_min = rounddown(raw_min, digits=digits)
+                data_max = roundup(raw_max, digits=digits)
+
+            discrete_diff = data_max - data_min
+            digit_inc += 1  # Loop again to next digit if necessary
+
+    else:
+        # Data is considered to be zero
+        if raw_max > 0:
+            digits = int(np.floor(-np.log10(raw_max)) + 3)
+        elif raw_min < 0:
+            digits = int(np.floor(-np.log10(- raw_min)) + 3)
+        else:
+            digits = 3
+
+        data_central = round(raw_max, digits)
+        data_min = rounddown(raw_min, digits=digits)
+        data_max = roundup(raw_max, digits=digits)
+        if data_central == data_min:
+            data_min -= (data_max - data_central)
+        elif data_central == data_max:
+            data_max += (data_central - data_min)
+
+        if data_min == data_max:
+            # We probably have zero here, just set some values
+            data_min -= -0.001
+            data_max += 0.001
 
     # ------------------------------------------------------------------------ #
     # Find a nice step for contours
@@ -442,8 +485,8 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
     max_step = (data_max - data_min) / min_num_bins
 
     # To be safe, only make contours when we have non-zero data
-    if max_step > 1e-32:
-        step_digits = math.floor(-np.log10(max_step))
+    if (raw_max - raw_min) > zero_tolerance:
+        step_digits = int(np.floor(-np.log10(max_step)))
         # Find an even bigger maximum step by rounding max_step up
         max_max_step = roundup(max_step, digits=step_digits)
 
@@ -466,7 +509,7 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False):
 
     # Data is entirely zero, so return only two contours
     else:
-        contours = np.array([data_min, data_max])
+        contours = np.linspace(data_min, data_max, zero_num_bins+1)
 
     return contours
 
@@ -491,3 +534,272 @@ def rounded_limits(data, divergent_flag=False):
     data_max = nice_contours[-1]
 
     return data_min, data_max
+
+
+def only_minmax_ticklabels(ax):
+    """
+    Changes the tick labels on a plot so that only the minimum and maximum
+    values are included.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot the field on.
+    """
+
+    xlims = ax.get_xlim()
+    ylims = ax.get_ylim()
+    xticks = ax.get_xticks()
+    yticks = ax.get_yticks()
+
+    # Work out where lowest visible xtick is
+    lowest_visible_xtick = 0
+    for tick_idx, xtick in enumerate(xticks):
+        if xtick >= xlims[0]:
+            lowest_visible_xtick = tick_idx
+            break
+
+    # Work out where highest visible xtick is
+    highest_visible_xtick = len(xticks) - 1
+    for tick_idx, xtick in enumerate(np.flip(xticks)):
+        if xtick <= xlims[-1]:
+            highest_visible_xtick = len(xticks) - 1 - tick_idx
+            break
+
+    # Work out where lowest visible ytick is
+    lowest_visible_ytick = 0
+    for tick_idx, ytick in enumerate(yticks):
+        if ytick >= ylims[0]:
+            lowest_visible_ytick = tick_idx
+            break
+
+    # Work out where highest visible ytick is
+    highest_visible_ytick = len(yticks) - 1
+    for tick_idx, ytick in enumerate(np.flip(yticks)):
+        if ytick <= ylims[-1]:
+            highest_visible_ytick = len(yticks) - 1 - tick_idx
+            break
+
+    old_xticklabels = ax.get_xticklabels()
+    old_yticklabels = ax.get_yticklabels()
+
+    # Set most tick labels to be an empty string
+    new_xticklabels = ['' for _ in old_xticklabels]
+    new_yticklabels = ['' for _ in old_yticklabels]
+
+    # Still keep min and max values
+    new_xticklabels[lowest_visible_xtick] = old_xticklabels[lowest_visible_xtick]
+    new_xticklabels[highest_visible_xtick] = old_xticklabels[highest_visible_xtick]
+    new_yticklabels[lowest_visible_ytick] = old_yticklabels[lowest_visible_ytick]
+    new_yticklabels[highest_visible_ytick] = old_yticklabels[highest_visible_ytick]
+
+    ax.set_xticklabels(new_xticklabels)
+    ax.set_yticklabels(new_yticklabels)
+
+
+def tomplot_legend_fig(fig, location='top', extra_padding=0.0, **leg_kwargs):
+    """
+    Adds a legend to the outside of a figure.
+
+    This is appropriate for quickly adding a legend to a plot. If you need to
+    precisely specify the position of a legend, or include the legend within the
+    figure it would be better to directly use plt.legend(). The strategy here is
+    to create the legend and then move it to a position outside of the plot.
+
+    Args:
+        fig (:class:`Figure`): the pyplot figure object to plot on.
+        location (str, optional): denotes where the legend will be. Implemented
+            options are "bottom", "top", "lower center" and "upper center".
+            Defaults to "top".
+        extra_padding (float, optional): padding to be provided to the legend
+            relative to the figure and its associated artists. Defaults to 0.0.
+        **leg_kwargs: keyword arguments to be passed to the underlying pyplot
+            legend routine.
+    """
+
+    # ------------------------------------------------------------------------ #
+    # Checks and convert location to simplify code
+    # ------------------------------------------------------------------------ #
+    if location not in ['bottom', 'top', 'lower center', 'upper center']:
+        raise NotImplementedError(f'legend location {location} not implemented')
+
+    if location == 'bottom':
+        leg_location = 'lower center'
+    elif location == 'top':
+        leg_location = 'upper center'
+    else:
+        leg_location = location
+
+    if leg_location == 'lower center':
+        padding = 0.08 + extra_padding
+    else:
+        padding = 0.06 + extra_padding
+
+    # ------------------------------------------------------------------------ #
+    # Work out all handles and labels
+    # ------------------------------------------------------------------------ #
+
+    # Gather all legend handles/labels from different axes
+    all_handles = []
+    all_labels = []
+    for ax in fig.get_axes():
+        handles, labels = ax.get_legend_handles_labels()
+        all_handles += handles
+        all_labels += labels
+
+    # Now extract only unique handles and labels
+    unique_handles_labels = []
+    handles = []
+    labels = []
+    for handle, label in zip(all_handles, all_labels):
+        if f'{handle}_{label}' not in unique_handles_labels:
+            unique_handles_labels.append(f'{handle}_{label}')
+            handles.append(handle)
+            labels.append(label)
+
+    # ------------------------------------------------------------------------ #
+    # Work out ax extent
+    # ------------------------------------------------------------------------ #
+    # ax.get_tightbox is the bbox containing all the axes labels
+    # this uses display coordinates
+    fig_tightbbox = fig.get_tightbbox()
+
+    # the extent is a larger bbox which we can use to work out the transform
+    extent_display_coords = fig.get_window_extent()
+    # To extract the bbox in ax coords, need to add ._bbox
+    extent_ax_coords = extent_display_coords._bbox
+
+    # Use relationship between extent display and ax coordinates to work out
+    # the transform for the tightbox to the ax coordinates
+    y_gradient = ((extent_ax_coords.ymax - extent_ax_coords.ymin)
+                  / (extent_display_coords.ymax - extent_display_coords.ymin))
+    y_intercept = extent_ax_coords.ymin - y_gradient * extent_display_coords.ymin
+    fig_ymin = fig_tightbbox.ymin * y_gradient + y_intercept
+    fig_ymax = fig_tightbbox.ymax * y_gradient + y_intercept
+
+    # ------------------------------------------------------------------------ #
+    # Make legend (first)
+    # ------------------------------------------------------------------------ #
+    # Make legend to find the extent of the legend
+    leg = fig.legend(handles, labels, loc=leg_location, **leg_kwargs)
+
+    # ------------------------------------------------------------------------ #
+    # Work out legend extent
+    # ------------------------------------------------------------------------ #
+
+    # the bbox to anchor is larger and is used to work out the transform
+    leg_display_bbox = leg.get_bbox_to_anchor()
+    # To extract the bbox in ax coords, need to add ._bbox
+    leg_ax_bbox = leg_display_bbox._bbox
+
+    # Other coordinates can be taken from the ax_bbox
+    leg_xmin = leg_ax_bbox.xmin
+
+    # ------------------------------------------------------------------------ #
+    # Move legend
+    # ------------------------------------------------------------------------ #
+    # Work out new bbox
+    if location in ['bottom', 'lower center']:
+        new_bbox = (leg_xmin, fig_ymin - padding, 1.0, 1.0)
+    elif location in ['top', 'upper center']:
+        new_bbox = (leg_xmin, fig_ymax + padding, 1.0, 1.0)
+
+    # Set new position
+    leg.set_bbox_to_anchor(new_bbox)
+
+
+def tomplot_legend_ax(ax, location='top', extra_padding=0.0, **leg_kwargs):
+    """
+    Adds a legend to the outside of an Axes.
+
+    This is appropriate for quickly adding a legend to a plot. If you need to
+    precisely specify the position of a legend, or include the legend within the
+    axes it would be better to directly use plt.legend(). The strategy here is
+    to create the legend and then move it to a position outside of the plot.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot on.
+        location (str, optional): denotes where the legend will be. Implemented
+            options are "bottom", "top", "lower center" and "upper center".
+            Defaults to "top".
+        extra_padding (float, optional): padding to be provided to the legend
+            relative to the axes and its associated artist. Defaults to 0.0.
+        **leg_kwargs: keyword arguments to be passed to the underlying pyplot
+            legend routine.
+    """
+
+    # ------------------------------------------------------------------------ #
+    # Checks and convert location to simplify code
+    # ------------------------------------------------------------------------ #
+    if location not in ['bottom', 'top', 'lower center', 'upper center']:
+        raise NotImplementedError(f'legend location {location} not implemented')
+
+    if location == 'bottom':
+        leg_location = 'lower center'
+    elif location == 'top':
+        leg_location = 'upper center'
+    else:
+        leg_location = location
+
+    if leg_location == 'lower center':
+        padding = 0.25 + extra_padding
+    else:
+        padding = 0.25 + extra_padding
+
+    # ------------------------------------------------------------------------ #
+    # Work out ax extent
+    # ------------------------------------------------------------------------ #
+    # ax.get_tightbox is the bbox containing all the axes labels
+    # this uses display coordinates
+    ax_tightbbox = ax.get_tightbbox()
+
+    # the extent is a larger bbox which we can use to work out the transform
+    extent_display_coords = ax.get_window_extent()
+    # To extract the bbox in ax coords, need to add ._bbox
+    extent_ax_coords = extent_display_coords._bbox
+
+    # Use relationship between extent display and ax coordinates to work out
+    # the transform for the tightbox to the ax coordinates
+    y_gradient = ((extent_ax_coords.ymax - extent_ax_coords.ymin)
+                  / (extent_display_coords.ymax - extent_display_coords.ymin))
+    y_intercept = extent_ax_coords.ymin - y_gradient * extent_display_coords.ymin
+    ax_ymin = ax_tightbbox.ymin * y_gradient + y_intercept
+    ax_ymax = ax_tightbbox.ymax * y_gradient + y_intercept
+
+    # ------------------------------------------------------------------------ #
+    # Make legend (first)
+    # ------------------------------------------------------------------------ #
+    # Make legend to find the extent of the legend
+    leg = plt.legend(loc=leg_location, **leg_kwargs)
+
+    # ------------------------------------------------------------------------ #
+    # Work out legend extent
+    # ------------------------------------------------------------------------ #
+    # leg.get_tightbox is the tight bbox containing the legend
+    # this uses display coordinates
+    leg_tightbbox = leg.get_tightbbox()
+
+    # the bbox to anchor is larger and is used to work out the transform
+    leg_display_bbox = leg.get_bbox_to_anchor()
+    # To extract the bbox in ax coords, need to add ._bbox
+    leg_ax_bbox = leg_display_bbox._bbox
+
+    # Use relationship between extent display and ax coordinates to work out
+    # the transform for the tightbox to the ax coordinates
+    y_gradient = ((leg_ax_bbox.ymax - leg_ax_bbox.ymin)
+                  / (leg_display_bbox.ymax - leg_display_bbox.ymin))
+    leg_height = (leg_tightbbox.ymax - leg_tightbbox.ymin) * y_gradient
+
+    # Other coordinates can be taken from the ax_bbox
+    leg_xmin = leg_ax_bbox.xmin
+    leg_width = leg_ax_bbox.xmax - leg_ax_bbox.xmin
+
+    # ------------------------------------------------------------------------ #
+    # Move legend
+    # ------------------------------------------------------------------------ #
+    # Work out new bbox
+    if location in ['bottom', 'lower center']:
+        new_bbox = (leg_xmin, ax_ymin - padding - leg_height, leg_width, leg_height)
+    elif location in ['top', 'upper center']:
+        new_bbox = (leg_xmin, ax_ymax + padding, leg_width, leg_height)
+
+    # Set new position
+    leg.set_bbox_to_anchor(new_bbox)

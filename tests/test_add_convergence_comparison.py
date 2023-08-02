@@ -2,6 +2,7 @@
 This tests the routine to add a comparison line to a convergence plot.
 """
 
+import matplotlib
 import matplotlib.pyplot as plt
 from tomplot import (plot_convergence, add_convergence_comparison_line,
                      tomplot_field_title, set_tomplot_style)
@@ -51,3 +52,6 @@ def test_add_convergence_comparison(log_by, plot_setup):
 
     tomplot_field_title(ax, title)
     setup.make_plots(plot_name)
+
+    # Restore the default style
+    matplotlib.style.use('default')

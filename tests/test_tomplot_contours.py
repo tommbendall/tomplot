@@ -8,7 +8,7 @@ import pytest
 
 situations = ["single_digits", "negative_symmetric", "negative_asymmetric",
               "theta_type", "single_digits_to_teens", "below_and_above_one",
-              "single_digits_to_twenties", "tricky_depth"]
+              "single_digits_to_twenties", "tricky_depth", "constant", "zero"]
 
 
 @pytest.mark.parametrize("situation", situations)
@@ -62,6 +62,16 @@ def test_tomplot_contours(situation):
         answer_min, answer_max = 8800, 10200
         answer_step = 100.
         min_num_bins = 12
+    elif situation == 'constant':
+        raw_min, raw_max = 0.58735, 0.58735
+        answer_min, answer_max = 0.586, 0.588
+        answer_step = 0.002 / 3
+        min_num_bins = 3
+    elif situation == 'zero':
+        raw_min, raw_max = 0.0, 0.0
+        answer_min, answer_max = -0.001, 0.001
+        answer_step = 0.002 / 3
+        min_num_bins = 3
     else:
         raise ValueError(f'test_rounded_limits: situation {situation} not implemented')
 
@@ -69,7 +79,7 @@ def test_tomplot_contours(situation):
     # Specify raw values and answers
     # ------------------------------------------------------------------------ #
     data_array = np.array([raw_min, raw_max])
-    answer_contours = np.arange(answer_min, answer_max+answer_step, step=answer_step)
+    answer_contours = np.arange(answer_min, answer_max+answer_step/2.0, step=answer_step)
     nice_contours = tomplot_contours(data_array, min_num_bins=min_num_bins)
     diff = nice_contours - answer_contours
 
