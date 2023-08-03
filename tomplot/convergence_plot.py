@@ -1,304 +1,274 @@
 """
-This file provides some plotting tools
+This file provides tools for quickly making a neat convergence plot, to plot
+error measurements against some independent variable so as to determine the
+order of accuracy of a numerical method.
 """
-import matplotlib.pyplot as plt
-from netCDF4 import Dataset
 import numpy as np
-from .plot_decorations import *
+import warnings
 
-def individual_convergence_plot(dirnames, variable, fields, run_ids, error,
-                                best_fit=True, testname=None, plotdir=None,
-                                override_dirname=False, field_labels=None,
-                                figsize=(8,8), colours=None, markers=None,
-                                linestyles=None, linewidth=2, markersize=8,
-                                fontsize=24, title=None, comparison_lines=None,
-                                ax=None, grid=True, xlabel='default',
-                                ylabel='default', best_fit_deg=1,
-                                xlim=None, ylim=None, legend_bbox=(1.0,1.0),
-                                legend_ncol=1, label_style='gradient_full',
-                                format='png', dpi=None, titlepad=None,
-                                leg_col_spacing=None, leg_fontsize=None):
-    """
-    Makes an individual convergence plot for errors from a global netCDF
-    diagnostics file.
+__all__ = ["plot_convergence", "add_convergence_comparison_line"]
 
-    :arg dirnames:          list of names of the directories with the data
-    :arg variable:          a string giving the name of the variable that we
-                            measure convergence with respect to. e.g. 'dx'.
-    :arg fields:            a single string, or a list of all string giving the
-                            fields to be plotted.
-    :arg run_ids:           a list of IDs for the runs to be plotted. This
-                            should be of the same length as the list of fields.
-                            Can be replaced by a single integer.
-    :arg error:             a string giving the error diagnostic to be plotted
-    :arg best_fit:          (Optional) Boolean to plot best fit lines through
-                            the error points. If True then the gradients of
-                            these lines will be added to the legend labels.
-                            Default is True.
-    :arg testname:          (Optional) a string used for identifying particular
-                            plot parameters and labelling the figures.
-    :arg plotdir:           (Optional) the name of the directory to output the
-                            plots to. If None (the default value) then plotdir
-                            will be the same as dirname.
-    :arg override_dirname:  (Optional) Boolean for determining whether to
-                            override the default path to the dirname.
-    :arg field_labels:      (Optional) a list of labels corresponding to the
-                            fields to be used in the plot legends.
-    :arg figsize:           (Optional) the size of the figure to use. If not
-                            specified then the default is (8,8).
-    :arg colours:           (Optional) a list of colours to use for the markers
-                            and best fit lines. If not specified then will be
-                            auto-picked.
-    :arg markers:           (Optional) the markers to use in the convergence
-                            plot. If not specified then it will be auto-picked.
-    :arg linestyles:        (Optional) the line styles to use for the best fit
-                            lines on the convergence plot. Default is '-'
-    :arg linewidth:         (Optional) the widths to use for the best fit lines.
-                            Default is 2.
-    :arg markersize:        (Optional) the size of the markers to use in the
-                            convergence plot. Default is 8.
-    :arg fontsize:          (Optional) the fontsize to use for axis labels, tick
-                            labels, plot titles and the legend labels.
-    :arg title:             (Optional) a title of the plot. Default is None.
-    :arg comparison_lines:  (Optional) a list of floats that can be used for
-                            giving comparison convergence lines, corresponding
-                            to specific convergence rates. e.g. [1.0, 2.0].
-    :arg ax:                (Optional) a matplotlib.pyplot ax object. If this is
-                            provided, then the plotting will be performed on
-                            this ax and this will then be returned. This could
-                            be useful for making subplots. Otherwise a new fig
-                            and ax will be set up and no plot will be returned.
-    :arg grid:              (Optional) Boolean determining whether to show the
-                            background gridlines or not. Default is True.
-    :arg xlabel:            (Optional) the label for the x-axis. If not provided
-                            then this will be determined from 'variable'.
-    :arg ylabel:            (Optional) the label for the y-axis. If not provided
-                            then this will be determined from 'error'.
-    :arg xlim:              (Optional) the limits for the x-axis. If not given
-                            then just uses the pyplot defaults.
-    :arg ylim:              (Optional) the limits for the y-axis. If not given
-                            then just uses the pyplot defaults.
+
+def plot_convergence(ax, input_data, error_data,
+                     label=None, marker='+', color='black', markersize=None,
+                     # Options relating to logarithms
+                     log_by='data', log_base='e',
+                     # Options relating to best fit lines
+                     best_fit=True, best_fit_deg=1,
+                     linestyle='-', linewidth=None,
+                     gradient_in_label=True, gradient_format='.2f'):
+    u"""
+    Plots the values of some error measurements against their independent
+    variable to determine a convergence rate.
+
+    An example of how to use this routine is to try to determine how the order
+    of accuracy of a numerical method. For instance, if the error of the scheme
+    converges as 𝓞(Δx^2), the order of accuracy is the exponent 2. This can be
+    determined from error measurements, by plotting the measurements as a
+    function of Δx on a log-log plot. The gradient of a line of best fit then
+    approximates the order of accuracy.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot the data on.
+        input_data (`numpy.ndarray`): an array containing the x-axis data. This
+            is likely to correspond to a parameter such as Δx or Δt.
+        error_data (`numpy.ndarray`): an array containing the y-axis data, which
+            corresponds to the error measurements to be plotted.
+        label (str, optional): the label for this set of data, to appear in the
+            legend. If the `gradient_in_label` argument is True, the gradient of
+            a line of best fit will be appended to this label. Defaults to None.
+        marker (str, optional): which type of marker to use for this dataset.
+            Defaults to '+'.
+        color (str, optional): which colour to use for the plotted points and
+            any line of best fit. Defaults to 'black'.
+        markersize (float, optional): the size of markers to use for plotting
+            the data points. Defaults to None.
+        log_by (str, optional): how the plot should handle logarithms. Options
+            are: "data", in which log(error) is plotted against log(input), or
+            "axes" in which the error is plotted against the input but the axes
+            take a logarithmic scale. Defaults to "data".
+        log_base (float, optional): the base to use for the logarithm. Should be
+            a positive float, not equal to 1. Can also be the string "e", which
+            is the default value.
+        best_fit (bool, optional): whether to plot a line of best fit through
+            the data points. Defaults to True.
+        best_fit_deg (int, optional): the order of polynomial to use for the
+            line of best fit. Defaults to 1.
+        linestyle (str, optional): the linestyle to use for the line of best
+            fit. Defaults to '-'.
+        linewidth (float, optional): the linewidth to use for the line of best
+            fit. Defaults to None.
+        gradient_in_label (bool, optional): whether to include the gradient of
+            the line of best fit in the label shown in the legend. If True, this
+            is appended to the `label` argument. Defaults to True.
+        gradient_format (str, optional): the format to use for the gradient
+            that is shown in the label. Defaults to '.2f'.
+
+    Raises:
+        ValueError: if `gradient_in_label` is True, but `best_fit_deg` is not 1.
+        NotImplementedError: plotting a line of best fit for a polynomial that
+            is not 1 when using the log_by="axes" argument.
     """
 
-    # Each field will represent a single line on the plot
-    # Each run ID will be at a different resolution -- each is a point on the plot
+    # ------------------------------------------------------------------------ #
+    # Checks on arguments
+    # ------------------------------------------------------------------------ #
 
-    #--------------------------------------------------------------------------#
-    # Checks
-    #--------------------------------------------------------------------------#
+    assert log_by in ['data', 'axes'], 'convergence plot: the "log_by" ' \
+        + f'argument can take values of "data" or "axes", and not {log_by}'
 
-    # Make results dirnames into an array if only a single string is provided
-    if isinstance(dirnames, str):
-        dirnames = [dirnames]
+    assert (log_base == 'e' or (type(log_base) in [float, int]
+                                and log_base > 0 and log_base != 1)), \
+        'plot_convergence: the "log_base" argument can take the value of "e" ' \
+        + f'or that of a positive real number (not 1). Your value is {log_base}'
 
-    # Make fields into an array if only a single string is provided
-    if isinstance(fields, str):
-        fields = [fields]
+    assert type(best_fit_deg) is int, 'plot_convergence: the "best_fit_deg" ' \
+        f'must be of integer type, not {type(best_fit_deg)}'
 
-    # Make run_ids into an array if only a single integer is provided
-    if isinstance(run_ids, int):
-        run_ids = [[run_ids]]*len(fields)
-    else:
-        # Assume that run_ids is already a list
-        # If it's a list of lists then we're already good
-        if not isinstance(run_ids[0], list):
-            # Then we assume that the same list is used for every field
-            run_ids = [run_ids]*len(fields)
+    if best_fit_deg != 1 and gradient_in_label:
+        raise ValueError('plot_convergence: cannot use a "best_fit_deg" that is'
+                         + 'not 1 and have gradient_in_label == True')
 
-    if len(run_ids) != len(fields):
-        raise ValueError('The lengths of run_ids list and fields list are not equal')
+    if best_fit and best_fit_deg != 1 and log_by == 'axes':
+        raise NotImplementedError('plot_convergence: cannot plot a line of best'
+                                  + ' fit with a polynomial other than 1 when '
+                                  + 'using the log_by="axes" argument')
 
-    if colours is not None:
-        if len(colours) != len(fields)*len(dirnames):
-            raise ValueError('The list of colours should have the same '+
-                             'length as the list of fields. Found %d but expected %d' %
-                             (len(colours), len(fields)*len(dirnames)))
+    if log_by == 'axes' and log_base == 'e':
+        warnings.warn('plot_convergence: "log_by" is set to "axes" but using a'
+                      + 'log with base e. You may prefer to use log_base = 10')
 
-    if markers is not None:
-        if len(markers) != len(fields)*len(dirnames):
-            raise ValueError('The list of markers should have the same '+
-                             'length as the list of fields. Found %d but expected %d' %
-                             (len(markers), len(fields)*len(dirnames)))
+    # ------------------------------------------------------------------------ #
+    # Deal with logarithms
+    # ------------------------------------------------------------------------ #
+    # Turn log_base of "e" into a real number
+    base = np.exp(1) if log_base == "e" else log_base
+    log_input_data = np.emath.logn(base, input_data)
+    log_error_data = np.emath.logn(base, error_data)
 
-    if linestyles is not None:
-        if len(linestyles) != len(fields)*len(dirnames):
-            raise ValueError('The list of linestyles should have the same '+
-                             'length as the list of fields. Found %d but expected %d' %
-                             (len(linestyles), len(fields)*len(dirnames)))
-    
-    if type(best_fit) == list:
-        if len(best_fit) != len(best_fit)*len(dirnames):
-            raise ValueError('The list of best fits should have the same '+
-                             'length as the list of fields. Found %d but expected %d' %
-                             (len(best_fit), len(fields)*len(dirnames)))
-    else:
-        best_fit = [best_fit]*(len(fields)*len(dirnames))
+    # ------------------------------------------------------------------------ #
+    # Line of best fit
+    # ------------------------------------------------------------------------ #
+    # This is done first to generate the gradient if it's needed in the label
+    if best_fit:
+        # Line of best fit using standard polynomial fitting
+        best_fit_line = np.poly1d(np.polyfit(log_input_data, log_error_data, deg=best_fit_deg))
 
-    ax_provided = (ax is not None)
+        # Read off the gradient of if best fit is linear
+        if best_fit_deg == 1:
+            intercept = best_fit_line[0]
+            gradient = best_fit_line[1]
 
-    #--------------------------------------------------------------------------#
-    # Make figure
-    #--------------------------------------------------------------------------#
+        if log_by == 'data':
+            ax.plot(log_input_data, best_fit_line(log_input_data), label=None,
+                    linestyle=linestyle, color=color, linewidth=linewidth)
+        elif log_by == 'axes':
+            # Plotting with actual error values but on log-log scale
+            # Assume linear best fit here (otherwise already raised an error)
+            # log(error) = gradient*log(input) + intercept
+            # => error = base**intercept * input**gradient
+            best_fit_data = base**intercept * input_data**gradient
+            ax.loglog(input_data, best_fit_data, label=None, base=base,
+                      linestyle=linestyle, color=color, linewidth=linewidth)
 
-    if ax is None:
-        # This is declared BEFORE figure and ax are initialised
-        plt.rc('text', usetex=True)
-        plt.rc('font', family='serif')
-        font = {'size':fontsize}
-        plt.rc('font',**font)
+        # -------------------------------------------------------------------- #
+        # Append gradient to label, if specified
+        # -------------------------------------------------------------------- #
+        if gradient_in_label:
+            # Work out string for formatting gradient
+            format_str = '{:'+gradient_format+'}'
 
-        fig = plt.figure(1, figsize=figsize)
-        ax = fig.add_subplot(111)
+            # If label is already None, gradient becomes label
+            if label is None:
+                label = f'{format_str.format(gradient)}'
 
-    #--------------------------------------------------------------------------#
-    # Loop through fields adding lines to plot
-    #--------------------------------------------------------------------------#
+            # Otherwise, we need to append the gradient to the label
+            else:
+                label = label + f' {format_str.format(gradient)}'
 
-    for j, dirname in enumerate(dirnames):
+    # ------------------------------------------------------------------------ #
+    # Plot data points, depending on log method
+    # ------------------------------------------------------------------------ #
 
-        if override_dirname:
-            filename = dirname
+    if log_by == 'data':
+        ax.plot(log_input_data, log_error_data, label=label, color=color,
+                marker=marker, markersize=markersize, linestyle='')
+
+    elif log_by == 'axes':
+        ax.loglog(input_data, error_data, label=label, base=base,
+                  color=color, marker=marker, markersize=markersize, linestyle='')
+
+    return
+
+
+def add_convergence_comparison_line(ax, exponent, x_points=None, y_shift=0.0,
+                                    label=None, color='black', linestyle='--',
+                                    linewidth=None, log_by='data', log_base='e'):
+    """
+    Adds a comparison line to a convergence plot.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot the data on.
+        exponent (float): the exponent of the comparison line to be plotted,
+            which corresponds to the gradient when plotting on a log-log plot.
+        x_points (`numpy.ndarray`, optional): points through which to plot the
+            comparison line. If not provided, the comparison line is chosen to
+            go through the centre of the figure. Defaults to None.
+        y_shift (float, optional): shift in the y-direction to apply to the
+            line. Defaults to 0.0.
+        label (str, optional): the label for this line, to appear in the legend
+            if specified. Defaults to None.
+        color (str, optional): which colour to use for the line. Defaults to
+            'black'.
+        linestyle (str, optional): the style of line to use. Defaults to '--',
+            corresponding to a dashed line.
+        log_by (str, optional): how the plot should handle logarithms. Options
+            are: "data", in which log(error) is plotted against log(input), or
+            "axes" in which the error is plotted against the input but the axes
+            take a logarithmic scale. Defaults to "data".
+        log_base (float, optional): the base to use for the logarithm. Should be
+            a positive float, not equal to 1. Can also be the string "e", which
+            is the default value.
+    """
+
+    # ------------------------------------------------------------------------ #
+    # Checks on arguments
+    # ------------------------------------------------------------------------ #
+
+    assert log_by in ['data', 'axes'], 'convergence plot: the "log_by" ' \
+        + f'argument can take values of "data" or "axes", and not {log_by}'
+
+    assert (log_base == 'e' or (type(log_base) in [float, int]
+                                and log_base > 0 and log_base != 1)), \
+        'add_convergence_comparison: "log_base" argument be "e" ' \
+        + f'or a positive real number (not 1). Your value is {log_base}'
+
+    if log_by == 'axes' and log_base == 'e':
+        warnings.warn('add_convergence_comparison: "log_by" is set to "axes" but'
+                      + 'using log with base e. You may prefer log_base = 10')
+
+    # ------------------------------------------------------------------------ #
+    # Deal with logarithms
+    # ------------------------------------------------------------------------ #
+    # Turn log_base of "e" into a real number
+    base = np.exp(1) if log_base == "e" else log_base
+
+    # ------------------------------------------------------------------------ #
+    # Work out where to plot the line
+    # ------------------------------------------------------------------------ #
+
+    if log_by == 'data':
+        log_y_lower, log_y_upper = ax.get_ylim()[0], ax.get_ylim()[1]
+        log_y_center = 0.5 * (log_y_lower + log_y_upper) + y_shift
+
+        if x_points is None:
+            # Get centre of figure
+            log_x_lower, log_x_upper = ax.get_xlim()[0], ax.get_xlim()[1]
+            log_x_center = 0.5 * (log_x_lower + log_x_upper)
+            log_x_points = np.linspace(log_x_lower, log_x_upper, 20)
         else:
-            filename = 'results/'+dirname+'/global_output.nc'
+            log_x_points = np.emath.logn(base, x_points)
+            log_x_center = 0.5 * (log_x_points[0] + log_x_points[-1])
 
-        data_file = Dataset(filename, 'r')
-
-        for i, (field, run_id_list) in enumerate(zip(fields, run_ids)):
-
-            k = i + j*len(fields)
-
-            #------------------------------------------------------------------#
-            # Extract data
-            #------------------------------------------------------------------#
-
-            # Should be an array indexed by run_id
-            variable_data = np.log(data_file.variables[variable][run_id_list])
-
-            # Use only the errors from the final time step
-            error_data = np.log(data_file.groups[field]['errors'].variables[error][run_id_list,-1])
-
-            #------------------------------------------------------------------#
-            # Determine marker colours, shapes and labels
-            #------------------------------------------------------------------#
-
-            colour = colours[k] if colours is not None else get_colour(testname, field, k)
-            marker = markers[k] if markers is not None else get_marker(testname, field, k)
-            linestyle = linestyles[k] if linestyles is not None else '-'
-
-            if field_labels is not None:
-                # Label is just read in
-                label = field_labels[k]
-            else:
-                label = get_label(field)
-
-
-            #------------------------------------------------------------------#
-            # Plot errors
-            #------------------------------------------------------------------#
-
-            if best_fit[k]:
-                # Get line of best fit first to amend the label
-                best_fit_line = np.poly1d(np.polyfit(variable_data, error_data, deg=best_fit_deg))
-                ax.plot(variable_data, best_fit_line(variable_data),
-                        linestyle=linestyle, color=colour, lw=linewidth)
-
-                if label_style == 'gradient_full':
-                    label = label+' gradient: %1.3f' % best_fit_line[1]
-                elif label_style == 'gradient_plain':
-                    label = label+': %1.3f' % best_fit_line[1]
-                elif label_style != 'plain':
-                    raise ValueError('label_style not recognised')
-
-            # Plot error points
-            ax.plot(variable_data, error_data, color=colour,
-                    marker=marker, label=label, linestyle='', ms=markersize)
-
-        data_file.close()
-
-    #--------------------------------------------------------------------------#
-    # Decorations
-    #--------------------------------------------------------------------------#
-
-    if xlabel == 'default':
-        xlabel = get_xlabel(variable, 'convergence')
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-    if ylabel == 'default':
-        ylabel = get_ylabel(error, 'convergence')
-        ax.set_ylabel(ylabel)
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-
-
-    if xlim is not None:
-        ax.set_xlim(xlim)
-    if ylim is not None:
-        ax.set_ylim(ylim)
-    if title is not None:
-        ax.set_title(title, pad=titlepad)
-
-    if grid:
-        ax.grid('on')
-
-    #--------------------------------------------------------------------------#
-    # Comparison lines
-    #--------------------------------------------------------------------------#
-
-    # This is done after plot decorations to ensure
-    # the lines pass through the centre of the figure
-
-    if comparison_lines is not None:
-        # Get centre of figure
-        x_lower, x_upper = ax.get_xlim()[0], ax.get_xlim()[1]
+    elif log_by == 'axes':
         y_lower, y_upper = ax.get_ylim()[0], ax.get_ylim()[1]
-        x_center = 0.5 * (x_lower + x_upper)
-        y_center = 0.5 * (y_lower + y_upper)
-        x = np.array([x_lower, x_upper])
+        log_y_lower = np.emath.logn(base, y_lower)
+        log_y_upper = np.emath.logn(base, y_upper)
+        log_y_center = 0.5*(log_y_lower + log_y_upper) + y_shift
 
-        comparison_linestyles = ['dashed', 'dotted', 'dashdot']
+        if x_points is None:
+            # Get centre of figure
+            x_lower, x_upper = ax.get_xlim()[0], ax.get_xlim()[1]
+            log_x_lower = np.emath.logn(base, x_lower)
+            log_x_upper = np.emath.logn(base, x_upper)
+            x_points = np.linspace(x_lower, x_upper, 20)
+            log_x_points = np.emath.logn(base, x_points)
+        else:
+            log_x_lower = np.emath.logn(base, x_points[0])
+            log_x_upper = np.emath.logn(base, x_points[-1])
+            log_x_points = np.emath.logn(base, x_points)
+        log_x_center = 0.5*(log_x_lower + log_x_upper)
 
-        for j, gradient in enumerate(comparison_lines):
+    # ------------------------------------------------------------------------ #
+    # Work out line to plot in log space and plot it
+    # ------------------------------------------------------------------------ #
 
-            label = get_xlabel(variable, 'grid parameters')
-            if isinstance(gradient, int):
-                if gradient != 1:
-                    label += r'$^{%d}$' % gradient
-            elif isinstance(gradient, float):
-                label += r'$^{%.1f}$' % gradient
-            else:
-                raise ValueError('Gradients provided in comparison_lines must be '+
-                                 'floats or integers, not %s' % type(gradient))
+    # Line going through centre of plot in log space
+    intercept = - exponent * log_x_center + log_y_center
+    log_y_points = exponent * log_x_points + intercept
 
-            # y = m*x + c
-            y = gradient * (x - x_center) + y_center
-            ax.plot(x, y, color='black', linestyle=comparison_linestyles[j % 3],
-                    label=label, linewidth=linewidth, marker='')
+    if log_by == 'data':
+        # Simply plot the logs of the points
+        ax.plot(log_x_points, log_y_points, label=label, color=color,
+                linestyle=linestyle, linewidth=linewidth)
 
-    #--------------------------------------------------------------------------#
-    # Legend
-    #--------------------------------------------------------------------------#
+    elif log_by == 'axes':
+        # Need to convert logs of points to curve
+        # log(y) = gradient*log(x) + intercept
+        # => y = base**intercept * x**gradient
+        y_points = base**intercept * x_points**exponent
 
-    handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc='upper center', ncol=legend_ncol,
-                    bbox_to_anchor=legend_bbox, edgecolor='black',
-                    fontsize=leg_fontsize, handletextpad=0.0,
-                    columnspacing=leg_col_spacing)
+        ax.loglog(x_points, y_points, label=label, color=color,
+                  linestyle=linestyle, linewidth=linewidth, base=base)
 
-    #--------------------------------------------------------------------------#
-    # Save and finish plot
-    #--------------------------------------------------------------------------#
-
-    if ax_provided:
-        return ax
-    else:
-        if plotdir is None:
-            if len(dirnames) > 1:
-                print('Convergence plot directory not specified. '+
-                      'Adding to results/'+dirnames[0]+'/figures')
-            plotdir = 'results/'+dirnames[0]+'/figures'
-        plotname = plotdir+'/'+testname+'_'+error+'.'+format
-
-        fig.savefig(plotname, bbox_extra_artists=(lgd,),
-                    bbox_inches='tight', dpi=dpi)
-
-        plt.close()
+    return

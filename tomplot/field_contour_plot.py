@@ -1,230 +1,292 @@
 """
-This file provides some plotting tools
+This file provides a generic routine for plotting a field on a 2D surface,
+generally as (filled) contours or with coloured points as a scatter plot.
+
+Some auxiliary routines are also provided.
 """
-import matplotlib.pyplot as plt
 import numpy as np
-from .plot_decorations import *
+import warnings
+from .tomplot_tools import tomplot_field_markersize, work_out_cmap_extension
+
+__all__ = ["plot_contoured_field", "label_contour_lines"]
 
 
-def individual_field_contour_plot(coords_X, coords_Y, field_data,
-                                  testname=None, plotname=None,
-                                  figsize=(8,8), field_name=None,
-                                  extra_field_data=None, extra_field_name=None,
-                                  slice_name=None, slice_idx=None,
-                                  projection=None,
-                                  spherical_centre=(0.0, 0.0),
-                                  cbar_label=None,
-                                  cbar_labelpad=None,
-                                  cbar_ticks=None,
-                                  cbar_format=None,
-                                  no_cbar=False,
-                                  contours=None,
-                                  extra_contours=None,
-                                  contour_lines=True,
-                                  clabel=False,
-                                  colour_scheme='Blues', restricted_cmap=None,
-                                  colour_levels_scaling=1.2,
-                                  extend_cmap=True, remove_contour=False,
-                                  transparency=1.0,
-                                  linestyle=None, linewidth=1,
-                                  linecolours='black',
-                                  fontsize=24, title=None, title_method='full',
-                                  titlepad=30, ax=None, title_size=24,
-                                  slice_label=None, time=None, time_method='seconds',
-                                  text=None, text_pos=None,
-                                  xlims=None, ylims=None, xticks=None, yticks=None,
-                                  xticklabels=None, yticklabels=None,
-                                  xlabel=None, ylabel=None, xlabelpad=-20, ylabelpad=None,
-                                  dpi=None, gridline_args=None,
-                                  remove_lines=False):
+def plot_contoured_field(ax, coords_X, coords_Y, field_data, method, contours,
+                         line_contours=None, projection=None,
+                         plot_filled_contours=True, plot_contour_lines=True,
+                         # Options relating to filled contours
+                         cmap=None, remove_lines=False, transparency=1.0,
+                         # Options relating to line contours
+                         contour_linestyles=None, contour_linewidths=1,
+                         contour_linecolors='black',
+                         # Options related to scatter method
+                         markersize=None, marker_scaling=1.0,
+                         # Keyword arguments to be passed to underlying matplotlib routines
+                         **kwargs):
     """
-    Makes an individual coloured 2D contour plot of a field from a netCDF
-    field output file.
+    Plots a 2D field using (filled) contours or coloured points.
 
-    :arg coords_X:   a 2D array of the X-coordinates at which to plot the field.
-    :arg coords_Y:   a 2D array of the Y-coordinates at which to plot the field.
-    :arg field_data: a 2D array giving the values of the field to be plotted.
-    :arg testname:   (Optional) a string describing the test. Usually used for
-                     accessing some pre-set specific plot settings.
-    :arg field_name: (Optional). The name of the field. Used for providing text
-                     information on the plot.
-    :arg time:       (Optional). The simulation time at corresponding to the
-                     data. Used for providing text information on the plot.
-    :arg slice_name: (Optional). The dimension along which to slice the data.
-                     Required if the domain has dimension greater than 1.
-                     Used for providing text information on the plot.
-    :arg slice_idx:  (Optional). The index of the other dimensions on the
-                     interpolation grid at which to slice. Used for providing
-                     text information on the plot.
+    This routine is for plotting fields on a 2D surface, acting as a wrapper to
+    the matplotlib `contour`, `contourf`, `tricontour` and `tricontourf`
+    routines. It also allows plotting of fields as points via a `scatter` plot.
+    Which underlying routine is called depends upon the `method` argument, which
+    can be "contour", "tricontour" or "scatter".
+
+    Filled (coloured) contours and contour lines will be plotted by default.
+    Different Cartopy projections can also be passed through, for instance when
+    wanting to plot on the surface of a sphere.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object to plot the field on.
+        coords_X (`numpy.ndarray`): an array containing the coordinates of the
+            field data, corresponding to the plot's X axis. If the method is
+            "contour", then this must form a `meshgrid` with the Y coordinates.
+            The shape of this array must correspond to that of the field data.
+        coords_Y (`numpy.ndarray`): an array containing the coordinates of the
+            field data, corresponding to the plot's Y axis. If the method is
+            "contour", then this must form a `meshgrid` with the X coordinates.
+            The shape of this array must correspond to that of the field data.
+        field_data (`numpy.ndarray`): the field data to be plotted. The shape of
+            this array must match that of the coordinates.
+        method (str): determines the method to use to plot the field. Valid
+            options are "contour", "tricontour" or "scatter" (which cannot be
+            used to plot contour lines).
+        contours (iter): an iterable object containing the values to use to
+            contour the field. In the case of a scatter plot, these values
+            determine the bins used for colouring the points. If the
+            `line_contours` argument is specified, then this is only the set of
+            contours used for the filled contours.
+        line_contours (iter, optional): an iterable object containing the values
+            to use to plot contour lines. Defaults to None, in which case
+            contour lines are plotted with the `contours` argument.
+        projection (:class:`Projection`, optional): a cartopy projection object.
+            Defaults to None.
+        plot_filled_contours (bool, optional): whether to plot (coloured) filled
+            contours. Defaults to True.
+        plot_contour_lines (bool, optional): whether to plot the contour lines.
+            Defaults to True.
+        cmap (`matplotlib.cmap`, optional): the colour map to be used for the
+            the coloured field. Defaults to None, in which case the default
+            matplotlib option is called (usually viridis).
+        remove_lines (bool, optional): when using a filled contour method, gaps
+            may be left between the filled colours (corresponding to the
+            contour lines). This option fills in those lines. Defaults to False.
+        transparency (float, optional): a number between 0 and 1 representing
+            the transparency of the filling/colouring to be applied, with 0
+            corresponding to transparent. Defaults to 1.0 (i.e. opaque).
+        contour_linestyles (_type_, optional): the line style to be used for
+            contour lines. Defaults to None, in which case positive contours
+            have a solid line and negative contours are dashed.
+        contour_linewidths (int, optional): the line width to use for contours.
+            Can be a number or an array matching the contours, Defaults to 1.
+        contour_linecolors (str, optional): the colour to be used for the
+            contour lines. Can be a string or an array of size matching the
+            contours. Defaults to 'black'.
+        markersize (float, optional): the size of markers to use for the
+            "scatter" method.
+        marker_scaling (float, optional): an optional scaling to apply to the
+            markersize when using the "scatter" method, and auto-generating the
+            markersizes. Defaults to 1.0.
+        **kwargs: keyword arguments to be passed to the underlying plotting
+            routines (contourf, tricontourf, contour, tricontour, scatter)
+
+    Raises:
+        ValueError: if the `remove_lines` option and `plot_contour_lines` are
+            both set to True.
+        ValueError: if the `remove_lines` option is used with the "scatter"
+            method.
+        ValueError: if the `plot_contour_lines` option is set to True but the
+            "scatter" method is used.
+        ValueError: if the `markersize` option is set but the "scatter" method
+            is not used.
+
+    Returns:
+        tuple: the generated filled contour and line contour set objects. These
+            can be used later, for instance to generate a colorbar. If one of
+            these objects is not created, None will be returned.
     """
 
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
     # Checks
-    #--------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------ #
 
-    # TODO: fill in checks here
+    if method not in ['contour', 'tricontour', 'scatter']:
+        raise ValueError(
+            f'Method {method} to field contour plot not recognised. '
+            + 'Valid options are "contour", "tricontour" or "scatter"')
 
+    if not (plot_filled_contours or plot_contour_lines):
+        raise ValueError('field_contour_plot invalid option: '
+                         + 'both plot_filled_contours and plot_contour_lines '
+                         + 'are set to False. One must be True!')
 
-    ax_provided = (ax is not None)
-    if not ax_provided and plotname is None:
-        raise ValueError('If ax is not provided to make 1D plot then a plotname must be specifed')
+    if remove_lines and plot_contour_lines:
+        raise ValueError('field_contour_plot invalid option: '
+                         + 'the remove_lines argument can only be True if the '
+                         + 'plot_contour_lines argument is False')
 
-    #--------------------------------------------------------------------------#
-    # Make figure
-    #--------------------------------------------------------------------------#
+    if remove_lines and method == 'scatter':
+        raise ValueError('field_contour_plot invalid option: '
+                         + 'the remove_lines argument cannot be used with '
+                         + 'the "scatter" method')
 
-    if ax is None:
-        # This is declared BEFORE figure and ax are initialised
-        plt.rc('text', usetex=True)
-        plt.rc('font', family='serif')
-        font = {'size':fontsize}
-        plt.rc('font',**font)
+    if markersize is not None and method != 'scatter':
+        raise ValueError('field_contour_plot invalid option: '
+                         + 'markersize is set but can only be used with the '
+                         + '"scatter" method')
 
-        fig = plt.figure(1, figsize=figsize)
+    if method == 'tricontour':
+        if len(np.shape(coords_X)) > 1:
+            coords_X = np.array(coords_X).flatten()
+            warnings.warn('WARNING: field_contour_plot with "tricontour" '
+                          + 'method requires flattened data. Flattening '
+                          + 'coords_X for you.')
+        if len(np.shape(coords_Y)) > 1:
+            coords_Y = np.array(coords_Y).flatten()
+            warnings.warn('WARNING: field_contour_plot with "tricontour" '
+                          + 'method requires flattened data. Flattening '
+                          + 'coords_Y for you.')
+        if len(np.shape(field_data)) > 1:
+            field_data = np.array(field_data).flatten()
+            warnings.warn('WARNING: field_contour_plot with "tricontour" '
+                          + 'method requires flattened data. Flattening '
+                          + 'field_data for you.')
 
-        if projection is None:
-            ax = fig.add_subplot(111)
-        elif projection == 'orthographic':
-            import cartopy.crs as ccrs
-            ax = fig.add_subplot(1, 1, 1,
-                                 projection=ccrs.Orthographic(spherical_centre[0]*180./np.pi,
-                                                              spherical_centre[1]*180./np.pi))
-        else:
-            raise ValueError('Projection %s not implemented' % projection)
+    # ------------------------------------------------------------------------ #
+    # Things related to a Cartopy projection
+    # ------------------------------------------------------------------------ #
 
-    if projection is None:
-        crs = None
-        extent = None
-    elif projection == 'orthographic':
+    # By default, these variables are None and do nothing
+    if projection is not None:
         import cartopy.crs as ccrs
         ax.set_global()
-        coords_X *= 360.0/(2*np.pi)
-        coords_Y *= 360.0/(2*np.pi)
-        crs = ccrs.PlateCarree()
-        extent = (0, 360, -90, 90)
-    else:
-        raise ValueError('Projection %s not implemented' % projection)
-
-
-    #--------------------------------------------------------------------------#
-    # Determine contours
-    #--------------------------------------------------------------------------#
-
-    field_min = np.amin(field_data)
-    field_max = np.amax(field_data)
-
-    if contours is None:
-        # Deal with case of no actual field values
-        if abs(field_max - field_min) < 1e-15:
-            field_min -= 1e-14
-            field_max += 1e-14
-            num_steps = 1
+        transform_extent = (-180, 180, -90, 90)
+        if method == "scatter":
+            transform_crs = ccrs.Geodetic()
         else:
-            num_steps = 10
-
-        field_step = (field_max - field_min) / num_steps
-        colour_contours = np.arange(field_min, field_max+field_step, step=field_step)
+            transform_crs = ccrs.PlateCarree()
     else:
-        colour_contours = contours
+        transform_extent = None
+        transform_crs = None
 
-    if extra_field_data is not None:
-        if extra_contours is None:
-            extra_field_min = np.amin(extra_field_data)
-            extra_field_max = np.amax(extra_field_data)
+    # ------------------------------------------------------------------------ #
+    # Determine how to handle values beyond the contour range
+    # ------------------------------------------------------------------------ #
 
-            # Deal with case of no actual field values
-            if abs(extra_field_max - extra_field_min) < 1e-15:
-                extra_field_min -= 1e-14
-                extra_field_max += 1e-14
-                num_steps = 1
+    if method in ['contour', 'tricontour']:
+        if 'extend' in kwargs.keys():
+            cmap_extension = kwargs['extend']
+            del kwargs['extend']
+        else:
+            cmap_extension = work_out_cmap_extension(cmap, contours)
+
+    # ------------------------------------------------------------------------ #
+    # Plot coloured fillings between contours
+    # ------------------------------------------------------------------------ #
+
+    if plot_filled_contours:
+        # Plot field using cmap, depending on the method
+        if method == 'contour':
+            cf = ax.contourf(coords_X, coords_Y, field_data, contours,
+                             cmap=cmap, alpha=transparency, origin='lower',
+                             extent=transform_extent, transform=transform_crs,
+                             extend=cmap_extension, **kwargs)
+
+        elif method == 'tricontour':
+            cf = ax.tricontourf(coords_X, coords_Y, field_data, contours,
+                                cmap=cmap, alpha=transparency, origin='lower',
+                                extent=transform_extent, transform=transform_crs,
+                                extend=cmap_extension, **kwargs)
+
+        elif method == 'scatter':
+            if markersize is None:
+                markersize = tomplot_field_markersize(
+                    field_data, marker_scaling=marker_scaling, ax=ax)
+
+            if transform_crs is None:
+                # Need to do this separately to ensure that points are plotted
+                cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
+                                vmin=contours[0], vmax=contours[-1], cmap=cmap,
+                                alpha=transparency, **kwargs)
             else:
-                num_steps = 10
+                cf = ax.scatter(coords_X, coords_Y, c=field_data, s=markersize,
+                                vmin=contours[0], vmax=contours[-1], cmap=cmap,
+                                alpha=transparency, transform=transform_crs,
+                                **kwargs)
 
-            extra_field_step = (extra_field_max - extra_field_min) / num_steps
-            extra_contours = np.arange(extra_field_min, extra_field_max+extra_field_step, step=extra_field_step)
+        # Contour lines may appear as gaps in plot. These can be filled here
+        if remove_lines:
+            for c in cf.collections:
+                c.set_edgecolor("face")
 
-    #--------------------------------------------------------------------------#
-    # Set up colour bar details
-    #--------------------------------------------------------------------------#
-
-    cmap, line_contours = colourmap_and_contours(colour_contours,
-                                                 colour_scheme=colour_scheme,
-                                                 restricted_cmap=restricted_cmap,
-                                                 colour_levels_scaling=colour_levels_scaling,
-                                                 remove_contour=remove_contour)
-
-    extend = 'both' if extend_cmap else 'neither'
-
-    #--------------------------------------------------------------------------#
-    # Plot
-    #--------------------------------------------------------------------------#
-
-    cf = ax.contourf(coords_X, coords_Y, field_data, colour_contours,
-                     cmap=cmap, extent=extent, transform=crs,
-                     origin='lower', alpha=transparency)
-
-    if remove_lines:
-        for c in cf.collections:
-            c.set_edgecolor("face")
-
-    if extend_cmap:
-        # Set colours for over and under shoots
-        cf.cmap.set_under('magenta')
-        cf.cmap.set_over('yellow')
-
-    if contour_lines:
-        if linestyle is None and extra_field_data is not None:
-            linestyles = 'solid'
-        cl = ax.contour(coords_X, coords_Y, field_data, line_contours,
-                        linewidths=linewidth, colors=linecolours,
-                        linestyles=linestyle, transform=crs, extent=extent,
-                        origin='lower')
-
-        if clabel:
-            ax.clabel(cl)
-
-    if extra_field_data is not None:
-        cle = ax.contour(coords_X, coords_Y, extra_field_data,
-                         extra_contours, linewidths=linewidth,
-                         colors=linecolours, linestyles='dashed',
-                         transform=crs, extent=extent, origin='lower')
-
-    # FIXME: should this not be associated with the axis?
-    if cbar_label is None and field_name is not None:
-        cbar_label = get_label(field_name)
-    if not no_cbar:
-        cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks)
-        if cbar_label is not None:
-            cb.set_label(cbar_label, labelpad=cbar_labelpad)
-
-    # Add axes labels, set limits and add a title
-    if projection is None:
-        axes_limits_labels_and_titles(ax, xlabel=xlabel, xlabelpad=xlabelpad, xlims=xlims,
-                                      xticks=xticks, xticklabels=xticklabels,
-                                      ylabel=ylabel, ylabelpad=ylabelpad, ylims=ylims,
-                                      yticks=yticks, yticklabels=yticklabels,
-                                      title=title, title_method=title_method, titlepad=titlepad,
-                                      slice_label=slice_label, time=time, time_method=time_method,
-                                      field_min=field_min, field_max=field_max, title_size=title_size)
-    elif gridline_args is not None:
-        ax.gridlines(**gridline_args)
-
-    if text is not None:
-        if text_pos is None or not isinstance(text_pos, tuple):
-            raise ValueError('If text has been provided, a text_pos tuple must also be provided')
-        else:
-            ax.text(text_pos[0], text_pos[1], text, fontsize=fontsize*1.25,
-                    ha='center', va='center')
-
-    #--------------------------------------------------------------------------#
-    # Finish
-    #--------------------------------------------------------------------------#
-
-    if ax_provided:
-        return cf
     else:
+        cf = None
 
-        print(f'Saving figure to {plotname}')
-        fig.savefig(plotname, bbox_inches='tight', dpi=dpi)
+    # ----------------------------------------------------------------------- #
+    # Plot contour lines
+    # ----------------------------------------------------------------------- #
 
-        plt.close()
+    if plot_contour_lines:
+        # If line contours aren't specified, get these from filled contours
+        if line_contours is None:
+            line_contours = contours
+
+        if method == 'contour':
+            cl = ax.contour(coords_X, coords_Y, field_data, line_contours,
+                            linewidths=contour_linewidths,
+                            colors=contour_linecolors,
+                            linestyles=contour_linestyles, origin='lower',
+                            extent=transform_extent, transform=transform_crs,
+                            **kwargs)
+
+        elif method == 'tricontour':
+            cl = ax.tricontour(coords_X, coords_Y, field_data, line_contours,
+                               linewidths=contour_linewidths,
+                               colors=contour_linecolors,
+                               linestyles=contour_linestyles, origin='lower',
+                               extent=transform_extent, transform=transform_crs,
+                               **kwargs)
+
+        elif method == 'scatter':
+            raise ValueError(
+                'Scatter method not compatible with plotting line contours. '
+                + 'If you want to use the scatter method then set the '
+                + 'plot_contour_lines argument to False.')
+
+    else:
+        cl = None
+
+    # ------------------------------------------------------------------------ #
+    # Finish
+    # ------------------------------------------------------------------------ #
+
+    return cf, cl
+
+
+# This is a separate routine to "plot_contoured_field" so that the number of
+# arguments to "plot_contoured_field" can be minimised, because I find that I
+# don't usually want to label contours, and doing so requires specifying a lot
+# of variables. Since this simply calls `clabel`, there is an argument that we
+# don't need this routine, but maybe it has an easier interface than `clabel`.
+# This routine motivates "plot_contoured_field" returning the `cl` object.
+def label_contour_lines(ax, cl, clabel_levels=None, clabel_fontsize=None,
+                        clabel_locations=None, clabel_format=None):
+    """
+    Adds labels to contour lines on a 2D contour plot.
+
+    Args:
+        ax (:class:`AxesSubplot`): the pyplot axes object containing the
+            contoured field plot.
+        cl (`matplotlib.contour`): the contoured lines object for the plot.
+        clabel_levels (iter, optional): a list of floats corresponding to the
+            contour levels to label. Defaults to None.
+        clabel_fontsize (float, optional): the size of contour labels. Defaults
+            to None.
+        clabel_locations (iter, optional): specific locations in the axes
+            coordinates for the contour labels. Defaults to None.
+        clabel_format (str, optional): the format to use for the labels.
+            Defaults to None.
+    """
+
+    ax.clabel(cl, levels=clabel_levels, fontsize=clabel_fontsize,
+              manual=clabel_locations, fmt=clabel_format)

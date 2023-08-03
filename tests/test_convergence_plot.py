@@ -1,55 +1,41 @@
 """
-In this file we test the routines for generating convergence plots.
+This tests the routine to make a convergence plot.
 """
 
-from tomplot import *
-import os
+import matplotlib.pyplot as plt
+from tomplot import plot_convergence, tomplot_field_title
 import numpy as np
 import pytest
 
-def test_convergence_plot():
+# Set up some data points to use: three different lines with different exponents
+np.random.seed(19)
+x_points = np.array([2.0, 3.5, 6.0])
+y_points_1 = 10.0*x_points + np.random.randn(len(x_points)) + 5
+y_points_2 = 10.0*x_points**2 + np.random.randn(len(x_points)) + 5
+y_points_3 = 10.0*x_points**3 + np.random.randn(len(x_points)) + 5
 
-    have_i_passed = False
 
-    # Things the same for all plots
-    variables = 'dx'
+@pytest.mark.parametrize("log_by", ['data', 'axes'])
+@pytest.mark.parametrize("log_base", ['e', 10])
+def test_convergence_plot(log_by, log_base, plot_setup):
 
-    #--------------------------------------------------------------------------#
-    # Get NetCDF file                                                          #
-    #--------------------------------------------------------------------------#
+    setup = plot_setup("none", 0.0, 0.0)
 
-    file_name = 'tests/data/global_output.nc'
-    plotdir = 'tests/figures'
+    plt.close()
 
-    if not os.path.exists(file_name):
-        raise IOError('Unable to find the model file for this run')
+    _, ax = plt.subplots(1, 1, figsize=(5, 5))
 
-    #--------------------------------------------------------------------------#
-    # Plot dissipation errors                                                  #
-    #--------------------------------------------------------------------------#
+    plot_convergence(ax, x_points, y_points_1, label='linear',
+                     color='blue', marker='s', log_by=log_by, log_base=log_base)
+    plot_convergence(ax, x_points, y_points_2, label='quadratic',
+                     color='red', marker='o', log_by=log_by, log_base=log_base)
+    plot_convergence(ax, x_points, y_points_3, label='cubic',
+                     color='purple', marker='^', log_by=log_by, log_base=log_base)
 
-    errors = 'dissipation_error'
-    fields = ['v', 'w', 'v', 'w']
-    field_labels = [r'RTCF1\_vector\_invariant', r'RTCF1\_dg\_advection',
-                    r'Vec\_DG1\_vector\_invariant', r'Vec\_DG1\_dg\_advection']
-    run_ids = [[0, 1], [0, 1], [2, 3], [2, 3]]
+    plt.legend()
 
-    make_convergence_plots(file_name, variables, fields, run_ids, errors,
-                           testname='test', plotdir=plotdir, override_dirname=True)
+    title = f'convergence log {log_by} with log base {log_base}'
+    plot_name = f'convergence_log_{log_base}_by_{log_by}.png'
 
-    #--------------------------------------------------------------------------#
-    # Plot two types of error for v                                            #
-    #--------------------------------------------------------------------------#
-
-    errors = ['dispersion_error', 'L2_error']
-    fields = ['v', 'v']
-    run_ids = [[0, 1], [2, 3]]
-    comparison_lines = [1, 1.5]
-
-    make_convergence_plots(file_name, variables, fields, run_ids, errors,
-                           testname='test', plotdir=plotdir, override_dirname=True,
-                           comparison_lines=comparison_lines)
-
-    have_i_passed = True
-
-    assert have_i_passed
+    tomplot_field_title(ax, title)
+    setup.make_plots(plot_name)

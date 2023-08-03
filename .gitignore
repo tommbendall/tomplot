@@ -27,9 +27,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Figures
-*.png
-
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -53,6 +50,10 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+
+# Temporary plots from unit-tests
+tests/tmp_figures/*.png
+figures/*.png
 
 # Translations
 *.mo
