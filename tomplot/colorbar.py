@@ -184,7 +184,7 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
     if cbar_label is not None:
         cbar_labelpad = tomplot_cbar_labelpad(cbar_labelpad, extra_labelpad,
                                               cbar_format_str, location, cb)
-        cb.set_label(cbar_label, loc=location, labelpad=cbar_labelpad)
+        cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
 
 def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
