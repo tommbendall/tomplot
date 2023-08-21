@@ -52,9 +52,9 @@ def apply_gusto_domain(ax, dataset, slice_along=None, units=None, xlabel=True,
             + f'spherical shell domain units must be "deg" or "rad" not {units}'
         if units is None:
             units = 'deg'
-    elif domain == 'vertical_slice':
+    elif domain in ['vertical_slice', 'plane', 'extruded_plane', 'interval']:
         assert units in [None, 'm', 'km'], 'apply_gusto_domain: for a ' \
-            + f'vertical slice domain units must be "m" or "km" not {units}'
+            + f'{domain} domain units must be "m" or "km" not {units}'
         if units is None:
             units = 'km'
     elif domain == 'extruded_spherical_shell':
@@ -81,6 +81,18 @@ def apply_gusto_domain(ax, dataset, slice_along=None, units=None, xlabel=True,
             xlabel = r'$\lambda \ / $ rad'
             ylabel = r'$\phi \ / $ rad'
 
+    elif domain == 'interval':
+        ylabel = None
+        if units == 'm':
+            unit_factor = 1
+            xlabel = r'$x \ / $ m'
+        elif units == 'km':
+            unit_factor = 0.001
+            xlabel = r'$x \ / $ km'
+
+        xlims = [0, unit_factor*dataset['domain_extent_x'][:].data]
+        ylims = None
+
     elif domain == 'vertical_slice':
         if units == 'm':
             unit_factor = 1
@@ -91,8 +103,57 @@ def apply_gusto_domain(ax, dataset, slice_along=None, units=None, xlabel=True,
             xlabel = r'$x \ / $ km'
             ylabel = r'$z \ / $ km'
 
+    elif domain == 'plane':
+        if units == 'm':
+            unit_factor = 1
+            xlabel = r'$x \ / $ m'
+            ylabel = r'$y \ / $ m'
+        elif units == 'km':
+            unit_factor = 0.001
+            xlabel = r'$x \ / $ km'
+            ylabel = r'$y \ / $ km'
+
         xlims = [0, unit_factor*dataset['domain_extent_x'][:].data]
-        ylims = [0, unit_factor*dataset['domain_extent_z'][:].data]
+        ylims = [0, unit_factor*dataset['domain_extent_y'][:].data]
+
+    elif domain == 'extruded_plane':
+        if units == 'm':
+            unit_factor = 1
+            xlabel = r'$x \ / $ m'
+            ylabel = r'$y \ / $ m'
+            zlabel = r'$z \ / $ m'
+
+        elif units == 'km':
+            unit_factor = 0.001
+            xlabel = r'$x \ / $ km'
+            ylabel = r'$y \ / $ km'
+            zlabel = r'$z \ / $ km'
+
+        xlims = [0, unit_factor*dataset['domain_extent_x'][:].data]
+        ylims = [0, unit_factor*dataset['domain_extent_y'][:].data]
+
+        # round this value as it may be a bit odd
+        zlims = [0, round(unit_factor*dataset['domain_extent_z'][:].data, 3)]
+
+        if slice_along is None:
+            raise ValueError('apply_gusto_domain: slice_along variable needs '
+                             + 'providing for extruded spherical shell data')
+
+        if slice_along == 'y':
+            ylabel = zlabel
+            ylims = zlims
+        elif slice_along == 'x':
+            xlabel = ylabel
+            xlims = ylims
+            ylabel = zlabel
+            ylims = zlims
+        elif slice_along == 'z':
+            # Everything already correct, pass
+            pass
+
+        else:
+            raise ValueError('apply_gusto_domain: slice_along variable '
+                             + f'{slice_along} not valid for extruded plane')
 
     elif domain == 'extruded_spherical_shell':
         if units in 'deg':

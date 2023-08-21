@@ -61,9 +61,9 @@ def extract_gusto_coords(dataset, field_name, units=None):
             + f'spherical shell domain units must be "deg" or "rad" not {units}'
         if units is None:
             units = 'deg'
-    elif domain == 'vertical_slice':
+    elif domain in ['vertical_slice', 'plane', 'extruded_plane', 'interval']:
         assert units in [None, 'm', 'km'], 'extract_gusto_coords: for a ' \
-            + f'vertical slice domain units must be "m" or "km" not {units}'
+            + f'{domain} domain units must be "m" or "km" not {units}'
         if units is None:
             units = 'km'
     elif domain == 'extruded_spherical_shell':
@@ -106,6 +106,18 @@ def extract_gusto_coords(dataset, field_name, units=None):
         coords_X = dataset.variables[f'x_{coord_space}'][:]*unit_factor
         coords_Z = dataset.variables[f'z_{coord_space}'][:]*unit_factor
         return coords_X, coords_Z
+    elif domain == 'interval':
+        coords_X = dataset.variables[f'x_{coord_space}'][:]*unit_factor
+        return coords_X
+    elif domain == 'plane':
+        coords_X = dataset.variables[f'x_{coord_space}'][:]*unit_factor
+        coords_Y = dataset.variables[f'y_{coord_space}'][:]*unit_factor
+        return coords_X, coords_Y
+    elif domain == 'extruded_plane':
+        coords_X = dataset.variables[f'x_{coord_space}'][:]*unit_factor
+        coords_Y = dataset.variables[f'y_{coord_space}'][:]*unit_factor
+        coords_Z = dataset.variables[f'z_{coord_space}'][:]*unit_factor
+        return coords_X, coords_Y, coords_Z
     elif domain == 'extruded_spherical_shell':
         coords_X = dataset.variables[f'lon_{coord_space}'][:]*unit_factor
         coords_Y = dataset.variables[f'lat_{coord_space}'][:]*unit_factor

@@ -44,7 +44,7 @@ def set_tomplot_style(fontsize=16, family='serif', usetex=True):
 
 
 def tomplot_field_title(ax, title, titlepad=None, return_title=False,
-                        fontsize=None, minmax=False, minmax_format='.2f',
+                        fontsize=None, minmax=False, minmax_format='default',
                         field_data=None):
     """
     Adds a title to a subplot, or generates a title to be returned depending on
@@ -83,8 +83,11 @@ def tomplot_field_title(ax, title, titlepad=None, return_title=False,
         field_min = np.min(field_data)
         field_max = np.max(field_data)
 
-        if minmax_format == '.2f' and (-abs(field_min) > 0.01 or abs(field_max) < 0.01):
-            minmax_format = '.2e'
+        if minmax_format == 'default':
+            if (-abs(field_min) > 0.01 or abs(field_max) < 0.01):
+                minmax_format = '.2e'
+            else:
+                minmax_format = '.2f'
 
         format_str = '{:'+minmax_format+'}'
 
