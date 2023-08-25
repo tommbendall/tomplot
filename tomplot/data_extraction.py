@@ -234,11 +234,11 @@ def extract_lfric_heights(height_dataset, field_dataset, field_name, level=None)
     """
 
     # Work out which level this should be on
-    if (field_dataset[field_name].dimensions[1] == 'half_levels'
-            and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
+    if (field_dataset[field_name].dimensions[-2] == 'half_levels'
+            and field_dataset[field_name].dimensions[-1] == 'nMesh2d_face'):
         height_name = 'height_w3'
-    elif (field_dataset[field_name].dimensions[1] == 'full_levels'
-          and field_dataset[field_name].dimensions[2] == 'nMesh2d_face'):
+    elif (field_dataset[field_name].dimensions[-2] == 'full_levels'
+          and field_dataset[field_name].dimensions[-1] == 'nMesh2d_face'):
         height_name = 'height_wth'
     else:
         raise NotImplementedError(f'Dimensions for {field_name} are not '
