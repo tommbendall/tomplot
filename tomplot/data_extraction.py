@@ -121,8 +121,12 @@ def extract_gusto_coords(dataset, field_name, units=None):
     elif domain == 'extruded_spherical_shell':
         coords_X = dataset.variables[f'lon_{coord_space}'][:]*unit_factor
         coords_Y = dataset.variables[f'lat_{coord_space}'][:]*unit_factor
-        coords_Z = dataset.variables[f'r_{coord_space}'][:]  # No unit factor
-        coords_Z -= np.min(coords_Z)  # Subtract radius
+        try:
+            # Support old data which outputted radius
+            coords_Z = dataset.variables[f'r_{coord_space}'][:]  # No unit factor
+            coords_Z -= np.min(coords_Z)  # Subtract radius
+        except KeyError:
+            coords_Z = dataset.variables[f'h_{coord_space}'][:]  # No unit factor
         return coords_X, coords_Y, coords_Z
     else:
         raise NotImplementedError(f'extract_gusto_coords: domain {domain} '
