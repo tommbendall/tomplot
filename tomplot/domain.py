@@ -72,7 +72,7 @@ def apply_gusto_domain(ax, dataset, slice_along=None, units=None,
         if units is None:
             units = 'deg'
         if vertical_units is None:
-            units = 'm'
+            vertical_units = 'm'
     else:
         raise NotImplementedError(f'apply_gusto_domain: domain {domain} '
                                   + ' either not implemented or recognised')
