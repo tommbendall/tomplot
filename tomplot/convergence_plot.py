@@ -11,6 +11,7 @@ __all__ = ["plot_convergence", "add_convergence_comparison_line"]
 
 def plot_convergence(ax, input_data, error_data,
                      label=None, marker='+', color='black', markersize=None,
+                     linestyle_between_points='',
                      # Options relating to logarithms
                      log_by='data', log_base='e',
                      # Options relating to best fit lines
@@ -43,6 +44,8 @@ def plot_convergence(ax, input_data, error_data,
             any line of best fit. Defaults to 'black'.
         markersize (float, optional): the size of markers to use for plotting
             the data points. Defaults to None.
+        linestyle_between_points (str, optional): the linestyle to use for lines
+            between the data points. Defaults to '', giving no line.
         log_by (str, optional): how the plot should handle logarithms. Options
             are: "data", in which log(error) is plotted against log(input), or
             "axes" in which the error is plotted against the input but the axes
@@ -152,11 +155,13 @@ def plot_convergence(ax, input_data, error_data,
 
     if log_by == 'data':
         ax.plot(log_input_data, log_error_data, label=label, color=color,
-                marker=marker, markersize=markersize, linestyle='')
+                marker=marker, markersize=markersize,
+                linestyle=linestyle_between_points)
 
     elif log_by == 'axes':
         ax.loglog(input_data, error_data, label=label, base=base,
-                  color=color, marker=marker, markersize=markersize, linestyle='')
+                  color=color, marker=marker, markersize=markersize,
+                  linestyle=linestyle_between_points)
 
     return
 
