@@ -11,6 +11,7 @@ from os.path import abspath, dirname
 import cartopy.crs as ccrs
 from netCDF4 import Dataset
 
+
 def test_orthographic_scatter_plot(plot_setup):
 
     # ------------------------------------------------------------------------ #
@@ -22,7 +23,7 @@ def test_orthographic_scatter_plot(plot_setup):
     results_file_name = f'{results_dir}/gusto_sphere_2d_field_output.nc'
 
     field_name = 'D'
-    title = f'Orthographic scatter'
+    title = 'Orthographic scatter'
     colour_scheme = 'RdYlBu_r'
     field_label = r'$D \ / $ m'
     method = 'scatter'
@@ -60,6 +61,6 @@ def test_orthographic_scatter_plot(plot_setup):
     add_colorbar_ax(ax, cf, field_label)
     tomplot_field_title(ax, title)
 
-    plot_name = f'orthographic_scatter.png'
+    plot_name = 'orthographic_scatter.png'
     setup = plot_setup('none', 0.0, 0.0)
     setup.make_plots(plot_name)
