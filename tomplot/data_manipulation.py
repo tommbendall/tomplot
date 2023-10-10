@@ -1,25 +1,35 @@
 import pandas as pd
+import numpy as np
 
 
-def area_restriction(field_data, coords_X, coords_Y, Y_lim=None, X_lim=None):
+def area_restriction(field_data, coords_X, coords_Y, X_lim=None, Y_lim=None):
     """
-    a function that takes a data dictionary and will restrict it for a given value
-    For the coordinate fields you must pass in a 1d object so either coords[:,level]
-    for slicing on z or coords.flatten if slicing along lat / lon
+    A function that restricts a data field and returns the new restricted field 
+    as well as its corresponding co-ordinates
 
-    args:
-    field_data: The Plotting field you wish to return
-    coords_X: The coordinates you wish to plot along the X axis.
-    coords_Y: The field you wish to plot along the Y axis.
-    X_lim: tuple containing the (lower, upper) limits for the X axis
-    Y_lim: tuple containing the (lower, upper) limits for the Y axis
-    returns
-    restricted field data, X_coords, Y_coords
+    Args:
+        field_data (':class:`numpy.ndarray`): The field to be filtered.
+        coords_X (':class:`numpy.ndarray`): The field along the X axis.
+        coords_Y (':class:`numpy.ndarray`): The field along the Y axis.
+        X_lim: tuple containing the (lower, upper) limits for the X axis
+        Y_lim: tuple containing the (lower, upper) limits for the Y axis
+
+    Returns:
+        new_field_data (':class:`numpy.ndarray`):  
+        new_X_coords (':class:`numpy.ndarray`):
+        new_Y_coords (':class:`numpy.ndarray`):
     """
+
+    if len(np.shape(field_data)) != 1:
+        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame')
+    if len(np.shape(coords_X)) != 1:
+        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame')
+    if len(np.shape(coords_Y)) != 1:
+        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame')
+
     data_dict = {'field': field_data, 'X': coords_X, 'Y': coords_Y}
     df = pd.DataFrame(data_dict)
-    # ive used this logic to allow a user to only enter a limit for one axis
-    # and not have to use a new function, im sure there is a more elegant way
+
     if X_lim is not None:
         X_min, X_max = X_lim
         df = df[(df["X"] >= X_min) & (df["X"] <= X_max)]
