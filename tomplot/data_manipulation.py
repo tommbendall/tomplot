@@ -2,17 +2,18 @@ import pandas as pd
 import numpy as np
 
 
-def area_restriction(field_data, coords_X, coords_Y,  coord_lims, X_lim=None, Y_lim=None,):
+def area_restriction(field_data, coords_X, coords_Y, coord_lims):
     """
-    A function that restricts a data field and returns the new restricted field 
+    A function that restricts a data field and returns the new restricted field
     as well as its corresponding co-ordinates.
 
     Args:
         field_data (':class:`numpy.ndarray`): The field to be filtered.
         coords_X (':class:`numpy.ndarray`): The field along the X axis.
         coords_Y (':class:`numpy.ndarray`): The field along the Y axis.
-        coord_lims (':class:'python dictionary): A dicitionary containing the  
-            coordinates as Keys and the values are tupples of the limites.
+        coord_lims (':class:'python dictionary): A dicitionary containing the
+            coordinates as Keys and the values are tuples containing the limits.
+
     Returns:
         new_field_data (':class:`numpy.ndarray`): The new restricted data.
         new_X_coords (':class:`numpy.ndarray`): The X coordinates for the restricted data
@@ -26,12 +27,11 @@ def area_restriction(field_data, coords_X, coords_Y,  coord_lims, X_lim=None, Y_
     if len(np.shape(coords_Y)) != 1:
         raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame')
 
-
     data_dict = {'field': field_data, 'X': coords_X, 'Y': coords_Y}
     df = pd.DataFrame(data_dict)
     for key in coord_lims:
-        if not key in ('X', 'Y'):
-            raise ValueError('Key error, Please choose a valid axis, X, Y')
+        if key not in ('X', 'Y'):
+            raise ValueError('Key error, Please choose a valid axis: X, Y')
         min, max = coord_lims[key]
         df = df[(df[key] >= min) & (df[key] <= max)]
 
