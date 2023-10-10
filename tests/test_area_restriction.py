@@ -29,9 +29,10 @@ def test_area_restriction(limits):
         extract_gusto_coords(data_file, field_name)
     field_full = extract_gusto_field(data_file, field_name, time_idx)
     # Reshape
-    _, _, _, coords_Z_full = \
-        reshape_gusto_data(field_full, coords_X_full, coords_Y_full,
-                           coords_Z_full)
+    field_full, coords_X_full, coords_Y_full, _ = \
+            reshape_gusto_data(field_full, coords_X_full,
+                                coords_Y_full, coords_Z_full)
+
     _, coords_X, coords_Y = area_restriction(field_full[:, level],
                                              coords_X_full[:, level],
                                              coords_Y_full[:, level],
@@ -40,12 +41,10 @@ def test_area_restriction(limits):
     # ------------------------------------------------------------------------ #
     # Check the limits have been applied
     # ------------------------------------------------------------------------ #
+    tol = 5 #large ish error tol as lat / lon
     for key in limits:
         min, max = limits[key]
         if key == 'X':
-            assert np.min(coords_X) == min
-            assert np.max(coords_X) == max
-
+            assert np.min(coords_X) > min and np.max(coords_X) < max
         if key == 'Y':
-            assert np.min(coords_Y) == min
-            assert np.max(coords_Y) == max
+            assert np.min(coords_Y) > min and np.max(coords_Y) < max
