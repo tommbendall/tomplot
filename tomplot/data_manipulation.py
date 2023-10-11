@@ -1,3 +1,6 @@
+"""
+Common routines for manipulating field data and the corresponding coordinates.
+"""
 import pandas as pd
 import numpy as np
 
@@ -21,11 +24,13 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
     """
 
     if len(np.shape(field_data)) != 1:
-        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame')
+        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame.')
     if len(np.shape(coords_X)) != 1:
-        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame')
+        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame.')
     if len(np.shape(coords_Y)) != 1:
-        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame')
+        raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame.')
+    if len(coord_lims) in (0,2):
+        raise ValueError('area_restriction: limit dictionary must only contain one or two axis. ')
 
     data_dict = {'field': field_data, 'X': coords_X, 'Y': coords_Y}
     df = pd.DataFrame(data_dict)
