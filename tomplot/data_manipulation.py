@@ -8,7 +8,7 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
     as well as its corresponding co-ordinates.
 
     Args:
-        field_data (':class:`numpy.ndarray`): The field to be filtered.
+        field_data (:class:`numpy.ndarray`): The field to be filtered.
         coords_X (':class:`numpy.ndarray`): The field along the X axis.
         coords_Y (':class:`numpy.ndarray`): The field along the Y axis.
         coord_lims (':class:'python dictionary): A dicitionary containing the
