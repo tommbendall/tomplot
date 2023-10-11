@@ -14,7 +14,6 @@ from netCDF4 import Dataset
                                     {'Y': (0, 90)},
                                     {'X': (0, 90), 'Y': (0, 90)}])
 def test_area_restriction(limits):
-
     time_idx = 0
     level = 0
     results_dir = f'{abspath(dirname(__file__))}/data'
@@ -41,7 +40,6 @@ def test_area_restriction(limits):
     # ------------------------------------------------------------------------ #
     # Check the limits have been applied
     # ------------------------------------------------------------------------ #
-    tol = 5 #large ish error tol as lat / lon
     for key in limits:
         min, max = limits[key]
         if key == 'X':
