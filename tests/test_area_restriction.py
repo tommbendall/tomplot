@@ -29,8 +29,8 @@ def test_area_restriction(limits):
     field_full = extract_gusto_field(data_file, field_name, time_idx)
     # Reshape
     field_full, coords_X_full, coords_Y_full, _ = \
-            reshape_gusto_data(field_full, coords_X_full,
-                                coords_Y_full, coords_Z_full)
+        reshape_gusto_data(field_full, coords_X_full,
+                           coords_Y_full, coords_Z_full)
 
     _, coords_X, coords_Y = area_restriction(field_full[:, level],
                                              coords_X_full[:, level],

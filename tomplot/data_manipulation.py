@@ -29,8 +29,8 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
         raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame.')
     if len(np.shape(coords_Y)) != 1:
         raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame.')
-    if len(coord_lims) in (0,2):
-        raise ValueError('area_restriction: limit dictionary must only contain one or two axis. ')
+    if len(coord_lims) == 0:
+        raise ValueError('area_restriction: limit dictionary is empty, please provide an axis and limits')
 
     data_dict = {'field': field_data, 'X': coords_X, 'Y': coords_Y}
     df = pd.DataFrame(data_dict)
