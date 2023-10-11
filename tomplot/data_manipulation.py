@@ -12,7 +12,7 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
         coords_X (':class:`numpy.ndarray`): The field along the X axis.
         coords_Y (':class:`numpy.ndarray`): The field along the Y axis.
         coord_lims (dict): A dicitionary containing the
-            coordinates as Keys and the values are tuples containing the limits.
+            coordinates as keys and the values are tuples containing the limits.
 
     Returns:
         new_field_data (':class:`numpy.ndarray`): The new restricted data.
