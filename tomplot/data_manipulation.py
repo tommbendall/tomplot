@@ -31,7 +31,7 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
     df = pd.DataFrame(data_dict)
     for key in coord_lims:
         if key not in ('X', 'Y'):
-            raise ValueError('Key error, Please choose a valid axis: X, Y')
+            raise KeyError('Key error, Please choose a valid axis: X, Y')
         min, max = coord_lims[key]
         df = df[(df[key] >= min) & (df[key] <= max)]
 
