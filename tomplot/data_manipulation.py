@@ -8,11 +8,11 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
     as well as its corresponding co-ordinates.
 
     Args:
-        field_data (':class:`numpy.ndarray`): The field to be filtered.
+        field_data (:class:`numpy.ndarray`): The field to be filtered.
         coords_X (':class:`numpy.ndarray`): The field along the X axis.
         coords_Y (':class:`numpy.ndarray`): The field along the Y axis.
-        coord_lims (':class:'python dictionary): A dicitionary containing the
-            coordinates as Keys and the values are tuples containing the limits.
+        coord_lims (dict): A dicitionary containing the
+            coordinates as keys and the values are tuples containing the limits.
 
     Returns:
         new_field_data (':class:`numpy.ndarray`): The new restricted data.
@@ -31,7 +31,7 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
     df = pd.DataFrame(data_dict)
     for key in coord_lims:
         if key not in ('X', 'Y'):
-            raise ValueError('Key error, Please choose a valid axis: X, Y')
+            raise KeyError('Key error, Please choose a valid axis: X, Y')
         min, max = coord_lims[key]
         df = df[(df[key] >= min) & (df[key] <= max)]
 
