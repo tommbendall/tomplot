@@ -52,8 +52,7 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
     # ------------------------------------------------------------------------ #
     # Make colorbar
     # ------------------------------------------------------------------------ #
-    cbar_format_str = cbar_format
-    cbar_ticks, cbar_format = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
+    cbar_ticks, cbar_format, cbar_format_str = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
     cb = plt.colorbar(cf, format=cbar_format, ticks=cbar_ticks,
                       location=location, extend=extend, **colorbar_kwargs)
     if cbar_label is not None:
@@ -62,7 +61,7 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
         cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
 
-def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
+def add_colorbar_fig(fig, cf, cbar_label=None, location='right', ax_idxs=None,
                      cbar_format=None, cbar_ticks=None, cbar_labelpad=None,
                      extra_labelpad=0.0, cbar_padding=0.0, cbar_thickness=0.02,
                      **colorbar_kwargs):
@@ -78,6 +77,9 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
             Defaults to None.
         location (str, optional): where the colorbar should be placed. Should
             be one of "right", "left", "top" or "bottom". Defaults to "right".
+        ax_idxs (list of int, optional): a list of indices of the figure's axes
+            to use for determining the position of the colorbar. Defaults to
+            None, in which case all axes are used.
         cbar_format (float, optional): the formatting to used for the ticklabels
             attached to the colorbar. Defaults to None.
         cbar_ticks (iter, optional): which ticks to be attached to the colorbar.
@@ -111,11 +113,15 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
     elif location == 'bottom':
         fig.subplots_adjust(bottom=0.2, hspace=0.1)
 
+    if ax_idxs is not None:
+        ax_to_use = [fig.get_axes()[idx] for idx in ax_idxs]
+    else:
+        ax_to_use = fig.get_axes()
+
     # Find corners of axes for whole plot
-    all_ax = fig.get_axes()
     min_x = min_y = 1.0  # Initial big values for minimum
     max_x = max_y = 0.0  # Initial small values for maximum
-    for ax in all_ax:
+    for ax in ax_to_use:
         ax_coords = ax.get_position()
         min_x = np.minimum(min_x, ax_coords.xmin)
         max_x = np.maximum(max_x, ax_coords.xmax)
@@ -175,8 +181,7 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
     # ------------------------------------------------------------------------ #
     # Make colorbar
     # ------------------------------------------------------------------------ #
-    cbar_format_str = cbar_format
-    cbar_ticks, cbar_format = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
+    cbar_ticks, cbar_format, cbar_format_str = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
     cb = fig.colorbar(cf, cax=cbar_ax, format=cbar_format, ticks=cbar_ticks,
                       orientation=orientation, ticklocation=location,
                       extend=extend, **colorbar_kwargs)
@@ -208,6 +213,8 @@ def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
         (list, str): the new cbar_ticks and the new cbar_format.
     """
 
+    cbar_format_str = None
+
     if cbar_ticks is None:
         if hasattr(cf, "levels"):
             # Take the minimum and maximum contours
@@ -220,21 +227,24 @@ def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
         min_val, max_val = np.min(cbar_ticks), np.max(cbar_ticks)
         # Use scientific notation if the minimum is less than -999 or
         # between -0.01 and 0.01
-        min_sci = (min_val < -999 or (min_val < 0.01 and min_val > -0.01))
+        min_sci = (min_val < -9999 or (max_val < 0.1 and min_val < 0.1 and min_val > -0.1))
 
         # Use scientific notation if the maximum is less than -999 or
         # between -0.01 and 0.01
-        max_sci = (max_val > 999 or (max_val < 0.01 and max_val > -0.01))
+        max_sci = (max_val > 9999 or (min_val > -0.1 and max_val < 0.1 and max_val > -0.1))
 
         if min_sci or max_sci:
+            cbar_format_str = '.2e'
             cbar_format = "{x:.2e}"
         else:
-            cbar_format = "{x:.3g}"
+            cbar_format_str = '.2f'
+            cbar_format = "{x:.2f}"
 
     elif cbar_format is not None:
+        cbar_format_str = cbar_format
         cbar_format = "{x:"+cbar_format+"}"
 
-    return cbar_ticks, cbar_format
+    return cbar_ticks, cbar_format, cbar_format_str
 
 
 def tomplot_cbar_labelpad(cbar_labelpad, extra_labelpad, cbar_format_str,
