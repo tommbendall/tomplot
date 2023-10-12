@@ -12,15 +12,15 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
 
     Args:
         field_data (:class:`numpy.ndarray`): The field to be filtered.
-        coords_X (':class:`numpy.ndarray`): The field along the X axis.
-        coords_Y (':class:`numpy.ndarray`): The field along the Y axis.
+        coords_X (:class:`numpy.ndarray`): The field along the X axis.
+        coords_Y (:class:`numpy.ndarray`): The field along the Y axis.
         coord_lims (dict): A dicitionary containing the
             coordinates as keys and the values are tuples containing the limits.
 
     Returns:
-        new_field_data (':class:`numpy.ndarray`): The new restricted data.
-        new_X_coords (':class:`numpy.ndarray`): The X coordinates for the restricted data
-        new_Y_coords (':class:`numpy.ndarray`): The Y coordinates for the restricted data
+        new_field_data (:class:`numpy.ndarray`): The new restricted data.
+        new_X_coords (:class:`numpy.ndarray`): The X coordinates for the restricted data
+        new_Y_coords (:class:`numpy.ndarray`): The Y coordinates for the restricted data
     """
 
     if len(np.shape(field_data)) != 1:
@@ -29,14 +29,14 @@ def area_restriction(field_data, coords_X, coords_Y, coord_lims):
         raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame.')
     if len(np.shape(coords_Y)) != 1:
         raise ValueError('area_restriction: input data must be 1D to be filtered by pandas data frame.')
-    if len(coord_lims) == 0:
-        raise ValueError('area_restriction: limit dictionary is empty, please provide an axis and limits')
+    if len(coord_lims.keys()) == 0:
+        raise ValueError('area_restriction: limits must be entered as a dictionary with valid axis keys of X or Y')
 
     data_dict = {'field': field_data, 'X': coords_X, 'Y': coords_Y}
     df = pd.DataFrame(data_dict)
     for key in coord_lims:
         if key not in ('X', 'Y'):
-            raise KeyError('Key error, Please choose a valid axis: X, Y')
+            raise KeyError(f'Area restriction: coord_lims key {key} not valid. Valid axes are X, Y')
         min, max = coord_lims[key]
         df = df[(df[key] >= min) & (df[key] <= max)]
 
