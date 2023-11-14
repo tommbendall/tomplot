@@ -457,7 +457,7 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
             else:
                 digits = 1
 
-            if (raw_min < 0 and raw_max > 0):
+            if (raw_min < 0 and raw_max > 0) or divergent_flag:
                 # How symmetric are these around zero?
                 if divergent_flag or min_abs > 0.5*max_abs:
                     data_max = roundup(max_abs, digits=digits)
