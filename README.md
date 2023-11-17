@@ -27,7 +27,8 @@ The design philosophy is that everything that is possible with matplotlib should
 The main dependencies are netCDF4, numpy and matplotlib. To take advantage of
 full features, it requires pandas, scipy and cartopy.
 
-Once downloaded, can be made available through
+Once downloaded, create a virtual environment, or activate an existing one.
+Tomplot can be installed by running:
 ```
-export PYTHONPATH=<path_to_tomplot>/tomplot
+pip install <path_to_tomplot>/tomplot
 ```
