@@ -45,3 +45,17 @@ def create_animation(results_dir, plot_dir, file_name='animation.gif',
 
     # use subprocesses to call the command
     subprocess.run(convert_cmd)
+
+def check_directory(path):
+    u"""
+    A routine which checks if the plotting directory exists and creates if
+    not.
+        path (class: int): path to directory
+    u"""
+
+    # check if directory exists
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print('results directory created')
+    else:
+        ('directory already exsists')
