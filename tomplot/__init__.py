@@ -8,3 +8,4 @@ from tomplot.field_contour_plot import *                                  # noqa
 from tomplot.quiver_plot import *                                         # noqa
 from tomplot.regridding import *                                          # noqa
 from tomplot.tomplot_tools import *                                       # noqa
+from tomplot.tomplot_utilities import *                                   # noqa
