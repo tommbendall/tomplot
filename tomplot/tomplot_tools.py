@@ -154,10 +154,6 @@ def tomplot_cmap(contours, color_scheme='Blues',
     if cmap_rescale_type not in [None, 'both', 'top', 'bottom']:
         raise ValueError(f'cmap_rescale_type {cmap_rescale_type} not recognised')
 
-    if cmap_rescale_type is not None and extend_cmap:
-        raise NotImplementedError('tomplot_cmap: cmap_rescale_type cannot be '
-                                  + 'used with extend_cmap')
-
     # First reproduce the contours for the lines from the existing set of contours
     line_contours = contours.copy()
 
