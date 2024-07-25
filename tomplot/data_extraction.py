@@ -160,7 +160,7 @@ def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
 
     # 2D time-varying field
     elif (len(dataset[field_name].dimensions) == 2
-          and dataset[field_name].dimensions[0] == 'time'):
+          and dataset[field_name].dimensions[0] in ['time', 'time_counter']):
         field_data = dataset[field_name][time_idx, :]
 
     # 3D non-time-varying field
