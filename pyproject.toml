@@ -25,7 +25,8 @@ dependencies = [
   "netCDF4",
   "pandas",
   "scipy",
-  "cartopy"
+  "cartopy",
+  "pytest"
 ]
 
 [project.urls]
