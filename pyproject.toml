@@ -16,10 +16,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
 ]
 
 dependencies = [
+  "matplotlib",
   "numpy",
   "netCDF4",
   "pandas",

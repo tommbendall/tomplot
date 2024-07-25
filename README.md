@@ -74,20 +74,13 @@ pip install git+https://github.com/tommbendall/tomplot.git
 
 ### Without pip
 
-If for some reason you don't want to use You can clone the repository with
-either:
-```
-git clone git@github.com:tommbendall/tomplot.git
-```
-or
-```
-git clone https://github.com/tommbendall/tomplot.git
-```
-
-Once downloaded, tomplot can be temporarily made available through
+It is not recommended to use tomplot by cloning the repository and setting the
+pythonpath to make tomplot temporarily made available through
 ```
 export PYTHONPATH=<path_to_tomplot>/tomplot
 ```
+
+It is much better to use pip instead.
 
 ## Testing
 
