@@ -34,6 +34,6 @@ Here are some things to consider when making a figure:
 - [ ] Does the field have tiny oscillations around some contour? *It may be better to remove the contour for that value, using the `remove_contour` argument to the `tomplot_cmap` routine.
 
 ## Colours
-- [ ] Are the colours used in the plot suitable for those with colour blindness? *Avoid red and green if possible. An array of colour maps can be found [here](https://matplotlib.org/stable/users/explain/colors/colormaps.html).*
+- [ ] Are the colours used in the plot suitable for those with colour blindness? *Avoid red and green if possible. A plethora of colour maps can be found [here](https://matplotlib.org/stable/users/explain/colors/colormaps.html).*
 - [ ] Have you considered whether your need plot should reproduce well in black and white? *The `tomplot_cmap` routine can generate colour maps that are rescaled to adjust the set of colours used. By rescaling colours to be less extreme, they may be clearer if converted to monochrome.*
 - [ ] Do out-of-scale values need to be shown? *The `extend_cmap` argument to `tomplot_cmap` allows extrema to be shown in specific colours.*
