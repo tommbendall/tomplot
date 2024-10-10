@@ -176,7 +176,7 @@ def tomplot_cmap(contours, color_scheme='Blues',
 
         # Make a colour map for more contours than we'll use
         actual_num_colour_levels = len(contours)
-        pure_num_colour_levels = np.ceil(actual_num_colour_levels/avg_colour_scaling)
+        pure_num_colour_levels = 256  # Something very high
 
         pure_cmap = mpl.colormaps[color_scheme].resampled(pure_num_colour_levels)
         new_colours = pure_cmap(np.linspace(lower_colour, upper_colour),

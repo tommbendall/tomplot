@@ -27,6 +27,8 @@ def rescaling_settings(cmap_arrangement, cmap_rescale_type, setup_func):
             title = 'Rescaled divergent cmap with contour removed'
             lower_true_cmap = 5
             upper_true_cmap = 15
+
+        equiv_remove_contour = remove_contour
         contour_max = tracer_max - tracer_background
         contour_min = -contour_max
         contours = np.linspace(contour_min, contour_max, num_bins+1)
@@ -35,6 +37,19 @@ def rescaling_settings(cmap_arrangement, cmap_rescale_type, setup_func):
         equiv_contours = np.linspace(2.0*contour_min, 2.0*contour_max, 2*num_bins+1)
         assert cmap_rescale_type == 'both', 'cmap_rescale_type ' + \
             f'{cmap_rescale_type} does not make sense for divergent cmap'
+
+    elif cmap_arrangement == "linear_difficult":
+        contours = np.linspace(-0.2, 1.2, 15)
+        cmap_rescaling = 0.75
+        remove_contour = 0.0
+        equiv_contours = np.linspace(-0.2, -0.2 + cmap_rescaling*1.4, 15)
+        equiv_remove_contour = equiv_contours[2]
+        ic_name = 'two_gaussian'
+        lower_true_cmap = 0
+        upper_true_cmap = 14
+        title = 'Difficult linear with removed contour'
+        tracer_background = 0.0
+        tracer_max = 1.0
 
     else:
         contour_max = tracer_max
@@ -90,11 +105,12 @@ def rescaling_settings(cmap_arrangement, cmap_rescale_type, setup_func):
         contours = np.arange(contour_min, contour_max+contour_step, step=contour_step)
         ic_name = 'two_gaussian'
         remove_contour = None
+        equiv_remove_contour = None
 
     setup = setup_func(ic_name, tracer_background, tracer_max)
 
     true_cmap, _ = tomplot_cmap(equiv_contours, setup.colour_scheme,
-                                remove_contour=remove_contour)
+                                remove_contour=equiv_remove_contour)
     true_cmap_values = [true_cmap(i) for i in range(lower_true_cmap,
                                                     upper_true_cmap+1)]
 
@@ -112,7 +128,10 @@ def cmap_combos(cmap_arrangements, cmap_rescale_types):
                          cmap_combos(["linear_odd", "linear_even"],
                                      ["both", "bottom", "top"])
                          # Also add a diverging cmap (only rescaling "both" makes sense here)
-                         + [("divergent", "both"), ("divergent_removed", "both")])
+                         + [("divergent", "both"), ("divergent_removed", "both"),
+                            ("linear_difficult", "top")])
+# @pytest.mark.parametrize("cmap_arrangement, cmap_rescale_type",
+#                         [("linear_difficult", "top")])
 def test_cmap_rescaling(cmap_arrangement, cmap_rescale_type, plot_setup):
 
     # Not currently bothered about getting exact colours, just general scaling
