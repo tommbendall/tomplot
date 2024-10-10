@@ -429,30 +429,36 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
     raw_max = np.amax(data)
     raw_min = np.amin(data)
 
+    max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
+    min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
+
+    if divergent_flag:
+        raw_diff = 2.0*max_abs
+    else:
+        raw_diff = raw_max - raw_min
+
     data_min = raw_min
     data_max = raw_max
 
     # Make initial discrete range definitely bigger than the real range
-    discrete_diff = 3.0 * (raw_max - raw_min) + 1.0
+    discrete_diff = 3.0 * raw_diff + 1.0
     digit_inc = 1
 
     # ------------------------------------------------------------------------ #
     # Loop through rounding digits until we have nice rounded mins/maxes
     # ------------------------------------------------------------------------ #
-    if (raw_max - raw_min) > zero_tolerance:
+    if raw_diff > zero_tolerance:
         # If the real range if less than half of the discrete range,
         # round to the next digit
-        while discrete_diff > 2.0*(raw_max - raw_min):
+        while discrete_diff > 2.0*raw_diff:
 
-            if (raw_max - raw_min > 0):
-                digits = int(np.floor(-np.log10(raw_max - raw_min)) + digit_inc)
+            if raw_diff > 0:
+                digits = int(np.floor(-np.log10(raw_diff)) + digit_inc)
             else:
                 digits = 1
 
-            if (raw_min < 0 and raw_max > 0):
+            if (raw_min < 0 and raw_max > 0) or divergent_flag:
                 # How symmetric are these around zero?
-                max_abs = np.maximum(np.abs(raw_min), np.abs(raw_max))
-                min_abs = np.minimum(np.abs(raw_min), np.abs(raw_max))
                 if divergent_flag or min_abs > 0.5*max_abs:
                     data_max = roundup(max_abs, digits=digits)
                     data_min = - data_max
@@ -495,7 +501,7 @@ def tomplot_contours(data, min_num_bins=10, divergent_flag=False,
     max_step = (data_max - data_min) / min_num_bins
 
     # To be safe, only make contours when we have non-zero data
-    if (raw_max - raw_min) > zero_tolerance:
+    if raw_diff > zero_tolerance:
         step_digits = int(np.floor(-np.log10(max_step)))
         # Find an even bigger maximum step by rounding max_step up
         max_max_step = roundup(max_step, digits=step_digits)
@@ -601,6 +607,8 @@ def only_minmax_ticklabels(ax):
     new_yticklabels[lowest_visible_ytick] = old_yticklabels[lowest_visible_ytick]
     new_yticklabels[highest_visible_ytick] = old_yticklabels[highest_visible_ytick]
 
+    ax.set_xticks(xticks)
+    ax.set_yticks(yticks)
     ax.set_xticklabels(new_xticklabels)
     ax.set_yticklabels(new_yticklabels)
 

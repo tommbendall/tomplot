@@ -61,7 +61,7 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
         cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
 
-def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
+def add_colorbar_fig(fig, cf, cbar_label=None, location='right', ax_idxs=None,
                      cbar_format=None, cbar_ticks=None, cbar_labelpad=None,
                      extra_labelpad=0.0, cbar_padding=0.0, cbar_thickness=0.02,
                      **colorbar_kwargs):
@@ -77,6 +77,9 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
             Defaults to None.
         location (str, optional): where the colorbar should be placed. Should
             be one of "right", "left", "top" or "bottom". Defaults to "right".
+        ax_idxs (list of int, optional): a list of indices of the figure's axes
+            to use for determining the position of the colorbar. Defaults to
+            None, in which case all axes are used.
         cbar_format (float, optional): the formatting to used for the ticklabels
             attached to the colorbar. Defaults to None.
         cbar_ticks (iter, optional): which ticks to be attached to the colorbar.
@@ -110,11 +113,15 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right',
     elif location == 'bottom':
         fig.subplots_adjust(bottom=0.2, hspace=0.1)
 
+    if ax_idxs is not None:
+        ax_to_use = [fig.get_axes()[idx] for idx in ax_idxs]
+    else:
+        ax_to_use = fig.get_axes()
+
     # Find corners of axes for whole plot
-    all_ax = fig.get_axes()
     min_x = min_y = 1.0  # Initial big values for minimum
     max_x = max_y = 0.0  # Initial small values for maximum
-    for ax in all_ax:
+    for ax in ax_to_use:
         ax_coords = ax.get_position()
         min_x = np.minimum(min_x, ax_coords.xmin)
         max_x = np.maximum(max_x, ax_coords.xmax)
