@@ -607,6 +607,8 @@ def only_minmax_ticklabels(ax):
     new_yticklabels[lowest_visible_ytick] = old_yticklabels[lowest_visible_ytick]
     new_yticklabels[highest_visible_ytick] = old_yticklabels[highest_visible_ytick]
 
+    ax.set_xticks(xticks)
+    ax.set_yticks(yticks)
     ax.set_xticklabels(new_xticklabels)
     ax.set_yticklabels(new_yticklabels)
 
