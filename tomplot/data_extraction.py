@@ -133,7 +133,8 @@ def extract_gusto_coords(dataset, field_name, units=None):
                                   + ' either not implemented or recognised')
 
 
-def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
+def extract_lfric_field(dataset, field_name, time_idx=None, level=None,
+                        time_variable='time'):
     """
     Extracts the data corresponding to a LFRic field.
 
@@ -145,6 +146,9 @@ def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
         level (int, optional): index of the vertical level to extract at (if
             there is any). Defaults to None, in which case all of the data is
             extracted.
+        time_variable (str, optional): the name of the time variable, used for
+            determining if the variable is 2D and time-varying. Defaults to
+            "time".
     """
 
     # If time_idx or level are None, we would index array as : and extract the
@@ -160,7 +164,8 @@ def extract_lfric_field(dataset, field_name, time_idx=None, level=None):
 
     # 2D time-varying field
     elif (len(dataset[field_name].dimensions) == 2
-          and dataset[field_name].dimensions[0] == 'time'):
+          and dataset[field_name].dimensions[0] in [
+              'time', 'time_counter', 'time_instant', time_variable]):
         field_data = dataset[field_name][time_idx, :]
 
     # 3D non-time-varying field
