@@ -56,7 +56,10 @@ def extract_gusto_coords(dataset, field_name, units=None):
     # Checks on units argument and set default for this domain
     # ------------------------------------------------------------------------ #
     # Work out which units to return the coords in, based on domain metadata
-    domain = str(chartostring(dataset.variables['domain_type'][:][0]))
+    try:
+        domain = str(chartostring(dataset.variables['domain_type'][:][0]))
+    except:
+        domain = dataset.variables['domain_type'][:]
     if domain == 'spherical_shell':
         assert units in [None, 'deg', 'rad'], 'extract_gusto_coords: for a ' \
             + f'spherical shell domain units must be "deg" or "rad" not {units}'
