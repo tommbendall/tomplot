@@ -5,6 +5,7 @@ Routines for extracting data from Gusto and LFRic field data files.
 import numpy as np
 import pandas as pd
 import warnings
+from netCDF4 import chartostring
 from .cubed_sphere import lonlat_to_alphabeta
 
 __all__ = ["extract_gusto_field", "extract_gusto_coords",
@@ -55,7 +56,10 @@ def extract_gusto_coords(dataset, field_name, units=None):
     # Checks on units argument and set default for this domain
     # ------------------------------------------------------------------------ #
     # Work out which units to return the coords in, based on domain metadata
-    domain = dataset.variables['domain_type'][:]
+    try:
+        domain = str(chartostring(dataset.variables['domain_type'][:][0]))
+    except:
+        domain = dataset.variables['domain_type'][:]
     if domain == 'spherical_shell':
         assert units in [None, 'deg', 'rad'], 'extract_gusto_coords: for a ' \
             + f'spherical shell domain units must be "deg" or "rad" not {units}'
