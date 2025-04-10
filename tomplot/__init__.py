@@ -5,6 +5,7 @@ from tomplot.data_extraction import *                                     # noqa
 from tomplot.data_manipulation import *                                   # noqa
 from tomplot.domain import *                                              # noqa
 from tomplot.field_contour_plot import *                                  # noqa
+from tomplot.icosahedral_sphere import *                                  # noqa
 from tomplot.quiver_plot import *                                         # noqa
 from tomplot.regridding import *                                          # noqa
 from tomplot.tomplot_tools import *                                       # noqa
