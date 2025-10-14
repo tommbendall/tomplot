@@ -218,12 +218,26 @@ def extract_lfric_coords(dataset, field_name, units=None):
 
     # Get name of coordinate data, e.g. "nMesh2d_edge"
     root_coords_name = dataset[field_name].dimensions[-1]
-    # Corresponding variable name is "Mesh2d_edge_x"
-    coords_X_name = root_coords_name[1:]+'_x'
-    coords_Y_name = root_coords_name[1:]+'_y'
+    if root_coords_name in ['dim0', 'dim1', 'dim2']:
+        coords_X_name = 'dynamics_face_x'
+        coords_Y_name = 'dynamics_face_y'
+    elif root_coords_name in [f'cell_checkpoint_{space}' for space in ['W2', 'W3', 'Wtheta']]:
+        space = root_coords_name[16:]
+        coords_X_name = f'lon_checkpoint_{space}'
+        coords_Y_name = f'lat_checkpoint_{space}'
+    elif root_coords_name == 'cell_Mesh2d':
+        coords_X_name = 'lon_Mesh2d'
+        coords_Y_name = 'lat_Mesh2d'
+    else:
+        # Corresponding variable name is "Mesh2d_edge_x"
+        coords_X_name = root_coords_name[1:]+'_x'
+        coords_Y_name = root_coords_name[1:]+'_y'
 
-    coords_X = dataset[coords_X_name][:]*unit_factor
-    coords_Y = dataset[coords_Y_name][:]*unit_factor
+    try:
+        coords_X = dataset[coords_X_name][:]*unit_factor
+        coords_Y = dataset[coords_Y_name][:]*unit_factor
+    except IndexError:
+        import pdb; pdb.set_trace()
 
     return coords_X, coords_Y
 
