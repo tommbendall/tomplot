@@ -110,7 +110,8 @@ def tomplot_field_title(ax, title, titlepad=None, return_title=False,
 
 def tomplot_cmap(contours, color_scheme='Blues',
                  cmap_rescale_type=None, cmap_rescaling=0.8,
-                 remove_contour=None, extend_cmap=False):
+                 remove_contour=None, extend_cmap=False,
+                 extend_cmap_colours=None):
     """
     Generates a color map based on contours and a named color scheme. This
     provides options to linearly rescale the colors in the color map, and to
@@ -135,7 +136,11 @@ def tomplot_cmap(contours, color_scheme='Blues',
             removes the central contour. Defaults to None.
         extend_cmap (bool, optional): whether to allow the color map to be
             extended beyond the values specified in `contours`. Defaults to
-            False. If True, sets "over" to yellow and "under" to magenta.
+            False.
+        extend_cmap_colours (tuple, optional): tuple of colours to specify for
+            the cmap extensions. First entry is the "under" colour, second entry
+            is the "over" colour. Defaults to None, in which case magenta and
+            yellow are used.
 
     Raises:
         ValueError: if `remove_contour` is 'middle' but the number of contours
@@ -239,8 +244,13 @@ def tomplot_cmap(contours, color_scheme='Blues',
         cmap = remove_colour(cmap, level_to_remove, len(contours))
 
     if extend_cmap:
-        cmap.set_under('magenta')
-        cmap.set_over('yellow')
+        if extend_cmap_colours is None:
+            cmap.set_under('magenta')
+            cmap.set_over('yellow')
+        elif extend_cmap_colours[0] is not None:
+            cmap.set_under(extend_cmap_colours[0])
+        elif extend_cmap_colours[1] is not None:
+            cmap.set_over(extend_cmap_colours[1])
 
     return cmap, line_contours
 
