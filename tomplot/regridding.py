@@ -65,11 +65,11 @@ def regrid_horizontal_slice(new_coords_X, new_coords_Y,
 
         # Extend at minimum x
         min_x_data = old_data[old_data['X'] < min_x + 0.05*x_diff]
-        min_x_data['X'].values[:] = min_x_data['X'].values[:] + x_diff
+        min_x_data['X'] = min_x_data['X'] + x_diff
 
         # Extend at maximum x
         max_x_data = old_data[old_data['X'] > max_x - 0.05*x_diff]
-        max_x_data['X'].values[:] = max_x_data['X'].values[:] - x_diff
+        max_x_data['X'] = max_x_data['X'] - x_diff
 
         # Update original data frame
         old_data = pd.concat([old_data, min_x_data, max_x_data], ignore_index=True)

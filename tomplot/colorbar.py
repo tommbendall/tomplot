@@ -60,6 +60,8 @@ def add_colorbar_ax(ax, cf, cbar_label=None, cbar_format=None, cbar_ticks=None,
                                               cbar_format_str, location, cb)
         cb.set_label(cbar_label, labelpad=cbar_labelpad)
 
+    return cb
+
 
 def add_colorbar_fig(fig, cf, cbar_label=None, location='right', ax_idxs=None,
                      cbar_format=None, cbar_ticks=None, cbar_labelpad=None,
@@ -190,6 +192,8 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right', ax_idxs=None,
         cbar_labelpad = tomplot_cbar_labelpad(cbar_labelpad, extra_labelpad,
                                               cbar_format_str, location, cb)
         cb.set_label(cbar_label, labelpad=cbar_labelpad)
+
+    return cb
 
 
 def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
