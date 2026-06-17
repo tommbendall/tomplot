@@ -9,3 +9,4 @@ from tomplot.icosahedral_sphere import *                                  # noqa
 from tomplot.quiver_plot import *                                         # noqa
 from tomplot.regridding import *                                          # noqa
 from tomplot.tomplot_tools import *                                       # noqa
+from tomplot.tomplot_utilities import *                                   # noqa
