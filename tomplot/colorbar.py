@@ -245,8 +245,8 @@ def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
             cbar_format = "{x:.2f}"
 
     elif cbar_format is not None:
-        cbar_format_str = cbar_format
-        cbar_format = "{x:"+cbar_format+"}"
+        cbar_format_str = "{x:"+cbar_format+"}"
+        cbar_format = cbar_format
 
     return cbar_ticks, cbar_format, cbar_format_str
 
