@@ -2,7 +2,7 @@
 
 import numpy as np
 
-__all__ = ["plot_icosahedral_sphere_panels"]
+__all__ = ["plot_icosahedral_sphere_panels", "great_circle_linspace"]
 
 
 def plot_icosahedral_sphere_panels(ax, units='deg', color='black', linewidth=None):
