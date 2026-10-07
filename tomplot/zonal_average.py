@@ -39,8 +39,11 @@ def zonal_average(field_data, coords_lon, coords_lat, coords_height,
     Returns:
         tuple of `numpy.ndarray`: (zonal_mean, lat_bin_centres, level_heights).
             zonal_mean: 2D array of shape (num_lat_bins, num_levels) of the
-                zonally-averaged field.
-            lat_bin_centres: 1D array of the centres of the latitude bins.
+                zonally-averaged field. Bins containing no data points are
+                omitted entirely (rather than being filled with NaN), so
+                num_lat_bins may be smaller than the requested num_bins.
+            lat_bin_centres: 1D array of the centres of the latitude bins that
+                contain data.
             level_heights: 1D array of the mean height at each level.
     """
 
@@ -75,7 +78,18 @@ def zonal_average(field_data, coords_lon, coords_lat, coords_height,
         lat_bins = np.linspace(min_lat, max_lat, num_bins+1)
 
     lat_bin_centres = 0.5*(lat_bins[:-1] + lat_bins[1:])
-    num_lat_bins = len(lat_bin_centres)
+
+    # ------------------------------------------------------------------------ #
+    # Determine which bins actually contain data points
+    # ------------------------------------------------------------------------ #
+    # Latitude (and hence bin membership) is assumed to be the same for every
+    # column regardless of level, so this only needs to be checked once
+    col_bins = pd.cut(lat_2d[:, 0], bins=lat_bins, labels=False,
+                      include_lowest=True)
+    valid_bins = sorted(int(b) for b in pd.unique(col_bins) if not np.isnan(b))
+    num_lat_bins = len(valid_bins)
+    bin_position = {bin_idx: pos for pos, bin_idx in enumerate(valid_bins)}
+    lat_bin_centres = lat_bin_centres[valid_bins]
 
     # ------------------------------------------------------------------------ #
     # Loop through levels, computing zonal mean for each
@@ -91,7 +105,8 @@ def zonal_average(field_data, coords_lon, coords_lat, coords_height,
         bin_means = df.groupby('lat_bin')['field'].mean()
 
         for bin_idx in bin_means.index:
-            zonal_mean[int(bin_idx), lev_idx] = bin_means[bin_idx]
+            if int(bin_idx) in bin_position:
+                zonal_mean[bin_position[int(bin_idx)], lev_idx] = bin_means[bin_idx]
 
         level_heights[lev_idx] = np.mean(height_2d[:, lev_idx])
 
