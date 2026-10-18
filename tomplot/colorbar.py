@@ -184,6 +184,7 @@ def add_colorbar_fig(fig, cf, cbar_label=None, location='right', ax_idxs=None,
     # Make colorbar
     # ------------------------------------------------------------------------ #
     cbar_ticks, cbar_format, cbar_format_str = tomplot_cbar_format(cf, cbar_ticks, cbar_format)
+    print(cbar_format, cbar_format_str)
     cb = fig.colorbar(cf, cax=cbar_ax, format=cbar_format, ticks=cbar_ticks,
                       orientation=orientation, ticklocation=location,
                       extend=extend, **colorbar_kwargs)
@@ -245,8 +246,10 @@ def tomplot_cbar_format(cf, cbar_ticks=None, cbar_format=None):
             cbar_format = "{x:.2f}"
 
     elif cbar_format is not None:
-        cbar_format_str = "{x:"+cbar_format+"}"
-        cbar_format = cbar_format
+        # Accept a bare format spec (e.g. '.1e') and wrap it for matplotlib
+        if '{x' not in cbar_format:
+            cbar_format = "{x:"+cbar_format+"}"
+        cbar_format_str = cbar_format[len("{x:"):-1]
 
     return cbar_ticks, cbar_format, cbar_format_str
 
